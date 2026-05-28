@@ -2,7 +2,7 @@
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
-<title>Eco Arandor Online</title>
+<title>Eco Arandor Online V3</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <style>
@@ -16,8 +16,8 @@
 
 body {
   overflow: hidden;
-  background: #090d12;
-  color: #fff;
+  background: #080b10;
+  color: white;
 }
 
 canvas {
@@ -27,24 +27,24 @@ canvas {
 
 .panel {
   position: absolute;
-  background: rgba(10, 14, 22, 0.82);
+  background: rgba(9, 13, 20, 0.84);
   border: 1px solid rgba(255,255,255,0.14);
-  border-radius: 14px;
-  box-shadow: 0 10px 30px rgba(0,0,0,0.35);
+  border-radius: 16px;
+  box-shadow: 0 14px 40px rgba(0,0,0,0.42);
   backdrop-filter: blur(8px);
 }
 
 #topHud {
   top: 14px;
   left: 14px;
-  width: 285px;
+  width: 310px;
   padding: 14px;
 }
 
 #topHud h1 {
   font-size: 20px;
   color: #ffd166;
-  margin-bottom: 4px;
+  margin-bottom: 5px;
 }
 
 .small {
@@ -78,21 +78,6 @@ canvas {
 .hp { background: linear-gradient(90deg, #ef476f, #ff8c42); }
 .mana { background: linear-gradient(90deg, #118ab2, #7b61ff); }
 .xp { background: linear-gradient(90deg, #06d6a0, #ffd166); }
-
-#rightPanel {
-  top: 14px;
-  right: 14px;
-  width: 310px;
-  max-height: calc(100vh - 28px);
-  padding: 14px;
-  overflow-y: auto;
-}
-
-h2 {
-  font-size: 15px;
-  color: #7ee787;
-  margin: 10px 0 8px;
-}
 
 button, input, select {
   border: none;
@@ -129,41 +114,15 @@ input, select {
   gap: 8px;
 }
 
-.itemGrid {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 7px;
-}
-
-.slot {
-  min-height: 50px;
-  background: #101722;
-  border: 1px solid rgba(255,255,255,0.12);
-  border-radius: 11px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 23px;
-  position: relative;
-}
-
-.slot span {
-  position: absolute;
-  right: 6px;
-  bottom: 4px;
-  color: #ffd166;
-  font-size: 11px;
-}
-
 #chat {
   left: 14px;
   bottom: 14px;
-  width: 380px;
+  width: 390px;
   padding: 12px;
 }
 
 #messages {
-  height: 120px;
+  height: 118px;
   overflow-y: auto;
   font-size: 13px;
   line-height: 1.35;
@@ -191,25 +150,98 @@ input, select {
 #menu {
   position: absolute;
   inset: 0;
-  background: radial-gradient(circle at center, rgba(38,78,54,.8), rgba(4,6,10,.96));
+  background: radial-gradient(circle at center, rgba(38,78,54,.82), rgba(4,6,10,.97));
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 10;
+  z-index: 20;
 }
 
 #menuCard {
-  width: 380px;
+  width: 540px;
   padding: 24px;
-  background: rgba(10, 14, 22, .92);
+  background: rgba(10, 14, 22, .94);
   border: 1px solid rgba(255,255,255,.16);
-  border-radius: 18px;
+  border-radius: 20px;
   box-shadow: 0 20px 80px rgba(0,0,0,.55);
 }
 
 #menuCard h1 {
   color: #ffd166;
   margin-bottom: 8px;
+}
+
+.classes {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 11px;
+  margin: 14px 0;
+}
+
+.classCard {
+  cursor: pointer;
+  border: 1px solid rgba(255,255,255,.14);
+  border-radius: 14px;
+  background: #101722;
+  padding: 12px;
+  min-height: 126px;
+}
+
+.classCard.selected {
+  border-color: #ffd166;
+  box-shadow: 0 0 0 2px rgba(255,209,102,.22);
+}
+
+.classCard h3 {
+  color: #7ee787;
+  font-size: 15px;
+  margin-bottom: 6px;
+}
+
+.modal {
+  right: 14px;
+  top: 14px;
+  width: 330px;
+  max-height: calc(100vh - 28px);
+  padding: 14px;
+  overflow-y: auto;
+  display: none;
+}
+
+.modal.open {
+  display: block;
+}
+
+.modal h2 {
+  font-size: 16px;
+  color: #7ee787;
+  margin-bottom: 8px;
+}
+
+.itemGrid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 7px;
+}
+
+.slot {
+  min-height: 54px;
+  background: #101722;
+  border: 1px solid rgba(255,255,255,0.12);
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+  position: relative;
+}
+
+.slot span {
+  position: absolute;
+  right: 6px;
+  bottom: 4px;
+  color: #ffd166;
+  font-size: 11px;
 }
 
 .marketRow {
@@ -226,13 +258,42 @@ input, select {
   font-size: 12px;
 }
 
+.keyHelp {
+  position: absolute;
+  right: 14px;
+  bottom: 14px;
+  padding: 12px;
+  width: 260px;
+  font-size: 12px;
+  color: #c9d4e5;
+}
+
+#serverClock {
+  color: #ffd166;
+  font-weight: bold;
+}
+
 @media (max-width: 900px) {
-  #rightPanel {
+  .keyHelp {
     display: none;
   }
 
   #chat {
     width: calc(100vw - 28px);
+  }
+
+  .modal {
+    width: calc(100vw - 28px);
+    left: 14px;
+    right: 14px;
+  }
+
+  #menuCard {
+    width: calc(100vw - 28px);
+  }
+
+  .classes {
+    grid-template-columns: 1fr;
   }
 }
 </style>
@@ -244,11 +305,27 @@ input, select {
 <div id="menu">
   <div id="menuCard">
     <h1>Eco Arandor Online</h1>
-    <p class="small">MMORPG indie multiplayer. Escolha seu nome e entre no mundo.</p>
+    <p class="small">Escolha seu nome e sua classe. Você começa na base segura do servidor.</p>
     <br>
     <input id="nameInput" class="full" maxlength="16" placeholder="Nome do personagem">
+
+    <div class="classes">
+      <div class="classCard selected" data-class="swordsman" onclick="selectClass('swordsman')">
+        <h3>⚔️ Espadachim</h3>
+        <p class="small">Ataque físico de curto alcance. Mais vida e combate corpo a corpo.</p>
+      </div>
+      <div class="classCard" data-class="archer" onclick="selectClass('archer')">
+        <h3>🏹 Arqueiro</h3>
+        <p class="small">Ataque físico de longo alcance. Bom dano à distância.</p>
+      </div>
+      <div class="classCard" data-class="mage" onclick="selectClass('mage')">
+        <h3>🔮 Mago</h3>
+        <p class="small">Ataque mágico de longo alcance. Usa mana para causar mais dano.</p>
+      </div>
+    </div>
+
     <button class="full" onclick="enterGame()">Entrar no jogo</button>
-    <p class="small" style="margin-top:12px;">Controles: WASD move, Espaço ataca, Enter chat.</p>
+    <p class="small" style="margin-top:12px;">WASD move • Espaço ataca • I inventário • L loja • M mercado • Enter chat</p>
   </div>
 </div>
 
@@ -256,10 +333,11 @@ input, select {
 
 <div id="topHud" class="panel">
   <h1>Eco Arandor</h1>
-  <p class="small">Classe: Guardião Arcano</p>
+  <p class="small">Servidor: <span id="serverClock">--:--:--</span></p>
 
   <div class="row"><span id="pName">---</span><span>Online: <b id="online">0</b></span></div>
-  <div class="row"><span>Level <b id="level">1</b></span><span>Ouro: <b id="gold">0</b></span></div>
+  <div class="row"><span>Classe: <b id="className">---</b></span><span>Level <b id="level">1</b></span></div>
+  <div class="row"><span>Ouro: <b id="gold">0</b></span><span>Kills: <b id="kills">0</b></span></div>
 
   <div class="row"><span>Vida</span><span id="hpText">100/100</span></div>
   <div class="bar"><div id="hpBar" class="fill hp"></div></div>
@@ -270,40 +348,66 @@ input, select {
   <div class="row"><span>XP</span><span id="xpText">0/100</span></div>
   <div class="bar"><div id="xpBar" class="fill xp"></div></div>
 
-  <button class="full" onclick="usePotion()">Usar poção</button>
+  <div class="grid2">
+    <button onclick="usePotion('hp')">Poção Vida</button>
+    <button onclick="usePotion('mana')">Poção Mana</button>
+  </div>
 </div>
 
-<div id="rightPanel" class="panel">
-  <h2>Personagem</h2>
-  <input id="renameInput" class="full" maxlength="16" placeholder="Novo nome">
-  <button class="full" onclick="renamePlayer()">Mudar nome</button>
-
-  <h2>Inventário</h2>
+<div id="inventoryPanel" class="panel modal">
+  <h2>🎒 Inventário</h2>
+  <p class="small">Itens coletados aparecem aqui. Aperte I para abrir/fechar.</p>
+  <br>
   <div id="inventory" class="itemGrid"></div>
 
-  <h2>Loja de Troca</h2>
-  <p class="small">Troque itens dropáveis por recursos úteis.</p>
-  <button class="full" onclick="shopTrade('potion')">2 Ervas → 1 Poção</button>
-  <button class="full" onclick="shopTrade('gold')">1 Cristal → 25 Ouro</button>
+  <h2 style="margin-top:14px;">Nome</h2>
+  <input id="renameInput" class="full" maxlength="16" placeholder="Novo nome">
+  <button class="full" onclick="renamePlayer()">Mudar nome</button>
+</div>
 
-  <h2>Mercado entre Players</h2>
+<div id="shopPanel" class="panel modal">
+  <h2>🏪 Loja de Troca</h2>
+  <p class="small">Aperte L para abrir/fechar.</p>
+  <br>
+  <button class="full" onclick="shopTrade('potion')">2 Ervas → 1 Poção de Vida</button>
+  <button class="full" onclick="shopTrade('manaPotion')">1 Cristal → 1 Poção de Mana</button>
+  <button class="full" onclick="shopTrade('gold')">1 Presa → 35 Ouro</button>
+</div>
+
+<div id="marketPanel" class="panel modal">
+  <h2>📦 Mercado Local</h2>
+  <p class="small">Aperte M para abrir/fechar. Itens vendidos saem do vendedor e somem da lista ao comprar.</p>
+  <br>
   <div class="grid2">
     <select id="sellItem">
       <option value="herb">Erva</option>
       <option value="crystal">Cristal</option>
       <option value="fang">Presa</option>
-      <option value="potion">Poção</option>
+      <option value="potion">Poção Vida</option>
+      <option value="manaPotion">Poção Mana</option>
     </select>
     <input id="sellAmount" type="number" value="1" min="1">
   </div>
   <input id="sellPrice" class="full" type="number" value="20" min="1" style="margin-top:7px;">
-  <button class="full" onclick="sellMarket()">Vender no mercado</button>
-  <div id="marketList" style="margin-top:9px;"></div>
+  <button class="full" onclick="sellMarket()">Colocar à venda</button>
+  <br><br>
+  <div id="marketList"></div>
 </div>
 
 <div id="chat" class="panel">
   <div id="messages"></div>
   <input id="chatInput" class="full" placeholder="Digite no chat e aperte Enter">
+</div>
+
+<div class="panel keyHelp">
+  <b>Atalhos</b><br>
+  WASD: mover<br>
+  Espaço: atacar<br>
+  I: inventário<br>
+  L: loja de troca<br>
+  M: mercado local<br>
+  Enter: chat<br>
+  Base central: área segura
 </div>
 
 <script src="/socket.io/socket.io.js"></script>
@@ -322,49 +426,64 @@ addEventListener("resize", () => {
 
 const keys = {};
 const renderPlayers = {};
-let state = { players: {}, enemies: [], drops: [], market: [], world: { width: 2400, height: 1800 } };
+let state = { players: {}, enemies: [], drops: [], market: [], world: { width: 2800, height: 2100, safeZone: { x: 1120, y: 780, w: 560, h: 420 } }, serverTime: "--:--:--" };
 let joined = false;
 let myId = null;
 let noticeTimer = 0;
+let chosenClass = "swordsman";
+let effects = [];
 
 const ITEM_INFO = {
   herb: { name: "Erva", icon: "🌿" },
   crystal: { name: "Cristal", icon: "💎" },
   fang: { name: "Presa", icon: "🦷" },
-  potion: { name: "Poção", icon: "🧪" }
+  potion: { name: "Poção", icon: "🧪" },
+  manaPotion: { name: "Poção de Mana", icon: "🔷" }
 };
 
-const mapDecor = {
+const decor = {
   trees: [],
   rocks: [],
   flowers: [],
   lakes: []
 };
 
-function seededDecor() {
-  for (let i = 0; i < 140; i++) {
-    mapDecor.trees.push({ x: Math.random() * 2400, y: Math.random() * 1800, s: 26 + Math.random() * 18 });
+function createDecor() {
+  for (let i = 0; i < 160; i++) {
+    decor.trees.push({ x: Math.random() * 2800, y: Math.random() * 2100, s: 26 + Math.random() * 20 });
   }
-  for (let i = 0; i < 70; i++) {
-    mapDecor.rocks.push({ x: Math.random() * 2400, y: Math.random() * 1800 });
+
+  for (let i = 0; i < 85; i++) {
+    decor.rocks.push({ x: Math.random() * 2800, y: Math.random() * 2100 });
   }
-  for (let i = 0; i < 330; i++) {
-    mapDecor.flowers.push({ x: Math.random() * 2400, y: Math.random() * 1800, c: Math.random() > .5 ? "#fff3b0" : "#ffd166" });
+
+  for (let i = 0; i < 390; i++) {
+    decor.flowers.push({ x: Math.random() * 2800, y: Math.random() * 2100, c: Math.random() > .5 ? "#fff3b0" : "#ffd166" });
   }
-  mapDecor.lakes.push({ x: 980, y: 620, w: 360, h: 230 });
-  mapDecor.lakes.push({ x: 350, y: 1180, w: 280, h: 190 });
+
+  decor.lakes.push({ x: 260, y: 360, w: 380, h: 250 });
+  decor.lakes.push({ x: 1920, y: 1280, w: 360, h: 220 });
 }
-seededDecor();
+createDecor();
+
+function selectClass(id) {
+  chosenClass = id;
+  document.querySelectorAll(".classCard").forEach(card => card.classList.remove("selected"));
+  document.querySelector(`[data-class="${id}"]`).classList.add("selected");
+}
 
 function enterGame() {
   const name = document.getElementById("nameInput").value.trim() || localStorage.getItem("ecoName") || "Aventureiro";
   localStorage.setItem("ecoName", name);
+  localStorage.setItem("ecoClass", chosenClass);
   document.getElementById("menu").style.display = "none";
-  socket.emit("join", { name });
+  socket.emit("join", { name, classId: chosenClass });
   joined = true;
 }
 
 document.getElementById("nameInput").value = localStorage.getItem("ecoName") || "";
+chosenClass = localStorage.getItem("ecoClass") || "swordsman";
+selectClass(chosenClass);
 
 socket.on("connect", () => {
   myId = socket.id;
@@ -375,9 +494,7 @@ socket.on("state", s => {
   state = s;
 
   for (const id in state.players) {
-    if (!renderPlayers[id]) {
-      renderPlayers[id] = { ...state.players[id] };
-    }
+    if (!renderPlayers[id]) renderPlayers[id] = { ...state.players[id] };
   }
 
   for (const id in renderPlayers) {
@@ -397,15 +514,26 @@ socket.on("chat", msg => {
 
 socket.on("notice", showNotice);
 
+socket.on("attackEffect", e => {
+  effects.push({ ...e, life: 14 });
+});
+
 function showNotice(text) {
   document.getElementById("notice").textContent = text;
   noticeTimer = 180;
 }
 
 document.addEventListener("keydown", e => {
-  if (document.activeElement.id === "chatInput") return;
-  if (document.activeElement.tagName === "INPUT") return;
-  if (document.activeElement.tagName === "SELECT") return;
+  const tag = document.activeElement.tagName;
+  const focusedChat = document.activeElement.id === "chatInput";
+
+  if (focusedChat) return;
+
+  if (e.key.toLowerCase() === "i") togglePanel("inventoryPanel");
+  if (e.key.toLowerCase() === "l") togglePanel("shopPanel");
+  if (e.key.toLowerCase() === "m") togglePanel("marketPanel");
+
+  if (tag === "INPUT" || tag === "SELECT") return;
 
   keys[e.key.toLowerCase()] = true;
 
@@ -425,6 +553,13 @@ document.getElementById("chatInput").addEventListener("keydown", e => {
   }
 });
 
+function togglePanel(id) {
+  ["inventoryPanel", "shopPanel", "marketPanel"].forEach(panelId => {
+    if (panelId !== id) document.getElementById(panelId).classList.remove("open");
+  });
+  document.getElementById(id).classList.toggle("open");
+}
+
 setInterval(() => {
   if (!joined) return;
 
@@ -436,8 +571,8 @@ setInterval(() => {
   });
 }, 1000 / 30);
 
-function usePotion() {
-  socket.emit("usePotion");
+function usePotion(type) {
+  socket.emit("usePotion", type);
 }
 
 function renamePlayer() {
@@ -469,7 +604,7 @@ function me() {
 }
 
 function camera() {
-  const p = renderPlayers[myId] || me() || { x: 500, y: 500 };
+  const p = renderPlayers[myId] || me() || { x: 1400, y: 1000 };
   return {
     x: p.x - W / 2,
     y: p.y - H / 2
@@ -483,12 +618,12 @@ function screen(x, y) {
 
 function drawGround() {
   const c = camera();
-  ctx.fillStyle = "#226b36";
-  ctx.fillRect(0, 0, W, H);
-
   const tile = 64;
   const startX = Math.floor(c.x / tile) * tile;
   const startY = Math.floor(c.y / tile) * tile;
+
+  ctx.fillStyle = "#226b36";
+  ctx.fillRect(0, 0, W, H);
 
   for (let x = startX; x < c.x + W + tile; x += tile) {
     for (let y = startY; y < c.y + H + tile; y += tile) {
@@ -497,15 +632,31 @@ function drawGround() {
       ctx.fillRect(p.x, p.y, tile, tile);
     }
   }
+}
 
-  ctx.strokeStyle = "rgba(255,255,255,.035)";
-  for (let x = startX; x < c.x + W + tile; x += tile) {
-    const p = screen(x, 0);
-    ctx.beginPath();
-    ctx.moveTo(p.x, 0);
-    ctx.lineTo(p.x, H);
-    ctx.stroke();
-  }
+function drawSafeZone() {
+  const z = state.world.safeZone;
+  const p = screen(z.x, z.y);
+
+  ctx.fillStyle = "rgba(255, 209, 102, .16)";
+  roundRect(p.x, p.y, z.w, z.h, 34);
+  ctx.fill();
+
+  ctx.strokeStyle = "rgba(255, 209, 102, .65)";
+  ctx.lineWidth = 3;
+  roundRect(p.x, p.y, z.w, z.h, 34);
+  ctx.stroke();
+  ctx.lineWidth = 1;
+
+  ctx.fillStyle = "rgba(15,18,25,.85)";
+  roundRect(p.x + 80, p.y + 80, z.w - 160, z.h - 160, 22);
+  ctx.fill();
+
+  ctx.fillStyle = "#ffd166";
+  ctx.font = "18px Arial";
+  ctx.textAlign = "center";
+  ctx.fillText("BASE SEGURA", p.x + z.w / 2, p.y + 58);
+  ctx.textAlign = "left";
 }
 
 function drawLake(l) {
@@ -557,6 +708,7 @@ function drawDrop(d) {
   ctx.beginPath();
   ctx.ellipse(p.x, p.y + 10, 14, 5, 0, 0, Math.PI * 2);
   ctx.fill();
+
   ctx.font = "24px Arial";
   ctx.textAlign = "center";
   ctx.fillText(ITEM_INFO[d.item]?.icon || "?", p.x, p.y + 6);
@@ -580,24 +732,21 @@ function drawEnemy(e) {
   ctx.fillRect(p.x - 9, p.y - 4, 4, 4);
   ctx.fillRect(p.x + 5, p.y - 4, 4, 4);
 
-  ctx.fillStyle = "#111";
-  ctx.fillRect(p.x - 22, p.y - 28, 44, 5);
-  ctx.fillStyle = "#ef476f";
-  ctx.fillRect(p.x - 22, p.y - 28, 44 * Math.max(0, e.hp / e.maxHp), 5);
+  drawMiniBar(p.x, p.y - 31, 46, e.hp / e.maxHp, "#ef476f");
 }
 
 function drawPlayer(p, isMe) {
   const r = renderPlayers[p.id] || p;
   const pos = screen(r.x, r.y);
   const moving = Math.abs(p.vx) + Math.abs(p.vy) > .1;
-  const bob = moving ? Math.sin(Date.now() / 90) * 2 : 0;
+  const bob = moving ? Math.sin(Date.now() / 85) * 2 : 0;
 
   ctx.fillStyle = "rgba(0,0,0,.32)";
   ctx.beginPath();
   ctx.ellipse(pos.x, pos.y + 27, 20, 8, 0, 0, Math.PI * 2);
   ctx.fill();
 
-  ctx.fillStyle = isMe ? "#49a6ff" : p.color;
+  ctx.fillStyle = isMe ? p.color : p.color;
   ctx.fillRect(pos.x - 13, pos.y - 18 + bob, 26, 33);
 
   ctx.fillStyle = "#f4bf77";
@@ -611,30 +760,62 @@ function drawPlayer(p, isMe) {
   ctx.fillRect(pos.x - 5, pos.y - 31 + bob, 3, 3);
   ctx.fillRect(pos.x + 4, pos.y - 31 + bob, 3, 3);
 
-  ctx.fillStyle = "#111";
-  ctx.fillRect(pos.x - 24, pos.y - 55, 48, 5);
-  ctx.fillStyle = "#ef476f";
-  ctx.fillRect(pos.x - 24, pos.y - 55, 48 * Math.max(0, p.hp / p.maxHp), 5);
+  drawMiniBar(pos.x, pos.y - 70, 54, p.hp / p.maxHp, "#ef476f");
+  drawMiniBar(pos.x, pos.y - 62, 54, p.mana / p.maxMana, "#118ab2");
 
   ctx.fillStyle = isMe ? "#7ee787" : "#fff";
   ctx.font = "13px Arial";
   ctx.textAlign = "center";
-  ctx.fillText(p.name, pos.x, pos.y - 62);
+  ctx.fillText(p.name, pos.x, pos.y - 78);
   ctx.textAlign = "left";
+
+  ctx.font = "11px Arial";
+  ctx.textAlign = "center";
+  ctx.fillStyle = "#cdd6e5";
+  ctx.fillText(p.className, pos.x, pos.y - 47);
+  ctx.textAlign = "left";
+}
+
+function drawMiniBar(x, y, w, value, color) {
+  ctx.fillStyle = "#111";
+  ctx.fillRect(x - w / 2, y, w, 5);
+  ctx.fillStyle = color;
+  ctx.fillRect(x - w / 2, y, w * Math.max(0, Math.min(1, value)), 5);
+}
+
+function drawEffects() {
+  for (let i = effects.length - 1; i >= 0; i--) {
+    const e = effects[i];
+    const a = screen(e.from.x, e.from.y);
+    const b = screen(e.to.x, e.to.y);
+
+    ctx.strokeStyle = e.classId === "mage" ? "#b388ff" : e.classId === "archer" ? "#ffd166" : "#ffffff";
+    ctx.lineWidth = e.classId === "swordsman" ? 5 : 3;
+    ctx.beginPath();
+    ctx.moveTo(a.x, a.y - 10);
+    ctx.lineTo(b.x, b.y - 10);
+    ctx.stroke();
+    ctx.lineWidth = 1;
+
+    e.life--;
+    if (e.life <= 0) effects.splice(i, 1);
+  }
 }
 
 function draw() {
   ctx.clearRect(0, 0, W, H);
   drawGround();
 
-  mapDecor.lakes.forEach(drawLake);
-  mapDecor.flowers.forEach(f => {
+  decor.lakes.forEach(drawLake);
+  decor.flowers.forEach(f => {
     const p = screen(f.x, f.y);
     ctx.fillStyle = f.c;
     ctx.fillRect(p.x, p.y, 4, 4);
   });
-  mapDecor.rocks.forEach(drawRock);
-  mapDecor.trees.forEach(drawTree);
+  decor.rocks.forEach(drawRock);
+  decor.trees.forEach(drawTree);
+
+  drawSafeZone();
 
   state.drops.forEach(drawDrop);
   state.enemies.forEach(drawEnemy);
@@ -643,15 +824,16 @@ function draw() {
     drawPlayer(state.players[id], id === myId);
   }
 
-  ctx.strokeStyle = "rgba(255,255,255,.18)";
+  drawEffects();
+
   const c = camera();
+  ctx.strokeStyle = "rgba(255,255,255,.18)";
   ctx.strokeRect(-c.x, -c.y, state.world.width, state.world.height);
 }
 
 function updateRenderPositions() {
   for (const id in state.players) {
     const target = state.players[id];
-
     if (!renderPlayers[id]) renderPlayers[id] = { ...target };
 
     renderPlayers[id].x += (target.x - renderPlayers[id].x) * 0.28;
@@ -663,10 +845,13 @@ function updateUI() {
   const p = me();
   if (!p) return;
 
+  document.getElementById("serverClock").textContent = state.serverTime || "--:--:--";
   document.getElementById("pName").textContent = p.name;
   document.getElementById("online").textContent = Object.keys(state.players).length;
+  document.getElementById("className").textContent = p.className;
   document.getElementById("level").textContent = p.level;
   document.getElementById("gold").textContent = p.gold;
+  document.getElementById("kills").textContent = p.kills;
 
   document.getElementById("hpText").textContent = `${Math.ceil(p.hp)}/${p.maxHp}`;
   document.getElementById("manaText").textContent = `${Math.ceil(p.mana)}/${p.maxMana}`;
@@ -681,6 +866,7 @@ function updateUI() {
   Object.entries(p.inventory).forEach(([item, amount]) => {
     const slot = document.createElement("div");
     slot.className = "slot";
+    slot.title = ITEM_INFO[item]?.name || item;
     slot.innerHTML = `${ITEM_INFO[item]?.icon || "?"}<span>${amount}</span>`;
     inv.appendChild(slot);
   });
@@ -692,7 +878,7 @@ function updateUI() {
     list.innerHTML = `<p class="small">Nenhum item anunciado.</p>`;
   }
 
-  state.market.slice(-8).reverse().forEach(m => {
+  state.market.slice().reverse().forEach(m => {
     const row = document.createElement("div");
     row.className = "marketRow";
     row.innerHTML = `
@@ -721,7 +907,7 @@ function loop() {
   if (noticeTimer > 0) {
     noticeTimer--;
   } else {
-    document.getElementById("notice").textContent = "WASD move • Espaço ataca • Drops automáticos • Mercado online";
+    document.getElementById("notice").textContent = "I inventário • L loja • M mercado • Espaço ataca • Base central segura";
   }
 
   draw();

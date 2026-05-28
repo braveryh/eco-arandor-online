@@ -2,7 +2,7 @@
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
-<title>Eco Arandor Online V10</title>
+<title>Eco Arandor Online V12</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <style>
@@ -29,33 +29,11 @@ button,input,select{border:none;outline:none;border-radius:10px;padding:9px}butt
 .modal{top:14px;width:340px;max-height:calc(100vh - 28px);padding:14px;overflow-y:auto;display:none}.modal.open{display:block}.modal h2{font-size:16px;color:#7ee787;margin-bottom:8px}
 #inventoryPanel{right:14px}#shopPanel{right:370px}#marketPanel{right:14px;top:355px}#statsPanel{left:340px;top:14px}#rankPanel{left:340px;top:355px}
 .itemGrid{display:grid;grid-template-columns:repeat(4,1fr);gap:7px}.slot{min-height:54px;background:#101722;border:1px solid rgba(255,255,255,.12);border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:24px;position:relative}.slot span{position:absolute;right:6px;bottom:4px;color:#ffd166;font-size:11px}
-.marketRow{background:#101722;border:1px solid rgba(255,255,255,.1);border-radius:10px;padding:8px;margin-bottom:7px;font-size:12px}.marketRow button{padding:6px;font-size:12px}
-.rankRow{background:#101722;border:1px solid rgba(255,255,255,.1);border-radius:10px;padding:8px;margin-bottom:6px;font-size:12px}
+.marketRow,.rankRow{background:#101722;border:1px solid rgba(255,255,255,.1);border-radius:10px;padding:8px;margin-bottom:7px;font-size:12px}.marketRow button{padding:6px;font-size:12px}
 .attrBtn{padding:5px 8px;font-size:12px;margin-top:0}
-.keyHelp{position:absolute;right:14px;bottom:14px;padding:12px;width:275px;font-size:12px;color:#c9d4e5}#serverClock{color:#ffd166;font-weight:bold}
-
-#confirmOverlay{
-  position:absolute;
-  inset:0;
-  background:rgba(0,0,0,.45);
-  display:none;
-  align-items:center;
-  justify-content:center;
-  z-index:40;
-}
-#confirmOverlay.open{display:flex}
-#confirmBox{
-  width:380px;
-  padding:22px;
-  background:rgba(9,13,20,.96);
-  border:1px solid rgba(255,255,255,.18);
-  border-radius:18px;
-  box-shadow:0 20px 80px rgba(0,0,0,.65);
-}
-#confirmBox h2{color:#ffd166;margin-bottom:8px}
-#confirmText{font-size:14px;color:#dbe4f0;line-height:1.4;margin-bottom:14px}
-.dangerBtn{background:linear-gradient(135deg,#ef476f,#ff8c42);color:white}
-
+.keyHelp{position:absolute;right:14px;bottom:14px;padding:12px;width:285px;font-size:12px;color:#c9d4e5}#serverClock{color:#ffd166;font-weight:bold}
+#confirmOverlay{position:absolute;inset:0;background:rgba(0,0,0,.45);display:none;align-items:center;justify-content:center;z-index:40}
+#confirmOverlay.open{display:flex}#confirmBox{width:380px;padding:22px;background:rgba(9,13,20,.96);border:1px solid rgba(255,255,255,.18);border-radius:18px;box-shadow:0 20px 80px rgba(0,0,0,.65)}#confirmBox h2{color:#ffd166;margin-bottom:8px}#confirmText{font-size:14px;color:#dbe4f0;line-height:1.4;margin-bottom:14px}.dangerBtn{background:linear-gradient(135deg,#ef476f,#ff8c42);color:white}
 @media(max-width:900px){.keyHelp{display:none}#chat{width:calc(100vw - 28px)}.modal{width:calc(100vw - 28px);left:14px!important;right:14px!important;top:14px!important}#menuCard{width:calc(100vw - 28px)}.classes{grid-template-columns:1fr}#bottomHud{width:calc(100vw - 28px)}}
 </style>
 </head>
@@ -66,12 +44,12 @@ button,input,select{border:none;outline:none;border-radius:10px;padding:9px}butt
 <div id="menu">
   <div id="menuCard">
     <h1>Eco Arandor Online</h1>
-    <p class="small">Mapa maior, mobs por nível e pontos de atributo ao subir de nível.</p><br>
+    <p class="small">Versão corrigida: mapa maior, biomas vivos, mobs sombrios e bosses.</p><br>
     <input id="nameInput" class="full" maxlength="16" placeholder="Nome do personagem">
     <div class="classes">
-      <div class="classCard selected" data-class="swordsman" onclick="selectClass('swordsman')"><h3>⚔️ Espadachim</h3><p class="small">Mais vida. Escala com ATK e Vigor.</p></div>
+      <div class="classCard selected" data-class="swordsman" onclick="selectClass('swordsman')"><h3>⚔️ Espadachim</h3><p class="small">Curto alcance. Escala com ATK e Vigor.</p></div>
       <div class="classCard" data-class="archer" onclick="selectClass('archer')"><h3>🏹 Arqueiro</h3><p class="small">Longo alcance. Escala com Destreza.</p></div>
-      <div class="classCard" data-class="mage" onclick="selectClass('mage')"><h3>🔮 Mago</h3><p class="small">Magia. Escala com Inteligência.</p></div>
+      <div class="classCard" data-class="mage" onclick="selectClass('mage')"><h3>🔮 Mago</h3><p class="small">Magia longa. Escala com Inteligência.</p></div>
     </div>
     <button class="full" onclick="enterGame()">Entrar no jogo</button>
     <p class="small" style="margin-top:12px">WASD • Espaço • I inventário • L loja • M mercado • H atributos • R ranking</p>
@@ -91,7 +69,6 @@ button,input,select{border:none;outline:none;border-radius:10px;padding:9px}butt
   </div>
 </div>
 
-
 <div id="topHud" class="panel">
   <h1>Eco Arandor</h1>
   <p class="small">Servidor: <span id="serverClock">--:--:--</span></p>
@@ -109,29 +86,10 @@ button,input,select{border:none;outline:none;border-radius:10px;padding:9px}butt
 </div>
 
 <div id="inventoryPanel" class="panel modal"><h2>🎒 Inventário</h2><p class="small">I para abrir/fechar.</p><br><div id="inventory" class="itemGrid"></div><h2 style="margin-top:14px">Nome</h2><input id="renameInput" class="full" maxlength="16" placeholder="Novo nome"><button class="full" onclick="renamePlayer()">Mudar nome</button></div>
-
 <div id="shopPanel" class="panel modal"><h2>🏪 Loja NPC</h2><p class="small">Fique perto da Lia. Cada poção custa 15 ouro.</p><br><button class="full" onclick="buyNpcPotion('hp')">Comprar Poção de Vida - 15 ouro</button><button class="full" onclick="buyNpcPotion('mana')">Comprar Poção de Mana - 15 ouro</button></div>
-
-<div id="marketPanel" class="panel modal">
-  <h2>📦 Mercado Local</h2>
-  <p class="small">Ao clicar comprar, aparece confirmação.</p><br>
-  <div class="grid2"><select id="sellItem"><option value="herb">Erva</option><option value="crystal">Cristal</option><option value="fang">Presa</option><option value="potion">Poção Vida</option><option value="manaPotion">Poção Mana</option></select><input id="sellAmount" type="number" value="1" min="1"></div>
-  <input id="sellPrice" class="full" type="number" value="20" min="1" style="margin-top:7px">
-  <button class="full" onclick="sellMarket()">Colocar à venda</button><br><br>
-  <div id="marketList"></div>
-</div>
-
-<div id="statsPanel" class="panel modal">
-  <h2>📊 Atributos</h2>
-  <p class="small">H para abrir. Distribua pontos ganhos por nível.</p><br>
-  <div id="statsList"></div>
-</div>
-
-<div id="rankPanel" class="panel modal">
-  <h2>🏆 Ranking de Level</h2>
-  <p class="small">R para abrir/fechar.</p><br>
-  <div id="rankList"></div>
-</div>
+<div id="marketPanel" class="panel modal"><h2>📦 Mercado Local</h2><p class="small">M para abrir. Compra com confirmação.</p><br><div class="grid2"><select id="sellItem"><option value="herb">Erva</option><option value="crystal">Cristal</option><option value="fang">Presa</option><option value="potion">Poção Vida</option><option value="manaPotion">Poção Mana</option></select><input id="sellAmount" type="number" value="1" min="1"></div><input id="sellPrice" class="full" type="number" value="20" min="1" style="margin-top:7px"><button class="full" onclick="sellMarket()">Colocar à venda</button><br><br><div id="marketList"></div></div>
+<div id="statsPanel" class="panel modal"><h2>📊 Atributos</h2><p class="small">H para abrir. Distribua pontos ganhos por nível.</p><br><div id="statsList"></div></div>
+<div id="rankPanel" class="panel modal"><h2>🏆 Ranking de Level</h2><p class="small">R para abrir/fechar.</p><br><div id="rankList"></div></div>
 
 <div id="chat" class="panel">
   <div class="chatTabs"><button id="tabGlobal" class="tab active" onclick="setChatTab('global')">Global</button><button id="tabActions" class="tab" onclick="setChatTab('actions')">Ações Privadas</button></div>
@@ -139,136 +97,325 @@ button,input,select{border:none;outline:none;border-radius:10px;padding:9px}butt
   <input id="chatInput" class="full" placeholder="Digite no chat global e aperte Enter">
 </div>
 
-<div class="panel keyHelp"><b>Atalhos</b><br>WASD: mover<br>Espaço: atacar<br>I: inventário<br>L: loja NPC<br>M: mercado<br>H: atributos<br>R: ranking<br>Mobs longe do spawn são mais fortes.</div>
+<div class="panel keyHelp"><b>Atalhos</b><br>WASD: mover<br>Espaço: atacar<br>I: inventário<br>L: loja NPC<br>M: mercado<br>H: atributos<br>R: ranking<br>Chat privado mostra ouro/XP ganho.</div>
 
 <script src="/socket.io/socket.io.js"></script>
 <script>
-const socket=io(),canvas=document.getElementById("game"),ctx=canvas.getContext("2d");
-let W=canvas.width=innerWidth,H=canvas.height=innerHeight;
-addEventListener("resize",()=>{W=canvas.width=innerWidth;H=canvas.height=innerHeight});
-const keys={},renderPlayers={};
-let state={players:{},enemies:[],drops:[],market:[],ranking:[],world:{width:4200,height:3200,safeZone:{x:1820,y:1340,w:560,h:420},npcShop:{x:2100,y:1550,name:"Lia, Mercadora"}},serverTime:"--:--:--"};
-let joined=false,myId=null,noticeTimer=0,chosenClass="swordsman",effects=[],floatTexts=[],chatTab="global",globalMessages=[],actionMessages=[];
-const ITEM_INFO={herb:{name:"Erva",icon:"🌿"},crystal:{name:"Cristal",icon:"💎"},fang:{name:"Presa",icon:"🦷"},potion:{name:"Poção de Vida",icon:"🧪"},manaPotion:{name:"Poção de Mana",icon:"🔷"}};
-const decor={trees:[],rocks:[],flowers:[],lakes:[]};
+const socket=io();
+const canvas=document.getElementById("game");
+const ctx=canvas.getContext("2d");
+let W=canvas.width=innerWidth;
+let H=canvas.height=innerHeight;
+
+addEventListener("resize",()=>{
+  W=canvas.width=innerWidth;
+  H=canvas.height=innerHeight;
+});
+
+const keys={};
+const renderPlayers={};
+const ITEM_INFO={
+  herb:{name:"Erva",icon:"🌿"},
+  crystal:{name:"Cristal",icon:"💎"},
+  fang:{name:"Presa",icon:"🦷"},
+  potion:{name:"Poção de Vida",icon:"🧪"},
+  manaPotion:{name:"Poção de Mana",icon:"🔷"}
+};
+
+let state={
+  players:{},
+  enemies:[],
+  drops:[],
+  market:[],
+  ranking:[],
+  world:{
+    width:6200,
+    height:4600,
+    safeZone:{x:2800,y:2000,w:620,h:460},
+    npcShop:{x:3110,y:2250,name:"Lia, Mercadora"},
+    biomes:[]
+  },
+  serverTime:"--:--:--"
+};
+
+let joined=false;
+let myId=null;
+let noticeTimer=0;
+let chosenClass="swordsman";
+let effects=[];
+let floatTexts=[];
+let chatTab="global";
+let globalMessages=[];
+let actionMessages=[];
+let pendingMarketBuy=null;
+
+const decor={trees:[],rocks:[],flowers:[],lakes:[],bones:[],crystals:[],lava:[]};
 
 function createDecor(){
-  decor.trees=[];
-  decor.rocks=[];
-  decor.flowers=[];
-  decor.lakes=[];
-
-  for(let i=0;i<720;i++)decor.trees.push({x:Math.random()*7600,y:Math.random()*5600,s:22+Math.random()*30,rot:Math.random()*6.28});
-  for(let i=0;i<420;i++)decor.rocks.push({x:Math.random()*7600,y:Math.random()*5600,s:8+Math.random()*20,rot:Math.random()*6.28});
-  for(let i=0;i<1600;i++)decor.flowers.push({x:Math.random()*7600,y:Math.random()*5600,c:Math.random()>.5?"#fff3b0":"#ffd166",s:2+Math.random()*3});
-
-  decor.lakes.push({x:520,y:620,w:520,h:300});
-  decor.lakes.push({x:6150,y:760,w:480,h:280});
-  decor.lakes.push({x:820,y:4470,w:440,h:240});
-  decor.lakes.push({x:6100,y:4200,w:500,h:300});
-  decor.lakes.push({x:3440,y:1180,w:390,h:230});
+  for(let i=0;i<680;i++)decor.trees.push({x:Math.random()*6200,y:Math.random()*4600,s:22+Math.random()*30,rot:Math.random()*6.28});
+  for(let i=0;i<360;i++)decor.rocks.push({x:Math.random()*6200,y:Math.random()*4600,s:8+Math.random()*20,rot:Math.random()*6.28});
+  for(let i=0;i<1400;i++)decor.flowers.push({x:Math.random()*6200,y:Math.random()*4600,c:Math.random()>.5?"#fff3b0":"#ffd166",s:2+Math.random()*3});
+  for(let i=0;i<80;i++)decor.bones.push({x:Math.random()*6200,y:Math.random()*4600});
+  for(let i=0;i<90;i++)decor.crystals.push({x:Math.random()*6200,y:Math.random()*4600});
+  for(let i=0;i<70;i++)decor.lava.push({x:Math.random()*6200,y:Math.random()*4600});
+  decor.lakes.push({x:520,y:620,w:440,h:250});
+  decor.lakes.push({x:4920,y:760,w:390,h:240});
+  decor.lakes.push({x:610,y:3660,w:420,h:230});
+  decor.lakes.push({x:4880,y:3570,w:440,h:250});
 }
 createDecor();
 
-function selectClass(id){chosenClass=id;document.querySelectorAll(".classCard").forEach(c=>c.classList.remove("selected"));document.querySelector(`[data-class="${id}"]`).classList.add("selected")}
-function enterGame(){const name=document.getElementById("nameInput").value.trim()||localStorage.getItem("ecoName")||"Aventureiro";localStorage.setItem("ecoName",name);localStorage.setItem("ecoClass",chosenClass);document.getElementById("menu").style.display="none";socket.emit("join",{name,classId:chosenClass});joined=true}
-document.getElementById("nameInput").value=localStorage.getItem("ecoName")||"";chosenClass=localStorage.getItem("ecoClass")||"swordsman";selectClass(chosenClass);
+function selectClass(id){
+  chosenClass=id;
+  document.querySelectorAll(".classCard").forEach(c=>c.classList.remove("selected"));
+  document.querySelector(`[data-class="${id}"]`).classList.add("selected");
+}
 
-socket.on("connect",()=>{myId=socket.id;showNotice("Conectado ao servidor.")});
-socket.on("state",s=>{state=s;for(const id in state.players){if(!renderPlayers[id])renderPlayers[id]={...state.players[id]}}for(const id in renderPlayers){if(!state.players[id])delete renderPlayers[id]}updateUI()});
-socket.on("chat",msg=>{globalMessages.push(msg);if(globalMessages.length>80)globalMessages.shift();renderChat()});
-socket.on("actionLog",msg=>{actionMessages.push(msg);if(actionMessages.length>100)actionMessages.shift();renderChat()});
+function enterGame(){
+  const name=document.getElementById("nameInput").value.trim()||localStorage.getItem("ecoName")||"Aventureiro";
+  localStorage.setItem("ecoName",name);
+  localStorage.setItem("ecoClass",chosenClass);
+  document.getElementById("menu").style.display="none";
+  socket.emit("join",{name,classId:chosenClass});
+  joined=true;
+}
+
+document.getElementById("nameInput").value=localStorage.getItem("ecoName")||"";
+chosenClass=localStorage.getItem("ecoClass")||"swordsman";
+selectClass(chosenClass);
+
+socket.on("connect",()=>{
+  myId=socket.id;
+  showNotice("Conectado ao servidor.");
+});
+
+socket.on("state",s=>{
+  state=s;
+  for(const id in state.players){
+    if(!renderPlayers[id])renderPlayers[id]={...state.players[id]};
+  }
+  for(const id in renderPlayers){
+    if(!state.players[id])delete renderPlayers[id];
+  }
+  updateUI();
+});
+
+socket.on("chat",msg=>{
+  globalMessages.push(msg);
+  if(globalMessages.length>80)globalMessages.shift();
+  renderChat();
+});
+
+socket.on("actionLog",msg=>{
+  actionMessages.push(msg);
+  if(actionMessages.length>100)actionMessages.shift();
+  renderChat();
+});
+
 socket.on("notice",showNotice);
-socket.on("attackEffect",e=>{effects.push({...e,life:14});floatTexts.push({x:e.to.x,y:e.to.y-30,text:String(e.damage),life:44,color:e.classId==="mage"?"#b388ff":e.classId==="archer"?"#ffd166":"#ffffff"})});
-socket.on("damageTaken",e=>{floatTexts.push({x:e.x,y:e.y,text:"-"+e.damage,life:44,color:"#ff4d6d"})});
 
-function setChatTab(tab){chatTab=tab;document.getElementById("tabGlobal").classList.toggle("active",tab==="global");document.getElementById("tabActions").classList.toggle("active",tab==="actions");document.getElementById("chatInput").style.display=tab==="global"?"block":"none";renderChat()}
-function renderChat(){const box=document.getElementById("messages");box.innerHTML="";const arr=chatTab==="global"?globalMessages:actionMessages;arr.slice(-45).forEach(msg=>{const div=document.createElement("div");div.textContent=msg;box.appendChild(div)});box.scrollTop=box.scrollHeight}
-function showNotice(text){document.getElementById("notice").textContent=text;noticeTimer=180}
+socket.on("attackEffect",e=>{
+  effects.push({...e,life:14});
+  floatTexts.push({x:e.to.x,y:e.to.y-30,text:String(e.damage),life:44,color:e.classId==="mage"?"#b388ff":e.classId==="archer"?"#ffd166":"#ffffff"});
+});
 
-document.addEventListener("keydown",e=>{const tag=document.activeElement.tagName,focusedChat=document.activeElement.id==="chatInput";if(focusedChat)return;if(e.key.toLowerCase()==="i")togglePanel("inventoryPanel");if(e.key.toLowerCase()==="l")togglePanel("shopPanel");if(e.key.toLowerCase()==="m")togglePanel("marketPanel");if(e.key.toLowerCase()==="h")togglePanel("statsPanel");if(e.key.toLowerCase()==="r")togglePanel("rankPanel");if(tag==="INPUT"||tag==="SELECT"||tag==="BUTTON")return;keys[e.key.toLowerCase()]=true;if(e.code==="Space")socket.emit("attack")});
-document.addEventListener("keyup",e=>{keys[e.key.toLowerCase()]=false});
-document.getElementById("chatInput").addEventListener("keydown",e=>{if(e.key==="Enter"){const v=e.target.value.trim();if(v)socket.emit("chat",v);e.target.value="";e.target.blur()}});
-function togglePanel(id){document.getElementById(id).classList.toggle("open")}
-setInterval(()=>{if(!joined)return;socket.emit("input",{up:!!keys["w"]||!!keys["arrowup"],down:!!keys["s"]||!!keys["arrowdown"],left:!!keys["a"]||!!keys["arrowleft"],right:!!keys["d"]||!!keys["arrowright"]})},1000/30);
+socket.on("damageTaken",e=>{
+  floatTexts.push({x:e.x,y:e.y,text:"-"+e.damage,life:44,color:"#ff4d6d"});
+});
 
-function usePotion(type){socket.emit("usePotion",type)}
-function buyNpcPotion(type){socket.emit("buyNpcPotion",type)}
-function addStat(stat){socket.emit("addStat",stat)}
-function renamePlayer(){const name=document.getElementById("renameInput").value.trim();if(!name)return;localStorage.setItem("ecoName",name);socket.emit("rename",name);showNotice("Nome alterado.")}
-function sellMarket(){socket.emit("marketSell",{item:document.getElementById("sellItem").value,amount:Number(document.getElementById("sellAmount").value),price:Number(document.getElementById("sellPrice").value)})}
-let pendingMarketBuy=null;
+function setChatTab(tab){
+  chatTab=tab;
+  document.getElementById("tabGlobal").classList.toggle("active",tab==="global");
+  document.getElementById("tabActions").classList.toggle("active",tab==="actions");
+  document.getElementById("chatInput").style.display=tab==="global"?"block":"none";
+  renderChat();
+}
 
-function confirmBuyMarket(id, itemName, amount, price, seller){
-  pendingMarketBuy={id:Number(id), itemName, amount, price, seller};
-  document.getElementById("confirmText").textContent =
-    `Deseja comprar ${amount}x ${itemName} de ${seller} por ${price} ouro?`;
+function renderChat(){
+  const box=document.getElementById("messages");
+  box.innerHTML="";
+  const arr=chatTab==="global"?globalMessages:actionMessages;
+  arr.slice(-45).forEach(msg=>{
+    const div=document.createElement("div");
+    div.textContent=msg;
+    box.appendChild(div);
+  });
+  box.scrollTop=box.scrollHeight;
+}
+
+function showNotice(text){
+  document.getElementById("notice").textContent=text;
+  noticeTimer=180;
+}
+
+document.addEventListener("keydown",e=>{
+  const tag=document.activeElement.tagName;
+  const focusedChat=document.activeElement.id==="chatInput";
+
+  if(focusedChat)return;
+
+  const key=e.key.toLowerCase();
+
+  if(key==="i")togglePanel("inventoryPanel");
+  if(key==="l")togglePanel("shopPanel");
+  if(key==="m")togglePanel("marketPanel");
+  if(key==="h")togglePanel("statsPanel");
+  if(key==="r")togglePanel("rankPanel");
+
+  if(tag==="INPUT"||tag==="SELECT"||tag==="BUTTON")return;
+
+  keys[key]=true;
+
+  if(e.code==="Space")socket.emit("attack");
+});
+
+document.addEventListener("keyup",e=>{
+  keys[e.key.toLowerCase()]=false;
+});
+
+document.getElementById("chatInput").addEventListener("keydown",e=>{
+  if(e.key==="Enter"){
+    const v=e.target.value.trim();
+    if(v)socket.emit("chat",v);
+    e.target.value="";
+    e.target.blur();
+  }
+});
+
+document.getElementById("confirmYes").addEventListener("mousedown",e=>{
+  e.preventDefault();
+  e.stopPropagation();
+  if(pendingMarketBuy){
+    socket.emit("marketBuy",Number(pendingMarketBuy.id));
+    showNotice("Solicitação de compra enviada...");
+  }
+  pendingMarketBuy=null;
+  document.getElementById("confirmOverlay").classList.remove("open");
+});
+
+document.getElementById("confirmNo").addEventListener("mousedown",e=>{
+  e.preventDefault();
+  e.stopPropagation();
+  pendingMarketBuy=null;
+  document.getElementById("confirmOverlay").classList.remove("open");
+});
+
+function togglePanel(id){
+  document.getElementById(id).classList.toggle("open");
+}
+
+setInterval(()=>{
+  if(!joined)return;
+  socket.emit("input",{
+    up:!!keys["w"]||!!keys["arrowup"],
+    down:!!keys["s"]||!!keys["arrowdown"],
+    left:!!keys["a"]||!!keys["arrowleft"],
+    right:!!keys["d"]||!!keys["arrowright"]
+  });
+},1000/30);
+
+function usePotion(type){socket.emit("usePotion",type);}
+function buyNpcPotion(type){socket.emit("buyNpcPotion",type);}
+function addStat(stat){socket.emit("addStat",stat);showNotice("Adicionando atributo...");}
+
+function renamePlayer(){
+  const name=document.getElementById("renameInput").value.trim();
+  if(!name)return;
+  localStorage.setItem("ecoName",name);
+  socket.emit("rename",name);
+  showNotice("Nome alterado.");
+}
+
+function sellMarket(){
+  socket.emit("marketSell",{
+    item:document.getElementById("sellItem").value,
+    amount:Number(document.getElementById("sellAmount").value),
+    price:Number(document.getElementById("sellPrice").value)
+  });
+}
+
+function confirmBuyMarket(id,itemName,amount,price,seller){
+  pendingMarketBuy={id:Number(id)};
+  document.getElementById("confirmText").textContent=`Deseja comprar ${amount}x ${itemName} de ${seller} por ${price} ouro?`;
   document.getElementById("confirmOverlay").classList.add("open");
 }
 
-document.getElementById("confirmYes").addEventListener("mousedown", e=>{
-  e.preventDefault();
-  e.stopPropagation();
+function me(){return state.players[myId];}
 
-  if(pendingMarketBuy){
-    socket.emit("marketBuy", Number(pendingMarketBuy.id));
-    showNotice("Solicitação de compra enviada...");
-  }
+function camera(){
+  const p=renderPlayers[myId]||me()||{x:3110,y:2250};
+  return{x:p.x-W/2,y:p.y-H/2};
+}
 
-  pendingMarketBuy=null;
-  document.getElementById("confirmOverlay").classList.remove("open");
-});
-
-document.getElementById("confirmNo").addEventListener("mousedown", e=>{
-  e.preventDefault();
-  e.stopPropagation();
-  pendingMarketBuy=null;
-  document.getElementById("confirmOverlay").classList.remove("open");
-});
-function me(){return state.players[myId]}function camera(){const p=renderPlayers[myId]||me()||{x:3800,y:2780};return{x:p.x-W/2,y:p.y-H/2}}function screen(x,y){const c=camera();return{x:x-c.x,y:y-c.y}}
-
+function screen(x,y){
+  const c=camera();
+  return{x:x-c.x,y:y-c.y};
+}
 
 function biomeAtClient(x,y){
   const biomes=state.world.biomes||[];
   for(const b of biomes){
-    if(x>=b.x && x<=b.x+b.w && y>=b.y && y<=b.y+b.h)return b.id;
+    if(x>=b.x&&x<=b.x+b.w&&y>=b.y&&y<=b.y+b.h)return b.id;
   }
   return "meadow";
 }
 
 function biomePalette(id){
-  if(id==="swamp")return {a:"#315b34",b:"#26492c",dot:"#68835a",soil:"#203b27"};
-  if(id==="desert")return {a:"#b9823a",b:"#c69048",dot:"#d9a85b",soil:"#8f6130"};
-  if(id==="ice")return {a:"#87c9d8",b:"#9bdde8",dot:"#e8fbff",soil:"#6097a6"};
-  if(id==="base")return {a:"#3b5f45",b:"#456b4f",dot:"#ffd166",soil:"#2e4637"};
-  return {a:"#28763b",b:"#236d35",dot:"#7ee787",soil:"#1f5f31"};
+  if(id==="forest")return{a:"#276f38",b:"#1f5f31",c:"#7ee787",soil:"#173e23"};
+  if(id==="ruins")return{a:"#3a3345",b:"#2b2635",c:"#8f5bff",soil:"#1c1824"};
+  if(id==="swamp")return{a:"#283f2d",b:"#203424",c:"#5f7c45",soil:"#17251c"};
+  if(id==="desert")return{a:"#a66f32",b:"#bd8742",c:"#d9a85b",soil:"#744720"};
+  if(id==="volcanic")return{a:"#40251f",b:"#592b21",c:"#ff6b35",soil:"#1e1210"};
+  if(id==="ice")return{a:"#73b7c9",b:"#9bdde8",c:"#e8fbff",soil:"#4d8797"};
+  if(id==="base")return{a:"#3b5f45",b:"#456b4f",c:"#ffd166",soil:"#2e4637"};
+  return{a:"#315f37",b:"#2b5733",c:"#6fbf73",soil:"#24462a"};
 }
 
-function drawBiomeTextureCell(x,y,w,h,id){
+function drawBiomeTile(x,y,w,h,id,wx,wy){
   const pal=biomePalette(id);
-  ctx.fillStyle=((x+y)/64)%2===0?pal.a:pal.b;
+  ctx.fillStyle=((Math.floor(wx/64)+Math.floor(wy/64))%2===0)?pal.a:pal.b;
   ctx.fillRect(x,y,w,h);
 
+  ctx.globalAlpha=.18;
   ctx.fillStyle=pal.soil;
   for(let i=0;i<3;i++){
-    const px=x+((x*13+y*7+i*19)%60);
-    const py=y+((x*5+y*11+i*23)%60);
-    ctx.globalAlpha=0.22;
+    const seed=wx*12.9+wy*78.2+i*43.7;
+    const px=x+Math.abs(Math.sin(seed))*w;
+    const py=y+Math.abs(Math.cos(seed))*h;
     ctx.beginPath();
-    ctx.ellipse(px,py,12+i*4,4+i,0,0,Math.PI*2);
+    ctx.ellipse(px,py,12+i*5,4+i*2,Math.sin(seed),0,Math.PI*2);
     ctx.fill();
-    ctx.globalAlpha=1;
   }
+  ctx.globalAlpha=1;
 
-  ctx.fillStyle=pal.dot;
-  ctx.globalAlpha=0.22;
-  ctx.fillRect(x+10+(x+y)%30,y+12,3,3);
-  ctx.fillRect(x+36,y+34+(x*y)%20,2,2);
+  ctx.globalAlpha=.25;
+  ctx.fillStyle=pal.c;
+  const px=x+12+Math.abs(Math.sin(wx+wy))*42;
+  const py=y+10+Math.abs(Math.cos(wx-wy))*42;
+
+  if(id==="desert"){
+    ctx.fillRect(px,py,20,2);
+    ctx.fillRect(px+6,py+8,24,2);
+  }else if(id==="ice"){
+    ctx.beginPath();ctx.moveTo(px,py);ctx.lineTo(px+10,py+18);ctx.lineTo(px-8,py+16);ctx.closePath();ctx.fill();
+  }else if(id==="ruins"){
+    ctx.fillRect(px,py,16,10);
+  }else if(id==="volcanic"){
+    ctx.fillStyle="#ff3d2e";ctx.fillRect(px,py,24,3);
+    ctx.fillStyle="#ff9f1c";ctx.fillRect(px+4,py+1,10,2);
+  }else{
+    ctx.fillRect(px,py,4,4);
+    ctx.fillRect(px+12,py+9,3,3);
+  }
   ctx.globalAlpha=1;
 }
 
 function drawGround(){
-  const c=camera(),tile=64,startX=Math.floor(c.x/tile)*tile,startY=Math.floor(c.y/tile)*tile;
+  const c=camera();
+  const tile=64;
+  const startX=Math.floor(c.x/tile)*tile;
+  const startY=Math.floor(c.y/tile)*tile;
+
   ctx.fillStyle="#226b36";
   ctx.fillRect(0,0,W,H);
 
@@ -276,78 +423,160 @@ function drawGround(){
     for(let y=startY;y<c.y+H+tile;y+=tile){
       const p=screen(x,y);
       const biome=biomeAtClient(x+tile/2,y+tile/2);
-      drawBiomeTextureCell(p.x,p.y,tile,tile,biome,x,y);
+      drawBiomeTile(p.x,p.y,tile,tile,biome,x,y);
     }
   }
 
-  drawBiomeLabels();
+  const biomes=state.world.biomes||[];
+  biomes.forEach(b=>{
+    if(b.id==="base")return;
+    const p=screen(b.x,b.y);
+    if(p.x>W||p.y>H||p.x+b.w<0||p.y+b.h<0)return;
+    ctx.strokeStyle="rgba(255,255,255,.14)";
+    ctx.lineWidth=2;
+    ctx.strokeRect(p.x,p.y,b.w,b.h);
+    ctx.lineWidth=1;
+    ctx.fillStyle="rgba(0,0,0,.45)";
+    roundRect(p.x+12,p.y+12,210,34,10);
+    ctx.fill();
+    ctx.fillStyle="#ffd166";
+    ctx.font="16px Arial";
+    ctx.fillText(b.name,p.x+25,p.y+35);
+  });
 }
-function drawSafeZone(){const z=state.world.safeZone,p=screen(z.x,z.y);ctx.fillStyle="rgba(255,209,102,.16)";roundRect(p.x,p.y,z.w,z.h,34);ctx.fill();ctx.strokeStyle="rgba(255,209,102,.65)";ctx.lineWidth=3;roundRect(p.x,p.y,z.w,z.h,34);ctx.stroke();ctx.lineWidth=1;ctx.fillStyle="rgba(15,18,25,.85)";roundRect(p.x+80,p.y+80,z.w-160,z.h-160,22);ctx.fill();ctx.fillStyle="#ffd166";ctx.font="18px Arial";ctx.textAlign="center";ctx.fillText("BASE SEGURA",p.x+z.w/2,p.y+58);ctx.textAlign="left"}
-function drawNpc(){const n=state.world.npcShop,p=screen(n.x,n.y);ctx.fillStyle="rgba(0,0,0,.3)";ctx.beginPath();ctx.ellipse(p.x,p.y+28,22,8,0,0,Math.PI*2);ctx.fill();ctx.fillStyle="#ffd166";ctx.fillRect(p.x-14,p.y-25,28,44);ctx.fillStyle="#f4bf77";ctx.fillRect(p.x-11,p.y-43,22,20);ctx.fillStyle="#111";ctx.fillText("🛒",p.x-12,p.y-50);ctx.fillStyle="#fff";ctx.font="13px Arial";ctx.textAlign="center";ctx.fillText(n.name,p.x,p.y-62);ctx.fillText("Poções 15 ouro",p.x,p.y+42);ctx.textAlign="left"}
-function drawLake(l){const p=screen(l.x,l.y);ctx.fillStyle="#1f6fb2";roundRect(p.x,p.y,l.w,l.h,48);ctx.fill();ctx.fillStyle="rgba(255,255,255,.13)";roundRect(p.x+35,p.y+35,l.w-70,22,16);ctx.fill()}
+
+function drawSafeZone(){
+  const z=state.world.safeZone;
+  const p=screen(z.x,z.y);
+  ctx.fillStyle="rgba(255,209,102,.16)";
+  roundRect(p.x,p.y,z.w,z.h,34);
+  ctx.fill();
+  ctx.strokeStyle="rgba(255,209,102,.65)";
+  ctx.lineWidth=3;
+  roundRect(p.x,p.y,z.w,z.h,34);
+  ctx.stroke();
+  ctx.lineWidth=1;
+  ctx.fillStyle="rgba(15,18,25,.85)";
+  roundRect(p.x+85,p.y+85,z.w-170,z.h-170,22);
+  ctx.fill();
+  ctx.fillStyle="#ffd166";
+  ctx.font="18px Arial";
+  ctx.textAlign="center";
+  ctx.fillText("BASE SEGURA",p.x+z.w/2,p.y+58);
+  ctx.textAlign="left";
+}
+
+function drawNpc(){
+  const n=state.world.npcShop;
+  const p=screen(n.x,n.y);
+  ctx.fillStyle="rgba(0,0,0,.3)";
+  ctx.beginPath();ctx.ellipse(p.x,p.y+28,22,8,0,0,Math.PI*2);ctx.fill();
+  ctx.fillStyle="#ffd166";ctx.fillRect(p.x-14,p.y-25,28,44);
+  ctx.fillStyle="#f4bf77";ctx.fillRect(p.x-11,p.y-43,22,20);
+  ctx.fillStyle="#111";ctx.fillText("🛒",p.x-12,p.y-50);
+  ctx.fillStyle="#fff";ctx.font="13px Arial";ctx.textAlign="center";
+  ctx.fillText(n.name,p.x,p.y-62);
+  ctx.fillText("Poções 15 ouro",p.x,p.y+42);
+  ctx.textAlign="left";
+}
+
+function drawLake(l){
+  const p=screen(l.x,l.y);
+  if(p.x>W||p.y>H||p.x+l.w<0||p.y+l.h<0)return;
+  ctx.fillStyle="#1f6fb2";
+  roundRect(p.x,p.y,l.w,l.h,48);
+  ctx.fill();
+  ctx.fillStyle="rgba(255,255,255,.13)";
+  roundRect(p.x+35,p.y+35,l.w-70,22,16);
+  ctx.fill();
+}
+
 function drawTree(t){
   const p=screen(t.x,t.y);
   if(p.x<-100||p.y<-100||p.x>W+100||p.y>H+100)return;
+
   const biome=biomeAtClient(t.x,t.y);
-  let trunk="#5a361d", leaf="#115c2b", leaf2="#1f7a3b";
-  if(biome==="swamp"){trunk="#3b2f22";leaf="#31522f";leaf2="#486b3f"}
-  if(biome==="desert"){trunk="#8a5b2f";leaf="#b58b3f";leaf2="#d0aa50"}
-  if(biome==="ice"){trunk="#6a7d83";leaf="#c8f4ff";leaf2="#9ee5ff"}
-  if(biome==="ruins"){trunk="#2c2535";leaf="#5f3ca0";leaf2="#8f5bff"}
-  if(biome==="volcanic"){trunk="#241615";leaf="#763024";leaf2="#ff4a2d"}
+  let trunk="#5a361d",leaf="#115c2b",leaf2="#1f7a3b";
+  if(biome==="swamp"){trunk="#3b2f22";leaf="#31522f";leaf2="#486b3f";}
+  if(biome==="desert"){trunk="#8a5b2f";leaf="#b58b3f";leaf2="#d0aa50";}
+  if(biome==="ice"){trunk="#6a7d83";leaf="#c8f4ff";leaf2="#9ee5ff";}
+  if(biome==="ruins"){trunk="#2c2535";leaf="#5f3ca0";leaf2="#8f5bff";}
+  if(biome==="volcanic"){trunk="#241615";leaf="#763024";leaf2="#ff4a2d";}
 
   ctx.fillStyle="rgba(0,0,0,.28)";
   ctx.beginPath();ctx.ellipse(p.x,p.y+t.s*.72,t.s*.85,t.s*.28,0,0,Math.PI*2);ctx.fill();
 
-  ctx.save();
-  ctx.translate(p.x,p.y);
-  ctx.rotate((t.rot||0)*0.05);
-
   if(biome==="desert"){
-    ctx.fillStyle=trunk;
-    ctx.fillRect(-5,-4,10,t.s*1.05);
-    ctx.fillStyle=leaf2;
-    ctx.fillRect(-18,-14,36,10);
-    ctx.fillRect(-8,-28,16,40);
+    ctx.fillStyle=trunk;ctx.fillRect(p.x-5,p.y-4,10,t.s*1.05);
+    ctx.fillStyle=leaf2;ctx.fillRect(p.x-18,p.y-14,36,10);ctx.fillRect(p.x-8,p.y-28,16,40);
   }else{
-    ctx.fillStyle=trunk;
-    ctx.fillRect(-6,0,12,t.s);
-    ctx.fillStyle=leaf;
-    ctx.beginPath();ctx.arc(0,-7,t.s,0,Math.PI*2);ctx.fill();
-    ctx.fillStyle=leaf2;
-    ctx.beginPath();ctx.arc(-t.s*.32,-t.s*.35,t.s*.55,0,Math.PI*2);ctx.fill();
-    ctx.fillStyle="rgba(255,255,255,.12)";
-    ctx.beginPath();ctx.arc(-t.s*.22,-t.s*.55,t.s*.28,0,Math.PI*2);ctx.fill();
+    ctx.fillStyle=trunk;ctx.fillRect(p.x-6,p.y,12,t.s);
+    ctx.fillStyle=leaf;ctx.beginPath();ctx.arc(p.x,p.y-7,t.s,0,Math.PI*2);ctx.fill();
+    ctx.fillStyle=leaf2;ctx.beginPath();ctx.arc(p.x-t.s*.32,p.y-t.s*.35,t.s*.55,0,Math.PI*2);ctx.fill();
   }
-  ctx.restore();
 }
+
 function drawRock(r){
   const p=screen(r.x,r.y);
   if(p.x<-80||p.y<-80||p.x>W+80||p.y>H+80)return;
+
   const biome=biomeAtClient(r.x,r.y);
-  let base="#747a7f", hi="#9aa0a6";
-  if(biome==="desert"){base="#9b7042";hi="#c09154"}
-  if(biome==="ice"){base="#9bd6e4";hi="#e8fbff"}
-  if(biome==="swamp"){base="#465443";hi="#6e7d64"}
-  if(biome==="ruins"){base="#4d445a";hi="#8f5bff"}
-  if(biome==="volcanic"){base="#23191a";hi="#ff6b35"}
+  let base="#747a7f",hi="#9aa0a6";
+  if(biome==="desert"){base="#9b7042";hi="#c09154";}
+  if(biome==="ice"){base="#9bd6e4";hi="#e8fbff";}
+  if(biome==="swamp"){base="#465443";hi="#6e7d64";}
+  if(biome==="ruins"){base="#4d445a";hi="#8f5bff";}
+  if(biome==="volcanic"){base="#23191a";hi="#ff6b35";}
 
   const s=r.s||14;
   ctx.fillStyle="rgba(0,0,0,.28)";
   ctx.beginPath();ctx.ellipse(p.x,p.y+6,s+7,5,0,0,Math.PI*2);ctx.fill();
-
-  ctx.save();
-  ctx.translate(p.x,p.y);ctx.rotate(r.rot||0);
-  ctx.fillStyle=base;
-  ctx.beginPath();ctx.ellipse(0,0,s+6,s*.75,0,0,Math.PI*2);ctx.fill();
-  ctx.fillStyle=hi;
-  ctx.beginPath();ctx.ellipse(-s*.35,-s*.22,s*.35,s*.16,0,0,Math.PI*2);ctx.fill();
-  ctx.restore();
+  ctx.fillStyle=base;ctx.beginPath();ctx.ellipse(p.x,p.y,s+6,s*.75,0,0,Math.PI*2);ctx.fill();
+  ctx.fillStyle=hi;ctx.beginPath();ctx.ellipse(p.x-s*.35,p.y-s*.22,s*.35,s*.16,0,0,Math.PI*2);ctx.fill();
 }
-function drawDrop(d){const p=screen(d.x,d.y);ctx.fillStyle="rgba(0,0,0,.25)";ctx.beginPath();ctx.ellipse(p.x,p.y+10,14,5,0,0,Math.PI*2);ctx.fill();ctx.font="24px Arial";ctx.textAlign="center";ctx.fillText(ITEM_INFO[d.item]?.icon||"?",p.x,p.y+6);ctx.textAlign="left"}
+
+function drawExtraDecor(){
+  decor.bones.forEach(b=>{
+    if(biomeAtClient(b.x,b.y)!=="desert"&&biomeAtClient(b.x,b.y)!=="ruins")return;
+    const p=screen(b.x,b.y);
+    if(p.x<-30||p.y<-30||p.x>W+30||p.y>H+30)return;
+    ctx.fillStyle="rgba(240,220,180,.55)";
+    ctx.fillRect(p.x,p.y,18,4);
+    ctx.fillRect(p.x+6,p.y-5,4,14);
+  });
+
+  decor.crystals.forEach(c=>{
+    const biome=biomeAtClient(c.x,c.y);
+    if(biome!=="ice"&&biome!=="ruins")return;
+    const p=screen(c.x,c.y);
+    if(p.x<-30||p.y<-30||p.x>W+30||p.y>H+30)return;
+    ctx.fillStyle=biome==="ice"?"#e8fbff":"#b388ff";
+    ctx.beginPath();ctx.moveTo(p.x,p.y-12);ctx.lineTo(p.x+8,p.y+10);ctx.lineTo(p.x-8,p.y+10);ctx.closePath();ctx.fill();
+  });
+
+  decor.lava.forEach(l=>{
+    if(biomeAtClient(l.x,l.y)!=="volcanic")return;
+    const p=screen(l.x,l.y);
+    if(p.x<-30||p.y<-30||p.x>W+30||p.y>H+30)return;
+    ctx.fillStyle="#ff3d2e";
+    ctx.fillRect(p.x,p.y,28,4);
+    ctx.fillStyle="#ff9f1c";
+    ctx.fillRect(p.x+5,p.y+1,12,2);
+  });
+}
+
+function drawDrop(d){
+  const p=screen(d.x,d.y);
+  ctx.fillStyle="rgba(0,0,0,.25)";
+  ctx.beginPath();ctx.ellipse(p.x,p.y+10,14,5,0,0,Math.PI*2);ctx.fill();
+  ctx.font="24px Arial";ctx.textAlign="center";
+  ctx.fillText(ITEM_INFO[d.item]?.icon||"?",p.x,p.y+6);
+  ctx.textAlign="left";
+}
+
 function drawEnemy(e){
   const p=screen(e.x,e.y);
-  if(p.x<-140||p.y<-140||p.x>W+140||p.y>H+140)return;
+  if(p.x<-150||p.y<-150||p.x>W+150||p.y>H+150)return;
 
   const pulse=e.isBoss?Math.sin(Date.now()/220)*4:Math.sin(Date.now()/260+e.id)*1.5;
   const size=e.size+pulse;
@@ -362,33 +591,21 @@ function drawEnemy(e){
 
   ctx.fillStyle=e.color||"#9b5de5";
 
-  const monstrous=["sandWraith","voidAcolyte","abyssSpawn","crystalWraith"];
-  const brute=["boneKnight","duneButcher","obsidianBrute","iceDevourer","frostStalker","lavaHound"];
-  const crawler=["venomCrawler","boneScarab","leechHorror"];
-
-  if(e.isBoss){
-    ctx.beginPath();
-    ctx.ellipse(p.x,p.y,size*.58,size*.48,0,0,Math.PI*2);
-    ctx.fill();
-    ctx.fillRect(p.x-size*.35,p.y-size*.65,size*.7,size*.7);
-    ctx.fillStyle="rgba(0,0,0,.25)";
-    ctx.fillRect(p.x-size*.18,p.y-size*.2,size*.36,size*.55);
-  }else if(crawler.includes(e.type)){
+  if(e.shape==="crawler"){
     ctx.beginPath();ctx.ellipse(p.x,p.y,size*.58,size*.32,0,0,Math.PI*2);ctx.fill();
-    for(let i=-2;i<=2;i++){
-      ctx.fillRect(p.x+i*size*.18,p.y+size*.1,4,size*.28);
-    }
-  }else if(brute.includes(e.type)){
+    for(let i=-2;i<=2;i++)ctx.fillRect(p.x+i*size*.18,p.y+size*.1,4,size*.28);
+  }else if(e.shape==="knight"){
     ctx.fillRect(p.x-size*.35,p.y-size*.45,size*.7,size*.9);
     ctx.fillStyle="rgba(255,255,255,.12)";
     ctx.fillRect(p.x-size*.22,p.y-size*.32,size*.16,size*.55);
-  }else if(monstruous.includes(e.type)){
-    ctx.beginPath();
-    ctx.moveTo(p.x,p.y-size*.55);
-    ctx.lineTo(p.x+size*.45,p.y+size*.35);
-    ctx.lineTo(p.x-size*.45,p.y+size*.35);
-    ctx.closePath();
-    ctx.fill();
+  }else if(e.shape==="mage"||e.shape==="demon"){
+    ctx.beginPath();ctx.moveTo(p.x,p.y-size*.55);ctx.lineTo(p.x+size*.45,p.y+size*.35);ctx.lineTo(p.x-size*.45,p.y+size*.35);ctx.closePath();ctx.fill();
+  }else if(e.shape==="wolf"||e.shape==="beast"){
+    ctx.beginPath();ctx.ellipse(p.x,p.y,size*.58,size*.35,0,0,Math.PI*2);ctx.fill();
+    ctx.fillRect(p.x+size*.25,p.y-size*.2,size*.35,size*.25);
+  }else if(e.shape==="ent"){
+    ctx.fillRect(p.x-size*.35,p.y-size*.55,size*.7,size*1.1);
+    ctx.fillStyle="#1f7a3b";ctx.beginPath();ctx.arc(p.x,p.y-size*.5,size*.45,0,Math.PI*2);ctx.fill();
   }else{
     ctx.beginPath();ctx.arc(p.x,p.y,size/2,0,Math.PI*2);ctx.fill();
   }
@@ -398,9 +615,7 @@ function drawEnemy(e){
   ctx.fillRect(p.x+5,p.y-4,4,4);
 
   if(e.isBoss){
-    ctx.fillStyle="#ffd166";
-    ctx.font="24px Arial";
-    ctx.textAlign="center";
+    ctx.fillStyle="#ffd166";ctx.font="24px Arial";ctx.textAlign="center";
     ctx.fillText(e.icon||"👑",p.x,p.y-size*.75);
     ctx.textAlign="left";
   }
@@ -412,9 +627,10 @@ function drawEnemy(e){
   ctx.fillText(`${e.isBoss?"BOSS ":""}${e.name||""} Nv.${e.level||1}`,p.x,p.y-size*.87);
   ctx.textAlign="left";
 }
-function drawWeapon(pos,p,bob){ctx.font="24px Arial";ctx.textAlign="center";ctx.fillText(p.weaponIcon||"⚔️",pos.x+24,pos.y-5+bob);ctx.textAlign="left"}
+
 function drawPlayer(p,isMe){
-  const r=renderPlayers[p.id]||p,pos=screen(r.x,r.y);
+  const r=renderPlayers[p.id]||p;
+  const pos=screen(r.x,r.y);
   const moving=Math.abs(p.vx)+Math.abs(p.vy)>.1;
   const t=Date.now();
   const step=moving?Math.sin(t/90):0;
@@ -423,83 +639,118 @@ function drawPlayer(p,isMe){
   const swing=attacking?Math.sin(t/45)*10:0;
 
   ctx.fillStyle="rgba(0,0,0,.34)";
-  ctx.beginPath();
-  ctx.ellipse(pos.x,pos.y+29,22,8,0,0,Math.PI*2);
-  ctx.fill();
+  ctx.beginPath();ctx.ellipse(pos.x,pos.y+29,22,8,0,0,Math.PI*2);ctx.fill();
 
   const armor=p.color||"#49a6ff";
-  const dark="#1a2433";
-  const skin="#f4bf77";
-
-  // legs animated
-  ctx.fillStyle=dark;
+  ctx.fillStyle="#1a2433";
   ctx.fillRect(pos.x-12,pos.y+12+bob+step*2,8,19);
   ctx.fillRect(pos.x+4,pos.y+12+bob-step*2,8,19);
-
-  // boots
   ctx.fillStyle="#0d1117";
   ctx.fillRect(pos.x-13,pos.y+29+bob+step*2,10,5);
   ctx.fillRect(pos.x+3,pos.y+29+bob-step*2,10,5);
 
-  // body armor
-  ctx.fillStyle=armor;
-  ctx.fillRect(pos.x-14,pos.y-18+bob,28,33);
-  ctx.fillStyle="rgba(255,255,255,.22)";
-  ctx.fillRect(pos.x-10,pos.y-14+bob,6,22);
-  ctx.fillStyle="rgba(0,0,0,.22)";
-  ctx.fillRect(pos.x+7,pos.y-14+bob,5,24);
+  ctx.fillStyle=armor;ctx.fillRect(pos.x-14,pos.y-18+bob,28,33);
+  ctx.fillStyle="rgba(255,255,255,.22)";ctx.fillRect(pos.x-10,pos.y-14+bob,6,22);
+  ctx.fillStyle="rgba(0,0,0,.22)";ctx.fillRect(pos.x+7,pos.y-14+bob,5,24);
 
-  // arms animated
-  ctx.fillStyle=skin;
+  ctx.fillStyle="#f4bf77";
   ctx.fillRect(pos.x-20,pos.y-13+bob-step*2,7,23);
   ctx.fillRect(pos.x+13,pos.y-13+bob+step*2,7,23);
-
-  // head
-  ctx.fillStyle=skin;
   ctx.fillRect(pos.x-11,pos.y-39+bob,22,20);
-  ctx.fillStyle="#3b2416";
-  ctx.fillRect(pos.x-12,pos.y-43+bob,24,7);
 
-  // face
-  ctx.fillStyle="#111";
-  ctx.fillRect(pos.x-5,pos.y-32+bob,3,3);
-  ctx.fillRect(pos.x+4,pos.y-32+bob,3,3);
+  ctx.fillStyle="#3b2416";ctx.fillRect(pos.x-12,pos.y-43+bob,24,7);
+  ctx.fillStyle="#111";ctx.fillRect(pos.x-5,pos.y-32+bob,3,3);ctx.fillRect(pos.x+4,pos.y-32+bob,3,3);
 
-  // class weapon with attack pose
   ctx.save();
   ctx.translate(pos.x+24,pos.y-5+bob);
   ctx.rotate((swing*Math.PI)/180);
-  ctx.font="25px Arial";
-  ctx.textAlign="center";
+  ctx.font="25px Arial";ctx.textAlign="center";
   ctx.fillText(p.weaponIcon||"⚔️",0,0);
   ctx.restore();
 
   if(attacking){
     ctx.strokeStyle=p.classId==="mage"?"#b388ff":p.classId==="archer"?"#ffd166":"#ffffff";
-    ctx.lineWidth=3;
-    ctx.beginPath();
-    ctx.arc(pos.x+18,pos.y-8+bob,24,0.1,1.4);
-    ctx.stroke();
-    ctx.lineWidth=1;
+    ctx.lineWidth=3;ctx.beginPath();ctx.arc(pos.x+18,pos.y-8+bob,24,.1,1.4);ctx.stroke();ctx.lineWidth=1;
   }
 
   drawMiniBar(pos.x,pos.y-74,58,p.hp/p.maxHp,"#ef476f");
   drawMiniBar(pos.x,pos.y-66,58,p.mana/p.maxMana,"#118ab2");
+
   ctx.fillStyle=isMe?"#7ee787":"#fff";
-  ctx.font="13px Arial";
-  ctx.textAlign="center";
+  ctx.font="13px Arial";ctx.textAlign="center";
   ctx.fillText(`${p.name} [Nv.${p.level}]`,pos.x,pos.y-82);
-  ctx.textAlign="left";
-  ctx.font="11px Arial";
-  ctx.textAlign="center";
-  ctx.fillStyle="#cdd6e5";
+  ctx.font="11px Arial";ctx.fillStyle="#cdd6e5";
   ctx.fillText(p.className,pos.x,pos.y-50);
   ctx.textAlign="left";
 }
-function drawMiniBar(x,y,w,value,color){ctx.fillStyle="#111";ctx.fillRect(x-w/2,y,w,5);ctx.fillStyle=color;ctx.fillRect(x-w/2,y,w*Math.max(0,Math.min(1,value)),5)}
-function drawEffects(){for(let i=effects.length-1;i>=0;i--){const e=effects[i],a=screen(e.from.x,e.from.y),b=screen(e.to.x,e.to.y);ctx.strokeStyle=e.classId==="mage"?"#b388ff":e.classId==="archer"?"#ffd166":"#ffffff";ctx.lineWidth=e.classId==="swordsman"?5:3;ctx.beginPath();ctx.moveTo(a.x,a.y-10);ctx.lineTo(b.x,b.y-10);ctx.stroke();ctx.lineWidth=1;e.life--;if(e.life<=0)effects.splice(i,1)}for(let i=floatTexts.length-1;i>=0;i--){const f=floatTexts[i],p=screen(f.x,f.y);ctx.fillStyle=f.color;ctx.font="bold 20px Arial";ctx.textAlign="center";ctx.fillText(f.text,p.x,p.y-(44-f.life));ctx.textAlign="left";f.life--;if(f.life<=0)floatTexts.splice(i,1)}}
-function draw(){ctx.clearRect(0,0,W,H);drawGround();decor.lakes.forEach(drawLake);decor.flowers.forEach(f=>{const p=screen(f.x,f.y);ctx.fillStyle=f.c;ctx.fillRect(p.x,p.y,4,4)});decor.rocks.forEach(drawRock);decor.trees.forEach(drawTree);drawSafeZone();drawNpc();state.drops.forEach(drawDrop);state.enemies.forEach(drawEnemy);for(const id in state.players)drawPlayer(state.players[id],id===myId);drawEffects();const c=camera();ctx.strokeStyle="rgba(255,255,255,.18)";ctx.strokeRect(-c.x,-c.y,state.world.width,state.world.height)}
-function updateRenderPositions(){for(const id in state.players){const t=state.players[id];if(!renderPlayers[id])renderPlayers[id]={...t};renderPlayers[id].x+=(t.x-renderPlayers[id].x)*.28;renderPlayers[id].y+=(t.y-renderPlayers[id].y)*.28}}
+
+function drawMiniBar(x,y,w,value,color){
+  ctx.fillStyle="#111";
+  ctx.fillRect(x-w/2,y,w,5);
+  ctx.fillStyle=color;
+  ctx.fillRect(x-w/2,y,w*Math.max(0,Math.min(1,value)),5);
+}
+
+function drawEffects(){
+  for(let i=effects.length-1;i>=0;i--){
+    const e=effects[i];
+    const a=screen(e.from.x,e.from.y);
+    const b=screen(e.to.x,e.to.y);
+    ctx.strokeStyle=e.classId==="mage"?"#b388ff":e.classId==="archer"?"#ffd166":"#ffffff";
+    ctx.lineWidth=e.classId==="swordsman"?5:3;
+    ctx.beginPath();ctx.moveTo(a.x,a.y-10);ctx.lineTo(b.x,b.y-10);ctx.stroke();
+    ctx.lineWidth=1;
+    e.life--;
+    if(e.life<=0)effects.splice(i,1);
+  }
+
+  for(let i=floatTexts.length-1;i>=0;i--){
+    const f=floatTexts[i];
+    const p=screen(f.x,f.y);
+    ctx.fillStyle=f.color;
+    ctx.font="bold 20px Arial";
+    ctx.textAlign="center";
+    ctx.fillText(f.text,p.x,p.y-(44-f.life));
+    ctx.textAlign="left";
+    f.life--;
+    if(f.life<=0)floatTexts.splice(i,1);
+  }
+}
+
+function draw(){
+  ctx.clearRect(0,0,W,H);
+  drawGround();
+  decor.lakes.forEach(drawLake);
+  drawExtraDecor();
+  decor.flowers.forEach(f=>{
+    const p=screen(f.x,f.y);
+    if(p.x<0||p.y<0||p.x>W||p.y>H)return;
+    ctx.fillStyle=f.c;
+    ctx.fillRect(p.x,p.y,f.s,f.s);
+  });
+  decor.rocks.forEach(drawRock);
+  decor.trees.forEach(drawTree);
+  drawSafeZone();
+  drawNpc();
+  state.drops.forEach(drawDrop);
+  state.enemies.forEach(drawEnemy);
+  for(const id in state.players)drawPlayer(state.players[id],id===myId);
+  drawEffects();
+
+  const c=camera();
+  ctx.strokeStyle="rgba(255,255,255,.18)";
+  ctx.strokeRect(-c.x,-c.y,state.world.width,state.world.height);
+}
+
+function updateRenderPositions(){
+  for(const id in state.players){
+    const t=state.players[id];
+    if(!renderPlayers[id])renderPlayers[id]={...t};
+    renderPlayers[id].x+=(t.x-renderPlayers[id].x)*.28;
+    renderPlayers[id].y+=(t.y-renderPlayers[id].y)*.28;
+  }
+}
+
 function updateUI(){
   const p=me();
   if(!p)return;
@@ -532,12 +783,10 @@ function updateUI(){
 
   const stats=document.getElementById("statsList");
   stats.innerHTML="";
-
   const points=document.createElement("div");
   points.className="row";
   points.innerHTML=`<span>Pontos disponíveis</span><b>${p.attrPoints||0}</b>`;
   stats.appendChild(points);
-
   stats.appendChild(document.createElement("br"));
 
   [
@@ -548,26 +797,20 @@ function updateUI(){
   ].forEach(([label,key,value])=>{
     const row=document.createElement("div");
     row.className="row";
-
     const left=document.createElement("span");
     left.textContent=label;
-
     const right=document.createElement("span");
     const strong=document.createElement("b");
     strong.textContent=value;
-
     const btn=document.createElement("button");
     btn.className="attrBtn";
     btn.textContent="+";
     btn.type="button";
-    btn.dataset.stat=key;
-    btn.addEventListener("mousedown", e=>{
+    btn.addEventListener("mousedown",e=>{
       e.preventDefault();
       e.stopPropagation();
-      socket.emit("addStat", key);
-      showNotice("Adicionando atributo...");
+      addStat(key);
     });
-
     right.appendChild(strong);
     right.appendChild(document.createTextNode(" "));
     right.appendChild(btn);
@@ -584,35 +827,27 @@ function updateUI(){
 
   const list=document.getElementById("marketList");
   list.innerHTML="";
-
-  if(!state.market.length){
-    list.innerHTML=`<p class="small">Nenhum item anunciado.</p>`;
-  }
+  if(!state.market.length)list.innerHTML=`<p class="small">Nenhum item anunciado.</p>`;
 
   state.market.slice().reverse().forEach(m=>{
     const itemName=ITEM_INFO[m.item]?.name||m.item;
     const row=document.createElement("div");
     row.className="marketRow";
-
     const title=document.createElement("b");
     title.textContent=`${m.amount}x ${ITEM_INFO[m.item]?.icon||""} ${itemName}`;
-
     const seller=document.createElement("div");
     seller.textContent=`Vendedor: ${m.seller}`;
-
     const price=document.createElement("div");
     price.textContent=`Preço: ${m.price} ouro`;
-
     const btn=document.createElement("button");
     btn.className="full";
     btn.type="button";
     btn.textContent="Comprar";
-    btn.addEventListener("mousedown", e=>{
+    btn.addEventListener("mousedown",e=>{
       e.preventDefault();
       e.stopPropagation();
-      confirmBuyMarket(m.id, itemName, m.amount, m.price, m.seller);
+      confirmBuyMarket(m.id,itemName,m.amount,m.price,m.seller);
     });
-
     row.appendChild(title);
     row.appendChild(document.createElement("br"));
     row.appendChild(seller);
@@ -631,8 +866,24 @@ function updateUI(){
   });
 }
 
-function roundRect(x,y,w,h,r){ctx.beginPath();ctx.moveTo(x+r,y);ctx.arcTo(x+w,y,x+w,y+h,r);ctx.arcTo(x+w,y+h,x,y+h,r);ctx.arcTo(x,y+h,x,y,r);ctx.arcTo(x,y,x+w,y,r);ctx.closePath()}
-function loop(){updateRenderPositions();if(noticeTimer>0)noticeTimer--;else document.getElementById("notice").textContent="Mapa gigante • Biomas distantes • Mobs sombrios • XP/ouro no chat privado";draw();requestAnimationFrame(loop)}
+function roundRect(x,y,w,h,r){
+  ctx.beginPath();
+  ctx.moveTo(x+r,y);
+  ctx.arcTo(x+w,y,x+w,y+h,r);
+  ctx.arcTo(x+w,y+h,x,y+h,r);
+  ctx.arcTo(x,y+h,x,y,r);
+  ctx.arcTo(x,y,x+w,y,r);
+  ctx.closePath();
+}
+
+function loop(){
+  updateRenderPositions();
+  if(noticeTimer>0)noticeTimer--;
+  else document.getElementById("notice").textContent="Mapa maior • Biomas vivos • Mobs sombrios • XP/ouro no chat privado";
+  draw();
+  requestAnimationFrame(loop);
+}
+
 loop();
 </script>
 </body>

@@ -12,10 +12,15 @@ app.use(express.static(path.join(__dirname, "public")));
 const PORT = process.env.PORT || 3000;
 
 const WORLD = {
-  width: 2800,
-  height: 2100,
-  safeZone: { x: 1120, y: 780, w: 560, h: 420 },
-  npcShop: { x: 1400, y: 990, name: "Lia, Mercadora" }
+  width: 4200,
+  height: 3200,
+  safeZone: { x: 1820, y: 1340, w: 560, h: 420 },
+  npcShop: { x: 2100, y: 1550, name: "Lia, Mercadora" }
+};
+
+const SPAWN_CENTER = {
+  x: WORLD.safeZone.x + WORLD.safeZone.w / 2,
+  y: WORLD.safeZone.y + WORLD.safeZone.h / 2
 };
 
 const players = {};
@@ -48,8 +53,7 @@ const CLASSES = {
     cooldown: 16,
     manaCost: 0,
     color: "#49a6ff",
-    stats: { atk: 10, vit: 16, dex: 6, int: 2 },
-    growth: { atk: 3, vit: 8, dex: 1, int: 0, hp: 22, mana: 4 }
+    stats: { atk: 10, vigor: 16, dex: 6, int: 2 }
   },
   archer: {
     label: "Arqueiro",
@@ -62,8 +66,7 @@ const CLASSES = {
     cooldown: 21,
     manaCost: 0,
     color: "#06d6a0",
-    stats: { atk: 8, vit: 9, dex: 16, int: 4 },
-    growth: { atk: 2, vit: 4, dex: 7, int: 1, hp: 12, mana: 7 }
+    stats: { atk: 8, vigor: 9, dex: 16, int: 4 }
   },
   mage: {
     label: "Mago",
@@ -76,8 +79,7 @@ const CLASSES = {
     cooldown: 28,
     manaCost: 14,
     color: "#b388ff",
-    stats: { atk: 4, vit: 6, dex: 5, int: 18 },
-    growth: { atk: 1, vit: 3, dex: 1, int: 8, hp: 8, mana: 20 }
+    stats: { atk: 4, vigor: 6, dex: 5, int: 18 }
   }
 };
 
@@ -95,11 +97,17 @@ function spawnPoint() {
   return { x: z.x + z.w / 2 + rand(-85, 85), y: z.y + z.h / 2 + rand(-60, 60) };
 }
 
+function mobLevelByPosition(pos) {
+  const maxDist = Math.hypot(WORLD.width / 2, WORLD.height / 2);
+  const d = dist(pos, SPAWN_CENTER);
+  return Math.max(1, Math.min(10, Math.floor((d / maxDist) * 10) + 1));
+}
+
 function enemySpawnPoint() {
   let p;
   do {
     p = { x: rand(100, WORLD.width - 100), y: rand(100, WORLD.height - 100) };
-  } while (inSafeZone(p) || dist(p, WORLD.npcShop) < 620);
+  } while (inSafeZone(p) || dist(p, WORLD.npcShop) < 700);
   return p;
 }
 
@@ -133,11 +141,11 @@ function createPlayer(id, name, classId) {
     gold: 200,
     kills: 0,
     attackCd: 0,
+    attrPoints: 0,
     lastDirX: 1,
     lastDirY: 0,
     color: cls.color,
     stats: { ...cls.stats },
-    growth: { ...cls.growth },
     inventory: {
       herb: 2,
       crystal: 0,
@@ -151,24 +159,36 @@ function createPlayer(id, name, classId) {
 function createEnemy() {
   const type = Math.random() > 0.35 ? "slime" : "wolf";
   const pos = enemySpawnPoint();
+  const lvl = mobLevelByPosition(pos);
+  const baseHp = type === "slime" ? 42 : 70;
+  const baseDamage = type === "slime" ? 7 : 12;
 
   return {
     id: enemyId++,
     type,
     name: type === "slime" ? "Slime" : "Lobo",
+    level: lvl,
     x: pos.x,
     y: pos.y,
-    size: type === "slime" ? 28 : 34,
-    hp: type === "slime" ? 50 : 85,
-    maxHp: type === "slime" ? 50 : 85,
-    speed: type === "slime" ? 0.95 : 1.25,
-    damage: type === "slime" ? 8 : 14,
+    size: (type === "slime" ? 28 : 34) + lvl * 0.7,
+    hp: baseHp + lvl * (type === "slime" ? 13 : 20),
+    maxHp: baseHp + lvl * (type === "slime" ? 13 : 20),
+    speed: (type === "slime" ? 0.9 : 1.15) + lvl * 0.025,
+    damage: baseDamage + lvl * (type === "slime" ? 3 : 4),
     cd: 0
   };
 }
 
 function spawnEnemies() {
-  while (enemies.length < 26) enemies.push(createEnemy());
+  while (enemies.length < 42) enemies.push(createEnemy());
+}
+
+function recalcDerived(p) {
+  const cls = CLASSES[p.classId] || CLASSES.swordsman;
+  p.maxHp = cls.maxHp + (p.level - 1) * 8 + p.stats.vigor * 7;
+  p.maxMana = cls.maxMana + (p.level - 1) * 4 + p.stats.int * 5;
+  p.hp = Math.min(p.hp, p.maxHp);
+  p.mana = Math.min(p.mana, p.maxMana);
 }
 
 function addXp(p, amount) {
@@ -179,19 +199,13 @@ function addXp(p, amount) {
     p.level++;
     p.nextXp = Math.floor(p.nextXp * 1.45);
 
-    p.stats.atk += p.growth.atk;
-    p.stats.vit += p.growth.vit;
-    p.stats.dex += p.growth.dex;
-    p.stats.int += p.growth.int;
-
-    p.maxHp += p.growth.hp + Math.floor(p.growth.vit / 2);
-    p.maxMana += p.growth.mana + Math.floor(p.growth.int / 2);
-
+    p.attrPoints += 5;
+    recalcDerived(p);
     p.hp = p.maxHp;
     p.mana = p.maxMana;
 
-    io.to(p.id).emit("notice", `Level up! Você chegou ao nível ${p.level}.`);
-    privateLog(p.id, `Você subiu para o nível ${p.level}. Atributos aumentados.`);
+    io.to(p.id).emit("notice", `Level up! Você ganhou 5 pontos de atributo.`);
+    privateLog(p.id, `Você subiu para o nível ${p.level}. Abra H e distribua seus pontos.`);
   }
 }
 
@@ -203,7 +217,7 @@ function updatePlayers() {
   for (const id in players) {
     const p = players[id];
     const input = inputs[id] || {};
-    const speed = 4.3 + Math.min(1.2, p.stats.dex * 0.015);
+    const speed = 4.1 + Math.min(1.4, p.stats.dex * 0.018);
 
     let dx = 0, dy = 0;
     if (input.up) dy -= 1;
@@ -225,8 +239,8 @@ function updatePlayers() {
     p.y = Math.max(25, Math.min(WORLD.height - 25, p.y + p.vy));
 
     if (p.attackCd > 0) p.attackCd--;
-    p.hp = Math.min(p.maxHp, p.hp + 0.018 + p.stats.vit * 0.0008);
-    p.mana = Math.min(p.maxMana, p.mana + 0.065 + p.stats.int * 0.001);
+    p.hp = Math.min(p.maxHp, p.hp + 0.018 + p.stats.vigor * 0.0009);
+    p.mana = Math.min(p.maxMana, p.mana + 0.065 + p.stats.int * 0.0012);
 
     for (let i = drops.length - 1; i >= 0; i--) {
       const d = drops[i];
@@ -255,7 +269,7 @@ function updateEnemies() {
       }
     }
 
-    if (target && best < 370 && best > 0) {
+    if (target && best < 410 && best > 0) {
       e.x += ((target.x - e.x) / best) * e.speed;
       e.y += ((target.y - e.y) / best) * e.speed;
     }
@@ -264,12 +278,12 @@ function updateEnemies() {
 
     if (target && best < 40 && e.cd <= 0) {
       e.cd = 45;
-      const damage = Math.max(1, e.damage - Math.floor(target.stats.vit * 0.08));
+      const damage = Math.max(1, e.damage - Math.floor(target.stats.vigor * 0.12));
       target.hp -= damage;
 
       io.to(target.id).emit("damageTaken", { x: target.x, y: target.y - 35, damage });
-      io.to(target.id).emit("notice", `${e.name} causou ${damage} de dano.`);
-      privateLog(target.id, `${e.name} causou ${damage} de dano em você.`);
+      io.to(target.id).emit("notice", `${e.name} Nv.${e.level} causou ${damage} de dano.`);
+      privateLog(target.id, `${e.name} Nv.${e.level} causou ${damage} de dano em você.`);
 
       if (target.hp <= 0) {
         const pos = spawnPoint();
@@ -291,13 +305,13 @@ function killEnemy(index, killer) {
 
   enemies.splice(index, 1);
   killer.kills++;
-  killer.gold += e.type === "slime" ? 9 : 18;
-  addXp(killer, e.type === "slime" ? 36 : 65);
+  killer.gold += (e.type === "slime" ? 6 : 12) + e.level * 4;
+  addXp(killer, (e.type === "slime" ? 28 : 50) + e.level * 12);
 
   if (e.type === "slime") addDrop(e.x, e.y, Math.random() > 0.45 ? "herb" : "crystal");
   else addDrop(e.x, e.y, Math.random() > 0.45 ? "fang" : "crystal");
 
-  privateLog(killer.id, `Você matou ${e.name} e recebeu ouro/XP.`);
+  privateLog(killer.id, `Você matou ${e.name} Nv.${e.level} e recebeu ouro/XP.`);
   setTimeout(spawnEnemies, 900);
 }
 
@@ -348,7 +362,7 @@ function attackEnemy(player) {
   });
 
   io.to(player.id).emit("notice", `${cls.label}: ${damage} de dano.`);
-  privateLog(player.id, `Você causou ${damage} de dano em ${e.name}.`);
+  privateLog(player.id, `Você causou ${damage} de dano em ${e.name} Nv.${e.level}.`);
 
   if (e.hp <= 0) killEnemy(bestIndex, player);
 }
@@ -377,6 +391,19 @@ function buyNpcPotion(socket, type) {
   privateLog(socket.id, `Você comprou 1 ${ITEM_INFO[item].name} por ${price} ouro na NPC Lia.`);
 }
 
+function ranking() {
+  return Object.values(players)
+    .sort((a, b) => b.level - a.level || b.xp - a.xp || b.kills - a.kills)
+    .map((p, i) => ({
+      pos: i + 1,
+      name: p.name,
+      className: p.className,
+      level: p.level,
+      xp: p.xp,
+      kills: p.kills
+    }));
+}
+
 function publicState() {
   return {
     world: WORLD,
@@ -384,6 +411,7 @@ function publicState() {
     enemies,
     drops,
     market,
+    ranking: ranking(),
     serverTime: new Date().toLocaleTimeString("pt-BR", {
       hour: "2-digit",
       minute: "2-digit",
@@ -462,6 +490,29 @@ io.on("connection", socket => {
     forceState();
   });
 
+  socket.on("addStat", stat => {
+    const p = players[socket.id];
+    if (!p) return;
+
+    const allowed = ["atk", "vigor", "dex", "int"];
+    if (!allowed.includes(stat)) return;
+
+    if (p.attrPoints <= 0) {
+      io.to(socket.id).emit("notice", "Você não tem pontos disponíveis.");
+      return;
+    }
+
+    p.attrPoints--;
+    p.stats[stat]++;
+    recalcDerived(p);
+
+    if (stat === "vigor") p.hp = Math.min(p.maxHp, p.hp + 7);
+    if (stat === "int") p.mana = Math.min(p.maxMana, p.mana + 5);
+
+    privateLog(p.id, `Você adicionou +1 em ${stat}. Pontos restantes: ${p.attrPoints}.`);
+    forceState();
+  });
+
   socket.on("marketSell", data => {
     const seller = players[socket.id];
     if (!seller) return;
@@ -479,7 +530,7 @@ io.on("connection", socket => {
 
     seller.inventory[item] -= amount;
 
-    const listing = {
+    market.push({
       id: marketId++,
       sellerId: seller.id,
       seller: seller.name,
@@ -487,9 +538,7 @@ io.on("connection", socket => {
       amount,
       price,
       sold: false
-    };
-
-    market.push(listing);
+    });
 
     io.to(socket.id).emit("notice", `${amount}x ${ITEM_INFO[item].name} foi colocado no mercado.`);
     privateLog(socket.id, `Você anunciou ${amount}x ${ITEM_INFO[item].name} por ${price} ouro.`);
@@ -500,8 +549,8 @@ io.on("connection", socket => {
     const buyer = players[socket.id];
     if (!buyer) return;
 
-    const listingId = parseInt(rawId, 10);
-    const index = market.findIndex(m => m.id === listingId && !m.sold);
+    const listingId = Number(rawId);
+    const index = market.findIndex(m => Number(m.id) === listingId && !m.sold);
 
     if (index === -1) {
       io.to(socket.id).emit("notice", "Esse item já foi vendido ou não existe.");
@@ -528,14 +577,14 @@ io.on("connection", socket => {
 
     if (seller) {
       seller.gold += listing.price;
-      io.to(seller.id).emit("notice", `${buyer.name} comprou seu item por ${listing.price} ouro.`);
-      privateLog(seller.id, `${buyer.name} comprou ${listing.amount}x ${ITEM_INFO[listing.item].name} seu por ${listing.price} ouro.`);
+      io.to(seller.id).emit("notice", "Venda realizada!");
+      privateLog(seller.id, `Venda realizada: ${buyer.name} comprou ${listing.amount}x ${ITEM_INFO[listing.item].name} por ${listing.price} ouro.`);
     }
 
     listing.sold = true;
     market.splice(index, 1);
 
-    io.to(socket.id).emit("notice", `Você comprou ${listing.amount}x ${ITEM_INFO[listing.item].name}.`);
+    io.to(socket.id).emit("notice", `Compra realizada: ${listing.amount}x ${ITEM_INFO[listing.item].name}.`);
     privateLog(socket.id, `Você comprou ${listing.amount}x ${ITEM_INFO[listing.item].name} de ${listing.seller} por ${listing.price} ouro.`);
 
     forceState();

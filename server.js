@@ -15,11 +15,11 @@ const PORT = process.env.PORT || 3000;
 const DB_FILE = path.join(__dirname, "database.json");
 
 const WORLD = {
-  width: 8200,
-  height: 6200,
-  safeZone: { x: 3790, y: 2860, w: 620, h: 480 },
-  npcShop: { x: 4100, y: 3110, name: "Lia, Mercadora" },
-  questNpc: { x: 4030, y: 3045, name: "Capitão Rowan" },
+  width: 9000,
+  height: 6800,
+  safeZone: { x: 4190, y: 3060, w: 680, h: 520 },
+  npcShop: { x: 4530, y: 3330, name: "Lia, Mercadora" },
+  questNpc: { x: 4440, y: 3250, name: "Capitão Rowan" },
   biomes: [
     { id: "forest", name: "Floresta Viva", x: 260, y: 260, w: 1800, h: 1450 },
     { id: "ruins", name: "Ruínas Profanas", x: 3180, y: 350, w: 1700, h: 1400 },
@@ -287,6 +287,7 @@ function createCharacterData(name, classId) {
     kills: 0,
     attackCd: 0,
     attrPoints: 0,
+    isFlying: false,
     color: cls.color,
     stats: { ...cls.stats },
     inventory: { herb: 2, crystal: 0, fang: 0, potion: 3, manaPotion: 1 },
@@ -411,39 +412,39 @@ function claimQuest(p, questId) {
 function enemyProfile(biome) {
   const profiles = {
     forest: [
-      { type: "thornfiend", name: "Demônio Espinheiro", color: "#3fbf5f", hp: 70, dmg: 12, size: 34, speed: 1.08, shape: "beast" },
-      { type: "direwolf", name: "Lobo Predador", color: "#7a5cff", hp: 100, dmg: 17, size: 40, speed: 1.25, shape: "wolf" },
+      { type: "thornfiend", name: "Florion Espinheiro", color: "#3fbf5f", hp: 70, dmg: 12, size: 34, speed: 1.08, shape: "beast" },
+      { type: "direwolf", name: "Lobo Feroz", color: "#7a5cff", hp: 100, dmg: 17, size: 40, speed: 1.25, shape: "wolf" },
       { type: "feralwolf", name: "Lobo Feroz", color: "#b23a48", hp: 130, dmg: 23, size: 44, speed: 1.34, shape: "wolf" },
       { type: "stormbird", name: "Pássaro Tempestade", color: "#9de2ff", hp: 82, dmg: 19, size: 34, speed: 1.45, shape: "bird" },
-      { type: "venomcrawler", name: "Rastejante Venenoso", color: "#65d96e", hp: 88, dmg: 15, size: 36, speed: 1.14, shape: "crawler" }
+      { type: "venomcrawler", name: "Cogumelo Venenoso", color: "#65d96e", hp: 88, dmg: 15, size: 36, speed: 1.14, shape: "crawler" }
     ],
     ruins: [
-      { type: "voidacolyte", name: "Acólito do Vazio", color: "#8f5bff", hp: 130, dmg: 24, size: 40, speed: 1.1, shape: "mage" },
-      { type: "boneknight", name: "Cavaleiro Ósseo", color: "#d8d0bf", hp: 180, dmg: 28, size: 46, speed: 0.98, shape: "knight" },
+      { type: "voidacolyte", name: "Mago Sombrio", color: "#8f5bff", hp: 130, dmg: 24, size: 40, speed: 1.1, shape: "mage" },
+      { type: "boneknight", name: "Cavaleiro Antigo", color: "#d8d0bf", hp: 180, dmg: 28, size: 46, speed: 0.98, shape: "knight" },
       { type: "minotaur", name: "Minotauro Profano", color: "#8a4b2a", hp: 260, dmg: 38, size: 58, speed: 0.92, shape: "minotaur" },
-      { type: "abyssspawn", name: "Cria Abissal", color: "#d84dff", hp: 150, dmg: 30, size: 44, speed: 1.18, shape: "demon" }
+      { type: "abyssspawn", name: "Mascote Abissal", color: "#d84dff", hp: 150, dmg: 30, size: 44, speed: 1.18, shape: "demon" }
     ],
     swamp: [
-      { type: "plaguemaw", name: "Boca da Praga", color: "#5f8d43", hp: 92, dmg: 16, size: 38, speed: 1.04, shape: "beast" },
-      { type: "bogreaver", name: "Ceifador do Brejo", color: "#3d5b38", hp: 125, dmg: 21, size: 42, speed: 1.16, shape: "knight" },
-      { type: "leechhorror", name: "Horror Sanguessuga", color: "#7e394d", hp: 112, dmg: 19, size: 40, speed: 1.12, shape: "crawler" },
+      { type: "plaguemaw", name: "Sapo Rei do Pântano", color: "#5f8d43", hp: 92, dmg: 16, size: 38, speed: 1.04, shape: "beast" },
+      { type: "bogreaver", name: "Guardião do Brejo", color: "#3d5b38", hp: 125, dmg: 21, size: 42, speed: 1.16, shape: "knight" },
+      { type: "leechhorror", name: "Gelatina Sombria", color: "#7e394d", hp: 112, dmg: 19, size: 40, speed: 1.12, shape: "crawler" },
       { type: "nightbat", name: "Morcego Noturno", color: "#403060", hp: 70, dmg: 16, size: 32, speed: 1.55, shape: "bird" }
     ],
     desert: [
-      { type: "bonescarab", name: "Escaravelho Ósseo", color: "#d39442", hp: 95, dmg: 17, size: 37, speed: 1.14, shape: "crawler" },
-      { type: "sandwraith", name: "Espectro de Areia", color: "#ce6a38", hp: 110, dmg: 22, size: 39, speed: 1.22, shape: "mage" },
-      { type: "dunebutcher", name: "Carniceiro das Dunas", color: "#a94a2e", hp: 145, dmg: 25, size: 45, speed: 1.08, shape: "demon" },
+      { type: "bonescarab", name: "Besouro Dourado", color: "#d39442", hp: 95, dmg: 17, size: 37, speed: 1.14, shape: "crawler" },
+      { type: "sandwraith", name: "Fada de Areia", color: "#ce6a38", hp: 110, dmg: 22, size: 39, speed: 1.22, shape: "mage" },
+      { type: "dunebutcher", name: "Minotauro das Dunas", color: "#a94a2e", hp: 145, dmg: 25, size: 45, speed: 1.08, shape: "demon" },
       { type: "sandminotaur", name: "Minotauro das Dunas", color: "#c07b3e", hp: 240, dmg: 35, size: 56, speed: 0.96, shape: "minotaur" }
     ],
     volcanic: [
-      { type: "ashimp", name: "Diabrete de Cinzas", color: "#ff6b35", hp: 120, dmg: 23, size: 38, speed: 1.18, shape: "demon" },
-      { type: "lavahound", name: "Cão de Lava", color: "#ff3d2e", hp: 165, dmg: 29, size: 45, speed: 1.17, shape: "wolf" },
-      { type: "obsidianbrute", name: "Bruto de Obsidiana", color: "#3b2d32", hp: 220, dmg: 34, size: 52, speed: 0.9, shape: "knight" }
+      { type: "ashimp", name: "Imp de Cinzas", color: "#ff6b35", hp: 120, dmg: 23, size: 38, speed: 1.18, shape: "demon" },
+      { type: "lavahound", name: "Lobo de Lava", color: "#ff3d2e", hp: 165, dmg: 29, size: 45, speed: 1.17, shape: "wolf" },
+      { type: "obsidianbrute", name: "Golem de Obsidiana", color: "#3b2d32", hp: 220, dmg: 34, size: 52, speed: 0.9, shape: "knight" }
     ],
     ice: [
-      { type: "crystalwraith", name: "Aparição Cristalina", color: "#93edff", hp: 102, dmg: 19, size: 37, speed: 1.12, shape: "mage" },
-      { type: "froststalker", name: "Perseguidor Gélido", color: "#c5f4ff", hp: 135, dmg: 24, size: 43, speed: 1.2, shape: "wolf" },
-      { type: "icedevourer", name: "Devorador Glacial", color: "#69b6ff", hp: 160, dmg: 27, size: 47, speed: 1.04, shape: "beast" }
+      { type: "crystalwraith", name: "Fada Cristalina", color: "#93edff", hp: 102, dmg: 19, size: 37, speed: 1.12, shape: "mage" },
+      { type: "froststalker", name: "Lobo Glacial", color: "#c5f4ff", hp: 135, dmg: 24, size: 43, speed: 1.2, shape: "wolf" },
+      { type: "icedevourer", name: "Yeti Cristalino", color: "#69b6ff", hp: 160, dmg: 27, size: 47, speed: 1.04, shape: "beast" }
     ],
     meadow: [
       { type: "slime", name: "Slime", color: "#54d66b", hp: 50, dmg: 8, size: 28, speed: 0.95, shape: "slime" },
@@ -559,7 +560,8 @@ function updatePlayers() {
   for (const id in players) {
     const p = players[id];
     const input = inputs[id] || {};
-    const speed = 4.1 + Math.min(1.4, p.stats.dex * 0.018);
+    const baseSpeed = 4.1 + Math.min(1.4, p.stats.dex * 0.018);
+    const speed = p.isFlying ? baseSpeed * 1.55 : baseSpeed;
 
     let dx = 0;
     let dy = 0;
@@ -1096,6 +1098,16 @@ io.on("connection", socket => {
     io.to(socket.id).emit("notice", "Você voltou para o spawn.");
     privateLog(socket.id, "Você usou o menu para voltar ao spawn.");
     savePlayerCharacter(p);
+    forceState();
+  });
+
+  socket.on("toggleFly", () => {
+    const p = players[socket.id];
+    if (!p) return;
+
+    p.isFlying = !p.isFlying;
+    io.to(socket.id).emit("notice", p.isFlying ? "Modo voo ativado. Você está usando prancha voadora." : "Modo voo desativado.");
+    privateLog(socket.id, p.isFlying ? "Você subiu na prancha voadora." : "Você desceu da prancha voadora.");
     forceState();
   });
 

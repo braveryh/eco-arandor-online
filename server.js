@@ -15,7 +15,20 @@ const WORLD = {
   width: 4200,
   height: 3200,
   safeZone: { x: 1820, y: 1340, w: 560, h: 420 },
-  npcShop: { x: 2100, y: 1550, name: "Lia, Mercadora" }
+  npcShop: { x: 2100, y: 1550, name: "Lia, Mercadora" },
+  biomes: [
+    { id: "forest", name: "Floresta Verdejante", x: 0, y: 0, w: 1700, h: 1450 },
+    { id: "swamp", name: "Pântano Sombrio", x: 2500, y: 0, w: 1700, h: 1450 },
+    { id: "desert", name: "Deserto Rubro", x: 0, y: 1750, w: 1700, h: 1450 },
+    { id: "ice", name: "Tundra Cristalina", x: 2500, y: 1750, w: 1700, h: 1450 },
+    { id: "base", name: "Base Segura", x: 1720, y: 1220, w: 760, h: 660 }
+  ],
+  bosses: [
+    { id: "forestBoss", name: "Ent Ancião", x: 520, y: 420, biome: "forest" },
+    { id: "swampBoss", name: "Hidra do Pântano", x: 3650, y: 520, biome: "swamp" },
+    { id: "desertBoss", name: "Escorpião Rei", x: 520, y: 2720, biome: "desert" },
+    { id: "iceBoss", name: "Golem Glacial", x: 3650, y: 2720, biome: "ice" }
+  ]
 };
 
 const SPAWN_CENTER = {
@@ -157,30 +170,58 @@ function createPlayer(id, name, classId) {
 }
 
 function createEnemy() {
-  const type = Math.random() > 0.35 ? "slime" : "wolf";
   const pos = enemySpawnPoint();
+  const biome = biomeAt(pos);
+
+  let profile;
+
+  if (biome === "swamp") {
+    profile = Math.random() > 0.45
+      ? { type: "bogling", name: "Bogling", color: "#5b8c48", hp: 62, damage: 10, size: 31, speed: 1.05 }
+      : { type: "mireWolf", name: "Lobo do Brejo", color: "#556b3d", hp: 94, damage: 15, size: 36, speed: 1.22 };
+  } else if (biome === "desert") {
+    profile = Math.random() > 0.45
+      ? { type: "scarab", name: "Escaravelho", color: "#c8893d", hp: 72, damage: 12, size: 32, speed: 1.1 }
+      : { type: "sandFiend", name: "Demônio de Areia", color: "#d25f2d", hp: 110, damage: 18, size: 38, speed: 1.18 };
+  } else if (biome === "ice") {
+    profile = Math.random() > 0.45
+      ? { type: "iceSprite", name: "Espírito de Gelo", color: "#8de6ff", hp: 78, damage: 13, size: 31, speed: 1.08 }
+      : { type: "frostWolf", name: "Lobo Glacial", color: "#b6ecff", hp: 118, damage: 19, size: 39, speed: 1.2 };
+  } else {
+    profile = Math.random() > 0.35
+      ? { type: "slime", name: "Slime", color: "#54d66b", hp: 50, damage: 8, size: 28, speed: 0.95 }
+      : { type: "wolf", name: "Lobo", color: "#9b5de5", hp: 85, damage: 14, size: 34, speed: 1.25 };
+  }
+
   const lvl = mobLevelByPosition(pos);
-  const baseHp = type === "slime" ? 42 : 70;
-  const baseDamage = type === "slime" ? 7 : 12;
 
   return {
     id: enemyId++,
-    type,
-    name: type === "slime" ? "Slime" : "Lobo",
+    isBoss: false,
+    type: profile.type,
+    name: profile.name,
+    biome,
+    color: profile.color,
     level: lvl,
     x: pos.x,
     y: pos.y,
-    size: (type === "slime" ? 28 : 34) + lvl * 0.7,
-    hp: baseHp + lvl * (type === "slime" ? 13 : 20),
-    maxHp: baseHp + lvl * (type === "slime" ? 13 : 20),
-    speed: (type === "slime" ? 0.9 : 1.15) + lvl * 0.025,
-    damage: baseDamage + lvl * (type === "slime" ? 3 : 4),
+    size: profile.size + lvl * 0.7,
+    hp: profile.hp + lvl * 14,
+    maxHp: profile.hp + lvl * 14,
+    speed: profile.speed + lvl * 0.025,
+    damage: profile.damage + lvl * 3,
     cd: 0
   };
 }
 
 function spawnEnemies() {
-  while (enemies.length < 42) enemies.push(createEnemy());
+  while (enemies.filter(e => !e.isBoss).length < 48) enemies.push(createEnemy());
+
+  for (const boss of WORLD.bosses) {
+    if (!enemies.some(e => e.bossId === boss.id)) {
+      enemies.push(createBoss(boss));
+    }
+  }
 }
 
 function recalcDerived(p) {

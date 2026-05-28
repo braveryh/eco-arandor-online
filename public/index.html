@@ -2,7 +2,7 @@
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
-<title>Eco Arandor Online V13</title>
+<title>Eco Arandor Online V14</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <style>
@@ -18,7 +18,12 @@ canvas{display:block;background:#1f6f36}
 button,input,select{border:none;outline:none;border-radius:10px;padding:9px}button{cursor:pointer;background:linear-gradient(135deg,#ffd166,#ff9f1c);color:#1a1200;font-weight:bold;margin-top:7px}button:hover{filter:brightness(1.08)}input,select{background:#101722;color:white;border:1px solid rgba(255,255,255,.14)}.full{width:100%}.grid2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
 #bottomHud{position:absolute;left:50%;bottom:16px;transform:translateX(-50%);width:390px;padding:9px;display:grid;grid-template-columns:1fr 1fr;gap:8px}
 #bottomHud .row{font-size:12px;margin-top:0}.quickBtn{font-size:12px;padding:8px}
-#chat{left:14px;bottom:14px;width:390px;padding:12px}
+#chat{left:14px;bottom:14px;width:86px;height:42px;padding:10px;overflow:hidden;cursor:pointer;transition:.18s ease}
+#chat.open{width:390px;height:auto;padding:12px;cursor:default}
+#chatCollapsed{display:block;text-align:center;font-weight:bold;color:#ffd166}
+#chat.open #chatCollapsed{display:none}
+#chatContent{display:none}
+#chat.open #chatContent{display:block}
 #messages{height:118px;overflow-y:auto;font-size:13px;line-height:1.35;margin-bottom:8px}
 #messages div{padding:3px 0;border-bottom:1px solid rgba(255,255,255,.05)}
 .chatTabs{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px}.tab{background:#101722;color:#cbd5e1}.tab.active{background:linear-gradient(135deg,#7ee787,#06d6a0);color:#06130b}
@@ -69,7 +74,7 @@ button,input,select{border:none;outline:none;border-radius:10px;padding:9px}butt
         <div class="classCard" data-class="mage" onclick="selectClass('mage')"><h3>🔮 Mago</h3><p class="small">Magia longa. Escala com Inteligência.</p></div>
       </div>
       <button class="full" onclick="createCharacter()">Criar novo personagem</button>
-      <p class="small" style="margin-top:12px">WASD • Espaço • Q missões • I inventário • H atributos • R ranking</p>
+      <p class="small" style="margin-top:12px">WASD • Espaço • Q missões • Clique esquerdo ataca • Direito move</p>
     </div>
   </div>
 </div>
@@ -111,12 +116,15 @@ button,input,select{border:none;outline:none;border-radius:10px;padding:9px}butt
 <div id="questPanel" class="panel modal"><h2>📜 Missões</h2><p class="small">Q para abrir/fechar. Complete e receba recompensas.</p><br><div id="questList"></div></div>
 
 <div id="chat" class="panel">
-  <div class="chatTabs"><button id="tabGlobal" class="tab active" onclick="setChatTab('global')">Global</button><button id="tabActions" class="tab" onclick="setChatTab('actions')">Ações Privadas</button></div>
-  <div id="messages"></div>
-  <input id="chatInput" class="full" placeholder="Digite no chat global e aperte Enter">
+  <div id="chatCollapsed">Chat</div>
+  <div id="chatContent">
+    <div class="chatTabs"><button id="tabGlobal" class="tab active" onclick="setChatTab('global')">Global</button><button id="tabActions" class="tab" onclick="setChatTab('actions')">Ações Privadas</button></div>
+    <div id="messages"></div>
+    <input id="chatInput" class="full" placeholder="Digite no chat global e aperte Enter">
+  </div>
 </div>
 
-<div class="panel keyHelp"><b>Atalhos</b><br>WASD: mover<br>Espaço: atacar<br>I: inventário<br>L: loja NPC<br>M: mercado<br>H: atributos<br>R: ranking<br>Chat privado mostra ouro/XP ganho.</div>
+<div class="panel keyHelp"><b>Atalhos</b><br>WASD: mover<br>Espaço: atacar<br>I: inventário<br>L: loja NPC<br>M: mercado<br>H: atributos<br>R: ranking<br>Chat minimizado. Clique esquerdo ataca, direito move.</div>
 
 <script src="/socket.io/socket.io.js"></script>
 <script>
@@ -132,6 +140,7 @@ addEventListener("resize",()=>{
 });
 
 const keys={};
+let mouseMoveTarget=null;
 const renderPlayers={};
 const ITEM_INFO={
   herb:{name:"Erva",icon:"🌿"},
@@ -372,6 +381,46 @@ document.getElementById("chatInput").addEventListener("keydown",e=>{
   }
 });
 
+document.getElementById("chat").addEventListener("mousedown",e=>{
+  if(!document.getElementById("chat").classList.contains("open")){
+    e.preventDefault();
+    e.stopPropagation();
+    document.getElementById("chat").classList.add("open");
+  }
+});
+
+document.addEventListener("mousedown",e=>{
+  const chat=document.getElementById("chat");
+  if(chat.contains(e.target))return;
+  if(e.target.closest(".panel") && e.target.closest(".panel").id!=="chat")return;
+
+  if(e.button===0){
+    const enemy=enemyAtScreen(e.clientX,e.clientY);
+    if(enemy){
+      const p=me();
+      const clsRange=p?.classId==="archer"?285:p?.classId==="mage"?305:75;
+      const range=clsRange+(enemy.isBoss?20:0);
+
+      if(p && distanceWorld(p,enemy)<=range){
+        socket.emit("attack",{enemyId:enemy.id});
+      }else{
+        showNotice("Alvo fora do alcance.");
+      }
+    }
+  }
+
+  if(e.button===2){
+    e.preventDefault();
+    mouseMoveTarget=screenToWorld(e.clientX,e.clientY);
+    showNotice("Movendo até o ponto marcado.");
+  }
+});
+
+document.addEventListener("contextmenu",e=>{
+  e.preventDefault();
+});
+
+
 document.getElementById("confirmYes").addEventListener("mousedown",e=>{
   e.preventDefault();
   e.stopPropagation();
@@ -396,12 +445,38 @@ function togglePanel(id){
 
 setInterval(()=>{
   if(!joined)return;
-  socket.emit("input",{
+
+  let input={
     up:!!keys["w"]||!!keys["arrowup"],
     down:!!keys["s"]||!!keys["arrowdown"],
     left:!!keys["a"]||!!keys["arrowleft"],
     right:!!keys["d"]||!!keys["arrowright"]
-  });
+  };
+
+  const p=me();
+
+  if(mouseMoveTarget && p && !input.up && !input.down && !input.left && !input.right){
+    const dx=mouseMoveTarget.x-p.x;
+    const dy=mouseMoveTarget.y-p.y;
+    const d=Math.hypot(dx,dy);
+
+    if(d<12){
+      mouseMoveTarget=null;
+    }else{
+      input.left=dx<-8;
+      input.right=dx>8;
+      input.up=dy<-8;
+      input.down=dy>8;
+    }
+  }
+
+  if(input.up||input.down||input.left||input.right){
+    if(keys["w"]||keys["a"]||keys["s"]||keys["d"]||keys["arrowup"]||keys["arrowdown"]||keys["arrowleft"]||keys["arrowright"]){
+      mouseMoveTarget=null;
+    }
+  }
+
+  socket.emit("input",input);
 },1000/30);
 
 function usePotion(type){socket.emit("usePotion",type);}
@@ -442,6 +517,34 @@ function screen(x,y){
   const c=camera();
   return{x:x-c.x,y:y-c.y};
 }
+
+function screenToWorld(x,y){
+  const c=camera();
+  return {x:x+c.x,y:y+c.y};
+}
+
+function enemyAtScreen(x,y){
+  let best=null;
+  let bestDist=9999;
+
+  for(const e of state.enemies){
+    const p=screen(e.x,e.y);
+    const radius=(e.size||32)*(e.isBoss?0.85:0.65);
+    const d=Math.hypot(p.x-x,p.y-y);
+
+    if(d<radius && d<bestDist){
+      best=e;
+      bestDist=d;
+    }
+  }
+
+  return best;
+}
+
+function distanceWorld(a,b){
+  return Math.hypot(a.x-b.x,a.y-b.y);
+}
+
 
 function biomeAtClient(x,y){
   const biomes=state.world.biomes||[];
@@ -844,6 +947,16 @@ function draw(){
   for(const id in state.players)drawPlayer(state.players[id],id===myId);
   drawEffects();
 
+  if(mouseMoveTarget){
+    const m=screen(mouseMoveTarget.x,mouseMoveTarget.y);
+    ctx.strokeStyle="#ffd166";
+    ctx.lineWidth=2;
+    ctx.beginPath();
+    ctx.arc(m.x,m.y,10,0,Math.PI*2);
+    ctx.stroke();
+    ctx.lineWidth=1;
+  }
+
   const c=camera();
   ctx.strokeStyle="rgba(255,255,255,.18)";
   ctx.strokeRect(-c.x,-c.y,state.world.width,state.world.height);
@@ -1015,7 +1128,7 @@ function roundRect(x,y,w,h,r){
 function loop(){
   updateRenderPositions();
   if(noticeTimer>0)noticeTimer--;
-  else document.getElementById("notice").textContent="Q missões • Personagens salvos • Biomas vivos • XP/ouro no chat privado";
+  else document.getElementById("notice").textContent="Clique esquerdo ataca • Direito move • Chat minimizado";
   draw();
   requestAnimationFrame(loop);
 }

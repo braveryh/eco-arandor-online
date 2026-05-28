@@ -2,7 +2,7 @@
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
-<title>Eco Arandor Online V6</title>
+<title>Eco Arandor Online V7</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <style>
@@ -147,7 +147,12 @@ function buyNpcPotion(type){socket.emit("buyNpcPotion",type)}
 function addStat(stat){socket.emit("addStat",stat)}
 function renamePlayer(){const name=document.getElementById("renameInput").value.trim();if(!name)return;localStorage.setItem("ecoName",name);socket.emit("rename",name);showNotice("Nome alterado.")}
 function sellMarket(){socket.emit("marketSell",{item:document.getElementById("sellItem").value,amount:Number(document.getElementById("sellAmount").value),price:Number(document.getElementById("sellPrice").value)})}
-function confirmBuyMarket(id,itemName,amount,price,seller){if(confirm(`Deseja comprar ${amount}x ${itemName} de ${seller} por ${price} ouro?`)){socket.emit("marketBuy",Number(id))}}
+function confirmBuyMarket(id, itemName, amount, price, seller){
+  const ok = confirm(`Deseja comprar ${amount}x ${itemName} de ${seller} por ${price} ouro?`);
+  if(ok){
+    socket.emit("marketBuy", Number(id));
+  }
+}
 function me(){return state.players[myId]}function camera(){const p=renderPlayers[myId]||me()||{x:2100,y:1550};return{x:p.x-W/2,y:p.y-H/2}}function screen(x,y){const c=camera();return{x:x-c.x,y:y-c.y}}
 
 function drawGround(){const c=camera(),tile=64,startX=Math.floor(c.x/tile)*tile,startY=Math.floor(c.y/tile)*tile;ctx.fillStyle="#226b36";ctx.fillRect(0,0,W,H);for(let x=startX;x<c.x+W+tile;x+=tile){for(let y=startY;y<c.y+H+tile;y+=tile){const p=screen(x,y);ctx.fillStyle=((x+y)/tile)%2===0?"#28763b":"#236d35";ctx.fillRect(p.x,p.y,tile,tile)}}}
@@ -164,12 +169,132 @@ function drawMiniBar(x,y,w,value,color){ctx.fillStyle="#111";ctx.fillRect(x-w/2,
 function drawEffects(){for(let i=effects.length-1;i>=0;i--){const e=effects[i],a=screen(e.from.x,e.from.y),b=screen(e.to.x,e.to.y);ctx.strokeStyle=e.classId==="mage"?"#b388ff":e.classId==="archer"?"#ffd166":"#ffffff";ctx.lineWidth=e.classId==="swordsman"?5:3;ctx.beginPath();ctx.moveTo(a.x,a.y-10);ctx.lineTo(b.x,b.y-10);ctx.stroke();ctx.lineWidth=1;e.life--;if(e.life<=0)effects.splice(i,1)}for(let i=floatTexts.length-1;i>=0;i--){const f=floatTexts[i],p=screen(f.x,f.y);ctx.fillStyle=f.color;ctx.font="bold 20px Arial";ctx.textAlign="center";ctx.fillText(f.text,p.x,p.y-(44-f.life));ctx.textAlign="left";f.life--;if(f.life<=0)floatTexts.splice(i,1)}}
 function draw(){ctx.clearRect(0,0,W,H);drawGround();decor.lakes.forEach(drawLake);decor.flowers.forEach(f=>{const p=screen(f.x,f.y);ctx.fillStyle=f.c;ctx.fillRect(p.x,p.y,4,4)});decor.rocks.forEach(drawRock);decor.trees.forEach(drawTree);drawSafeZone();drawNpc();state.drops.forEach(drawDrop);state.enemies.forEach(drawEnemy);for(const id in state.players)drawPlayer(state.players[id],id===myId);drawEffects();const c=camera();ctx.strokeStyle="rgba(255,255,255,.18)";ctx.strokeRect(-c.x,-c.y,state.world.width,state.world.height)}
 function updateRenderPositions(){for(const id in state.players){const t=state.players[id];if(!renderPlayers[id])renderPlayers[id]={...t};renderPlayers[id].x+=(t.x-renderPlayers[id].x)*.28;renderPlayers[id].y+=(t.y-renderPlayers[id].y)*.28}}
-function updateUI(){const p=me();if(!p)return;document.getElementById("serverClock").textContent=state.serverTime||"--:--:--";document.getElementById("pName").textContent=p.name;document.getElementById("online").textContent=Object.keys(state.players).length;document.getElementById("className").textContent=p.className;document.getElementById("weaponName").textContent=`${p.weaponIcon} ${p.weapon}`;document.getElementById("level").textContent=p.level;document.getElementById("gold").textContent=p.gold;document.getElementById("kills").textContent=p.kills;document.getElementById("attrPoints").textContent=p.attrPoints||0;document.getElementById("hpText").textContent=`${Math.ceil(p.hp)}/${p.maxHp}`;document.getElementById("manaText").textContent=`${Math.ceil(p.mana)}/${p.maxMana}`;document.getElementById("xpText").textContent=`${p.xp}/${p.nextXp}`;document.getElementById("hpBar").style.width=`${100*p.hp/p.maxHp}%`;document.getElementById("manaBar").style.width=`${100*p.mana/p.maxMana}%`;document.getElementById("xpBar").style.width=`${100*p.xp/p.nextXp}%`;
-const inv=document.getElementById("inventory");inv.innerHTML="";Object.entries(p.inventory).forEach(([item,amount])=>{const slot=document.createElement("div");slot.className="slot";slot.title=ITEM_INFO[item]?.name||item;slot.innerHTML=`${ITEM_INFO[item]?.icon||"?"}<span>${amount}</span>`;inv.appendChild(slot)});
-document.getElementById("statsList").innerHTML=`<div class="row"><span>Pontos disponíveis</span><b>${p.attrPoints||0}</b></div><br>${statLine("ATK","atk",p.stats.atk)}${statLine("Vigor","vigor",p.stats.vigor)}${statLine("Destreza","dex",p.stats.dex)}${statLine("Inteligência","int",p.stats.int)}<br><p class="small">Cada nível dá 5 pontos. Vigor aumenta vida; Inteligência aumenta mana; Destreza ajuda velocidade/cooldown; ATK aumenta dano físico.</p>`;
-const list=document.getElementById("marketList");list.innerHTML="";if(!state.market.length)list.innerHTML=`<p class="small">Nenhum item anunciado.</p>`;state.market.slice().reverse().forEach(m=>{const name=ITEM_INFO[m.item]?.name||m.item;const row=document.createElement("div");row.className="marketRow";row.innerHTML=`<b>${m.amount}x ${ITEM_INFO[m.item]?.icon||""} ${name}</b><br>Vendedor: ${m.seller}<br>Preço: ${m.price} ouro<button class="full" onclick="confirmBuyMarket(${m.id}, '${name}', ${m.amount}, ${m.price}, '${m.seller}')">Comprar</button>`;list.appendChild(row)});
-const rank=document.getElementById("rankList");rank.innerHTML="";(state.ranking||[]).forEach(r=>{const row=document.createElement("div");row.className="rankRow";row.textContent=`${r.pos}. ${r.name} | classe ${r.className} | nível ${r.level} | kills ${r.kills}`;rank.appendChild(row)})}
-function statLine(label,key,value){return `<div class="row"><span>${label}</span><span><b>${value}</b> <button class="attrBtn" onclick="addStat('${key}')">+</button></span></div>`}
+function updateUI(){
+  const p=me();
+  if(!p)return;
+
+  document.getElementById("serverClock").textContent=state.serverTime||"--:--:--";
+  document.getElementById("pName").textContent=p.name;
+  document.getElementById("online").textContent=Object.keys(state.players).length;
+  document.getElementById("className").textContent=p.className;
+  document.getElementById("weaponName").textContent=`${p.weaponIcon} ${p.weapon}`;
+  document.getElementById("level").textContent=p.level;
+  document.getElementById("gold").textContent=p.gold;
+  document.getElementById("kills").textContent=p.kills;
+  document.getElementById("attrPoints").textContent=p.attrPoints||0;
+  document.getElementById("hpText").textContent=`${Math.ceil(p.hp)}/${p.maxHp}`;
+  document.getElementById("manaText").textContent=`${Math.ceil(p.mana)}/${p.maxMana}`;
+  document.getElementById("xpText").textContent=`${p.xp}/${p.nextXp}`;
+  document.getElementById("hpBar").style.width=`${100*p.hp/p.maxHp}%`;
+  document.getElementById("manaBar").style.width=`${100*p.mana/p.maxMana}%`;
+  document.getElementById("xpBar").style.width=`${100*p.xp/p.nextXp}%`;
+
+  const inv=document.getElementById("inventory");
+  inv.innerHTML="";
+  Object.entries(p.inventory).forEach(([item,amount])=>{
+    const slot=document.createElement("div");
+    slot.className="slot";
+    slot.title=ITEM_INFO[item]?.name||item;
+    slot.innerHTML=`${ITEM_INFO[item]?.icon||"?"}<span>${amount}</span>`;
+    inv.appendChild(slot);
+  });
+
+  const stats=document.getElementById("statsList");
+  stats.innerHTML="";
+
+  const points=document.createElement("div");
+  points.className="row";
+  points.innerHTML=`<span>Pontos disponíveis</span><b>${p.attrPoints||0}</b>`;
+  stats.appendChild(points);
+
+  stats.appendChild(document.createElement("br"));
+
+  [
+    ["ATK","atk",p.stats.atk],
+    ["Vigor","vigor",p.stats.vigor],
+    ["Destreza","dex",p.stats.dex],
+    ["Inteligência","int",p.stats.int]
+  ].forEach(([label,key,value])=>{
+    const row=document.createElement("div");
+    row.className="row";
+
+    const left=document.createElement("span");
+    left.textContent=label;
+
+    const right=document.createElement("span");
+    const strong=document.createElement("b");
+    strong.textContent=value;
+
+    const btn=document.createElement("button");
+    btn.className="attrBtn";
+    btn.textContent="+";
+    btn.type="button";
+    btn.dataset.stat=key;
+    btn.addEventListener("click",()=>{
+      socket.emit("addStat", key);
+    });
+
+    right.appendChild(strong);
+    right.appendChild(document.createTextNode(" "));
+    right.appendChild(btn);
+    row.appendChild(left);
+    row.appendChild(right);
+    stats.appendChild(row);
+  });
+
+  const desc=document.createElement("p");
+  desc.className="small";
+  desc.style.marginTop="12px";
+  desc.textContent="Cada nível dá 5 pontos. Vigor aumenta vida; Inteligência aumenta mana; Destreza ajuda velocidade/cooldown; ATK aumenta dano físico.";
+  stats.appendChild(desc);
+
+  const list=document.getElementById("marketList");
+  list.innerHTML="";
+
+  if(!state.market.length){
+    list.innerHTML=`<p class="small">Nenhum item anunciado.</p>`;
+  }
+
+  state.market.slice().reverse().forEach(m=>{
+    const itemName=ITEM_INFO[m.item]?.name||m.item;
+    const row=document.createElement("div");
+    row.className="marketRow";
+
+    const title=document.createElement("b");
+    title.textContent=`${m.amount}x ${ITEM_INFO[m.item]?.icon||""} ${itemName}`;
+
+    const seller=document.createElement("div");
+    seller.textContent=`Vendedor: ${m.seller}`;
+
+    const price=document.createElement("div");
+    price.textContent=`Preço: ${m.price} ouro`;
+
+    const btn=document.createElement("button");
+    btn.className="full";
+    btn.type="button";
+    btn.textContent="Comprar";
+    btn.addEventListener("click",()=>{
+      confirmBuyMarket(m.id, itemName, m.amount, m.price, m.seller);
+    });
+
+    row.appendChild(title);
+    row.appendChild(document.createElement("br"));
+    row.appendChild(seller);
+    row.appendChild(price);
+    row.appendChild(btn);
+    list.appendChild(row);
+  });
+
+  const rank=document.getElementById("rankList");
+  rank.innerHTML="";
+  (state.ranking||[]).forEach(r=>{
+    const row=document.createElement("div");
+    row.className="rankRow";
+    row.textContent=`${r.pos}. ${r.name} | classe ${r.className} | nível ${r.level} | kills ${r.kills}`;
+    rank.appendChild(row);
+  });
+}
+
 function roundRect(x,y,w,h,r){ctx.beginPath();ctx.moveTo(x+r,y);ctx.arcTo(x+w,y,x+w,y+h,r);ctx.arcTo(x+w,y+h,x,y+h,r);ctx.arcTo(x,y+h,x,y,r);ctx.arcTo(x,y,x+w,y,r);ctx.closePath()}
 function loop(){updateRenderPositions();if(noticeTimer>0)noticeTimer--;else document.getElementById("notice").textContent="M mercado com confirmação • H atributos • R ranking • Mobs longe do spawn são mais fortes";draw();requestAnimationFrame(loop)}
 loop();

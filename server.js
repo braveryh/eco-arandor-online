@@ -494,6 +494,7 @@ io.on("connection", socket => {
     const p = players[socket.id];
     if (!p) return;
 
+    if (stat === "vit") stat = "vigor";
     const allowed = ["atk", "vigor", "dex", "int"];
     if (!allowed.includes(stat)) {
       io.to(socket.id).emit("notice", "Atributo inválido.");

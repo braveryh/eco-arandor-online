@@ -12,22 +12,26 @@ app.use(express.static(path.join(__dirname, "public")));
 const PORT = process.env.PORT || 3000;
 
 const WORLD = {
-  width: 4200,
-  height: 3200,
-  safeZone: { x: 1820, y: 1340, w: 560, h: 420 },
-  npcShop: { x: 2100, y: 1550, name: "Lia, Mercadora" },
+  width: 7600,
+  height: 5600,
+  safeZone: { x: 3500, y: 2550, w: 600, h: 460 },
+  npcShop: { x: 3800, y: 2780, name: "Lia, Mercadora" },
   biomes: [
-    { id: "forest", name: "Floresta Verdejante", x: 0, y: 0, w: 1700, h: 1450 },
-    { id: "swamp", name: "Pântano Sombrio", x: 2500, y: 0, w: 1700, h: 1450 },
-    { id: "desert", name: "Deserto Rubro", x: 0, y: 1750, w: 1700, h: 1450 },
-    { id: "ice", name: "Tundra Cristalina", x: 2500, y: 1750, w: 1700, h: 1450 },
-    { id: "base", name: "Base Segura", x: 1720, y: 1220, w: 760, h: 660 }
+    { id: "forest", name: "Floresta Verdejante", x: 250, y: 250, w: 1800, h: 1450 },
+    { id: "swamp", name: "Pântano Sombrio", x: 5350, y: 300, w: 1900, h: 1500 },
+    { id: "desert", name: "Deserto Rubro", x: 350, y: 3750, w: 1900, h: 1500 },
+    { id: "ice", name: "Tundra Cristalina", x: 5350, y: 3700, w: 1900, h: 1500 },
+    { id: "ruins", name: "Ruínas Profanas", x: 2850, y: 600, w: 1800, h: 1450 },
+    { id: "volcanic", name: "Campos Vulcânicos", x: 2850, y: 3650, w: 1900, h: 1500 },
+    { id: "base", name: "Base Segura", x: 3400, y: 2450, w: 800, h: 660 }
   ],
   bosses: [
-    { id: "forestBoss", name: "Ent Ancião", x: 520, y: 420, biome: "forest" },
-    { id: "swampBoss", name: "Hidra do Pântano", x: 3650, y: 520, biome: "swamp" },
-    { id: "desertBoss", name: "Escorpião Rei", x: 520, y: 2720, biome: "desert" },
-    { id: "iceBoss", name: "Golem Glacial", x: 3650, y: 2720, biome: "ice" }
+    { id: "forestBoss", name: "Ent Corrompido", x: 720, y: 670, biome: "forest" },
+    { id: "swampBoss", name: "Hidra Putrefata", x: 6750, y: 760, biome: "swamp" },
+    { id: "desertBoss", name: "Carrasco das Dunas", x: 760, y: 4880, biome: "desert" },
+    { id: "iceBoss", name: "Titã Glacial", x: 6720, y: 4880, biome: "ice" },
+    { id: "ruinsBoss", name: "Arconte Profano", x: 3820, y: 1130, biome: "ruins" },
+    { id: "volcanicBoss", name: "Behemoth de Cinzas", x: 3820, y: 4720, biome: "volcanic" }
   ]
 };
 
@@ -100,67 +104,38 @@ function rand(min, max) { return Math.random() * (max - min) + min; }
 function dist(a, b) { return Math.hypot(a.x - b.x, a.y - b.y); }
 function cleanName(name) { return String(name || "Aventureiro").replace(/[<>]/g, "").trim().slice(0, 16) || "Aventureiro"; }
 
+function inRect(pos, r) {
+  return pos.x >= r.x && pos.x <= r.x + r.w && pos.y >= r.y && pos.y <= r.y + r.h;
+}
+
 function inSafeZone(obj) {
-  const z = WORLD.safeZone;
-  return obj.x >= z.x && obj.x <= z.x + z.w && obj.y >= z.y && obj.y <= z.y + z.h;
+  return inRect(obj, WORLD.safeZone);
 }
 
 function spawnPoint() {
   const z = WORLD.safeZone;
-  return { x: z.x + z.w / 2 + rand(-85, 85), y: z.y + z.h / 2 + rand(-60, 60) };
+  return { x: z.x + z.w / 2 + rand(-90, 90), y: z.y + z.h / 2 + rand(-70, 70) };
+}
+
+function biomeAt(pos) {
+  for (const b of WORLD.biomes) {
+    if (inRect(pos, b)) return b.id;
+  }
+  return "meadow";
 }
 
 function mobLevelByPosition(pos) {
   const maxDist = Math.hypot(WORLD.width / 2, WORLD.height / 2);
   const d = dist(pos, SPAWN_CENTER);
-  return Math.max(1, Math.min(10, Math.floor((d / maxDist) * 10) + 1));
+  return Math.max(1, Math.min(10, Math.floor((d / maxDist) * 12) + 1));
 }
 
 function enemySpawnPoint() {
   let p;
   do {
     p = { x: rand(100, WORLD.width - 100), y: rand(100, WORLD.height - 100) };
-  } while (inSafeZone(p) || dist(p, WORLD.npcShop) < 700);
+  } while (inSafeZone(p) || dist(p, WORLD.npcShop) < 900 || biomeAt(p) === "base");
   return p;
-}
-
-
-function biomeAt(pos) {
-  for (const b of WORLD.biomes || []) {
-    if (pos.x >= b.x && pos.x <= b.x + b.w && pos.y >= b.y && pos.y <= b.y + b.h) {
-      return b.id;
-    }
-  }
-  return "forest";
-}
-
-function createBoss(spawn) {
-  const bossData = {
-    forest: { type: "ent", icon: "🌳", damage: 24, hp: 620, color: "#2d8f46" },
-    swamp: { type: "hydra", icon: "🐍", damage: 28, hp: 760, color: "#4b7f52" },
-    desert: { type: "scorpion", icon: "🦂", damage: 30, hp: 700, color: "#d07a2d" },
-    ice: { type: "golem", icon: "🧊", damage: 26, hp: 800, color: "#84d8ff" }
-  }[spawn.biome] || { type: "boss", icon: "👑", damage: 25, hp: 650, color: "#ffd166" };
-
-  return {
-    id: enemyId++,
-    bossId: spawn.id,
-    isBoss: true,
-    type: bossData.type,
-    name: spawn.name,
-    biome: spawn.biome,
-    icon: bossData.icon,
-    color: bossData.color,
-    level: 10,
-    x: spawn.x,
-    y: spawn.y,
-    size: 74,
-    hp: bossData.hp,
-    maxHp: bossData.hp,
-    speed: 0.8,
-    damage: bossData.damage,
-    cd: 0
-  };
 }
 
 function privateLog(id, text) {
@@ -208,31 +183,85 @@ function createPlayer(id, name, classId) {
   };
 }
 
+function enemyProfileForBiome(biome) {
+  const sets = {
+    forest: [
+      { type: "thornfiend", name: "Demônio Espinheiro", color: "#3fbf5f", hp: 70, damage: 12, size: 34, speed: 1.08 },
+      { type: "direwolf", name: "Lobo Predador", color: "#7a5cff", hp: 105, damage: 17, size: 40, speed: 1.25 },
+      { type: "venomCrawler", name: "Rastejante Venenoso", color: "#65d96e", hp: 88, damage: 15, size: 36, speed: 1.14 }
+    ],
+    swamp: [
+      { type: "plagueMaw", name: "Boca da Praga", color: "#5f8d43", hp: 92, damage: 16, size: 38, speed: 1.04 },
+      { type: "bogReaver", name: "Ceifador do Brejo", color: "#3d5b38", hp: 125, damage: 21, size: 42, speed: 1.16 },
+      { type: "leechHorror", name: "Horror Sanguessuga", color: "#7e394d", hp: 112, damage: 19, size: 40, speed: 1.12 }
+    ],
+    desert: [
+      { type: "boneScarab", name: "Escaravelho Ósseo", color: "#d39442", hp: 95, damage: 17, size: 37, speed: 1.14 },
+      { type: "sandWraith", name: "Espectro de Areia", color: "#ce6a38", hp: 110, damage: 22, size: 39, speed: 1.22 },
+      { type: "duneButcher", name: "Carniceiro das Dunas", color: "#a94a2e", hp: 145, damage: 25, size: 45, speed: 1.08 }
+    ],
+    ice: [
+      { type: "crystalWraith", name: "Aparição Cristalina", color: "#93edff", hp: 102, damage: 19, size: 37, speed: 1.12 },
+      { type: "frostStalker", name: "Perseguidor Gélido", color: "#c5f4ff", hp: 135, damage: 24, size: 43, speed: 1.2 },
+      { type: "iceDevourer", name: "Devorador Glacial", color: "#69b6ff", hp: 160, damage: 27, size: 47, speed: 1.04 }
+    ],
+    ruins: [
+      { type: "voidAcolyte", name: "Acólito do Vazio", color: "#8f5bff", hp: 130, damage: 24, size: 40, speed: 1.1 },
+      { type: "boneKnight", name: "Cavaleiro Ósseo", color: "#d8d0bf", hp: 180, damage: 28, size: 46, speed: 0.98 },
+      { type: "abyssSpawn", name: "Cria Abissal", color: "#d84dff", hp: 150, damage: 30, size: 44, speed: 1.18 }
+    ],
+    volcanic: [
+      { type: "ashImp", name: "Diabrete de Cinzas", color: "#ff6b35", hp: 120, damage: 23, size: 38, speed: 1.18 },
+      { type: "lavaHound", name: "Cão de Lava", color: "#ff3d2e", hp: 165, damage: 29, size: 45, speed: 1.17 },
+      { type: "obsidianBrute", name: "Bruto de Obsidiana", color: "#3b2d32", hp: 220, damage: 34, size: 52, speed: 0.9 }
+    ],
+    meadow: [
+      { type: "slime", name: "Slime", color: "#54d66b", hp: 50, damage: 8, size: 28, speed: 0.95 },
+      { type: "wolf", name: "Lobo", color: "#9b5de5", hp: 85, damage: 14, size: 34, speed: 1.25 }
+    ]
+  };
+
+  const arr = sets[biome] || sets.meadow;
+  return arr[Math.floor(Math.random() * arr.length)];
+}
+
+function createBoss(spawn) {
+  const bossData = {
+    forest: { type: "corruptedEnt", icon: "🌳", damage: 34, hp: 980, color: "#2d8f46" },
+    swamp: { type: "plagueHydra", icon: "🐍", damage: 40, hp: 1180, color: "#4b7f52" },
+    desert: { type: "duneExecutioner", icon: "🦂", damage: 42, hp: 1100, color: "#d07a2d" },
+    ice: { type: "glacialTitan", icon: "🧊", damage: 38, hp: 1250, color: "#84d8ff" },
+    ruins: { type: "profaneArchon", icon: "👁️", damage: 45, hp: 1320, color: "#9b5cff" },
+    volcanic: { type: "ashBehemoth", icon: "🔥", damage: 48, hp: 1450, color: "#ff4a2d" }
+  }[spawn.biome];
+
+  return {
+    id: enemyId++,
+    bossId: spawn.id,
+    isBoss: true,
+    type: bossData.type,
+    name: spawn.name,
+    biome: spawn.biome,
+    icon: bossData.icon,
+    color: bossData.color,
+    level: 10,
+    x: spawn.x,
+    y: spawn.y,
+    size: 82,
+    hp: bossData.hp,
+    maxHp: bossData.hp,
+    speed: 0.72,
+    damage: bossData.damage,
+    cd: 0
+  };
+}
+
 function createEnemy() {
   const pos = enemySpawnPoint();
   const biome = biomeAt(pos);
-
-  let profile;
-
-  if (biome === "swamp") {
-    profile = Math.random() > 0.45
-      ? { type: "bogling", name: "Bogling", color: "#5b8c48", hp: 62, damage: 10, size: 31, speed: 1.05 }
-      : { type: "mireWolf", name: "Lobo do Brejo", color: "#556b3d", hp: 94, damage: 15, size: 36, speed: 1.22 };
-  } else if (biome === "desert") {
-    profile = Math.random() > 0.45
-      ? { type: "scarab", name: "Escaravelho", color: "#c8893d", hp: 72, damage: 12, size: 32, speed: 1.1 }
-      : { type: "sandFiend", name: "Demônio de Areia", color: "#d25f2d", hp: 110, damage: 18, size: 38, speed: 1.18 };
-  } else if (biome === "ice") {
-    profile = Math.random() > 0.45
-      ? { type: "iceSprite", name: "Espírito de Gelo", color: "#8de6ff", hp: 78, damage: 13, size: 31, speed: 1.08 }
-      : { type: "frostWolf", name: "Lobo Glacial", color: "#b6ecff", hp: 118, damage: 19, size: 39, speed: 1.2 };
-  } else {
-    profile = Math.random() > 0.35
-      ? { type: "slime", name: "Slime", color: "#54d66b", hp: 50, damage: 8, size: 28, speed: 0.95 }
-      : { type: "wolf", name: "Lobo", color: "#9b5de5", hp: 85, damage: 14, size: 34, speed: 1.25 };
-  }
-
+  const profile = enemyProfileForBiome(biome);
   const lvl = mobLevelByPosition(pos);
+  const biomeBonus = ["ruins", "volcanic"].includes(biome) ? 1.35 : ["ice", "desert", "swamp"].includes(biome) ? 1.18 : 1;
 
   return {
     id: enemyId++,
@@ -245,16 +274,16 @@ function createEnemy() {
     x: pos.x,
     y: pos.y,
     size: profile.size + lvl * 0.7,
-    hp: profile.hp + lvl * 14,
-    maxHp: profile.hp + lvl * 14,
+    hp: Math.floor((profile.hp + lvl * 18) * biomeBonus),
+    maxHp: Math.floor((profile.hp + lvl * 18) * biomeBonus),
     speed: profile.speed + lvl * 0.025,
-    damage: profile.damage + lvl * 3,
+    damage: Math.floor((profile.damage + lvl * 4) * biomeBonus),
     cd: 0
   };
 }
 
 function spawnEnemies() {
-  while (enemies.filter(e => !e.isBoss).length < 48) enemies.push(createEnemy());
+  while (enemies.filter(e => !e.isBoss).length < 72) enemies.push(createEnemy());
 
   for (const boss of WORLD.bosses) {
     if (!enemies.some(e => e.bossId === boss.id)) {
@@ -278,12 +307,10 @@ function addXp(p, amount) {
     p.xp -= p.nextXp;
     p.level++;
     p.nextXp = Math.floor(p.nextXp * 1.45);
-
     p.attrPoints += 5;
     recalcDerived(p);
     p.hp = p.maxHp;
     p.mana = p.maxMana;
-
     io.to(p.id).emit("notice", `Level up! Você ganhou 5 pontos de atributo.`);
     privateLog(p.id, `Você subiu para o nível ${p.level}. Abra H e distribua seus pontos.`);
   }
@@ -349,21 +376,21 @@ function updateEnemies() {
       }
     }
 
-    if (target && best < 410 && best > 0) {
+    if (target && best < (e.isBoss ? 560 : 430) && best > 0) {
       e.x += ((target.x - e.x) / best) * e.speed;
       e.y += ((target.y - e.y) / best) * e.speed;
     }
 
     if (e.cd > 0) e.cd--;
 
-    if (target && best < 40 && e.cd <= 0) {
-      e.cd = 45;
+    if (target && best < (e.isBoss ? 58 : 40) && e.cd <= 0) {
+      e.cd = e.isBoss ? 60 : 45;
       const damage = Math.max(1, e.damage - Math.floor(target.stats.vigor * 0.12));
       target.hp -= damage;
 
       io.to(target.id).emit("damageTaken", { x: target.x, y: target.y - 35, damage });
-      io.to(target.id).emit("notice", `${e.name} Nv.${e.level} causou ${damage} de dano.`);
-      privateLog(target.id, `${e.name} Nv.${e.level} causou ${damage} de dano em você.`);
+      io.to(target.id).emit("notice", `${e.isBoss ? "BOSS " : ""}${e.name} Nv.${e.level} causou ${damage} de dano.`);
+      privateLog(target.id, `${e.isBoss ? "BOSS " : ""}${e.name} Nv.${e.level} causou ${damage} de dano em você.`);
 
       if (target.hp <= 0) {
         const pos = spawnPoint();
@@ -385,13 +412,32 @@ function killEnemy(index, killer) {
 
   enemies.splice(index, 1);
   killer.kills++;
-  killer.gold += (e.type === "slime" ? 6 : 12) + e.level * 4;
-  addXp(killer, (e.type === "slime" ? 28 : 50) + e.level * 12);
 
-  if (e.type === "slime") addDrop(e.x, e.y, Math.random() > 0.45 ? "herb" : "crystal");
-  else addDrop(e.x, e.y, Math.random() > 0.45 ? "fang" : "crystal");
+  if (e.isBoss) {
+    const goldGain = 260;
+    const xpGain = 520;
+    killer.gold += goldGain;
+    addXp(killer, xpGain);
+    addDrop(e.x, e.y, "crystal", 6);
+    addDrop(e.x + 22, e.y, "fang", 4);
+    privateLog(killer.id, `Você derrotou o BOSS ${e.name}! +${goldGain} ouro e +${xpGain} XP.`);
+    setTimeout(spawnEnemies, 20000);
+    return;
+  }
 
-  privateLog(killer.id, `Você matou ${e.name} Nv.${e.level} e recebeu ouro/XP.`);
+  const goldGain = (e.type === "slime" ? 9 : 18) + e.level * 4;
+  const xpGain = (e.type === "slime" ? 36 : 65) + e.level * 12;
+
+  killer.gold += goldGain;
+  addXp(killer, xpGain);
+
+  if (["slime", "thornfiend", "bogling", "iceSprite", "crystalWraith"].includes(e.type)) {
+    addDrop(e.x, e.y, Math.random() > 0.45 ? "herb" : "crystal");
+  } else {
+    addDrop(e.x, e.y, Math.random() > 0.45 ? "fang" : "crystal");
+  }
+
+  privateLog(killer.id, `Você matou ${e.name} Nv.${e.level}. +${goldGain} ouro e +${xpGain} XP.`);
   setTimeout(spawnEnemies, 900);
 }
 
@@ -419,7 +465,7 @@ function attackEnemy(player) {
   for (let i = 0; i < enemies.length; i++) {
     const e = enemies[i];
     const d = dist(player, e);
-    if (d <= cls.range && d < bestDistance) {
+    if (d <= cls.range + (e.isBoss ? 20 : 0) && d < bestDistance) {
       bestDistance = d;
       bestIndex = i;
     }
@@ -442,7 +488,7 @@ function attackEnemy(player) {
   });
 
   io.to(player.id).emit("notice", `${cls.label}: ${damage} de dano.`);
-  privateLog(player.id, `Você causou ${damage} de dano em ${e.name} Nv.${e.level}.`);
+  privateLog(player.id, `Você causou ${damage} de dano em ${e.isBoss ? "BOSS " : ""}${e.name} Nv.${e.level}.`);
 
   if (e.hp <= 0) killEnemy(bestIndex, player);
 }

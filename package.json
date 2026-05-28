@@ -1,7 +1,7 @@
 {
   "name": "eco-arandor-online",
-  "version": "3.0.0",
-  "description": "MMORPG indie multiplayer com classes, lobby, loja, mercado e inventário",
+  "version": "4.0.0",
+  "description": "MMORPG indie multiplayer V4",
   "main": "server.js",
   "scripts": {
     "start": "node server.js"

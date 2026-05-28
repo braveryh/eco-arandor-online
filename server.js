@@ -923,13 +923,29 @@ io.on("connection", socket => {
     forceState();
   });
 
-  socket.on("attack", () => {
+  socket.on("attack", data => {
     const p = players[socket.id];
     if (!p) return;
 
     if (inSafeZone(p)) {
       io.to(socket.id).emit("notice", "Você está na base segura. Saia da base para lutar.");
       return;
+    }
+
+    if (data && typeof data.enemyId !== "undefined") {
+      const enemy = enemies.find(e => e.id === Number(data.enemyId));
+      if (!enemy) {
+        io.to(socket.id).emit("notice", "Monstro não encontrado.");
+        return;
+      }
+
+      const cls = CLASSES[p.classId] || CLASSES.swordsman;
+      const range = cls.range + (enemy.isBoss ? 20 : 0);
+
+      if (dist(p, enemy) > range) {
+        io.to(socket.id).emit("notice", "Alvo fora do alcance.");
+        return;
+      }
     }
 
     attackEnemy(p);

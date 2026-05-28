@@ -2,7 +2,7 @@
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
-<title>Eco Arandor Online V12</title>
+<title>Eco Arandor Online V13</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <style>
@@ -27,7 +27,7 @@ button,input,select{border:none;outline:none;border-radius:10px;padding:9px}butt
 #menuCard{width:540px;padding:24px;background:rgba(10,14,22,.94);border:1px solid rgba(255,255,255,.16);border-radius:20px;box-shadow:0 20px 80px rgba(0,0,0,.55)}
 #menuCard h1{color:#ffd166;margin-bottom:8px}.classes{display:grid;grid-template-columns:repeat(3,1fr);gap:11px;margin:14px 0}.classCard{cursor:pointer;border:1px solid rgba(255,255,255,.14);border-radius:14px;background:#101722;padding:12px;min-height:126px}.classCard.selected{border-color:#ffd166;box-shadow:0 0 0 2px rgba(255,209,102,.22)}.classCard h3{color:#7ee787;font-size:15px;margin-bottom:6px}
 .modal{top:14px;width:340px;max-height:calc(100vh - 28px);padding:14px;overflow-y:auto;display:none}.modal.open{display:block}.modal h2{font-size:16px;color:#7ee787;margin-bottom:8px}
-#inventoryPanel{right:14px}#shopPanel{right:370px}#marketPanel{right:14px;top:355px}#statsPanel{left:340px;top:14px}#rankPanel{left:340px;top:355px}
+#inventoryPanel{right:14px}#shopPanel{right:370px}#marketPanel{right:14px;top:355px}#statsPanel{left:340px;top:14px}#rankPanel{left:340px;top:355px}#questPanel{left:690px;top:14px}
 .itemGrid{display:grid;grid-template-columns:repeat(4,1fr);gap:7px}.slot{min-height:54px;background:#101722;border:1px solid rgba(255,255,255,.12);border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:24px;position:relative}.slot span{position:absolute;right:6px;bottom:4px;color:#ffd166;font-size:11px}
 .marketRow,.rankRow{background:#101722;border:1px solid rgba(255,255,255,.1);border-radius:10px;padding:8px;margin-bottom:7px;font-size:12px}.marketRow button{padding:6px;font-size:12px}
 .attrBtn{padding:5px 8px;font-size:12px;margin-top:0}
@@ -44,15 +44,33 @@ button,input,select{border:none;outline:none;border-radius:10px;padding:9px}butt
 <div id="menu">
   <div id="menuCard">
     <h1>Eco Arandor Online</h1>
-    <p class="small">Versão corrigida: mapa maior, biomas vivos, mobs sombrios e bosses.</p><br>
-    <input id="nameInput" class="full" maxlength="16" placeholder="Nome do personagem">
-    <div class="classes">
-      <div class="classCard selected" data-class="swordsman" onclick="selectClass('swordsman')"><h3>⚔️ Espadachim</h3><p class="small">Curto alcance. Escala com ATK e Vigor.</p></div>
-      <div class="classCard" data-class="archer" onclick="selectClass('archer')"><h3>🏹 Arqueiro</h3><p class="small">Longo alcance. Escala com Destreza.</p></div>
-      <div class="classCard" data-class="mage" onclick="selectClass('mage')"><h3>🔮 Mago</h3><p class="small">Magia longa. Escala com Inteligência.</p></div>
+    <p class="small">Conta, personagens salvos e missões MMORPG.</p><br>
+
+    <div id="authScreen">
+      <input id="authEmail" class="full" type="email" placeholder="E-mail">
+      <input id="authPassword" class="full" type="password" placeholder="Senha, mínimo 6 caracteres" style="margin-top:8px">
+      <div class="grid2" style="margin-top:8px">
+        <button onclick="loginAccount()">Entrar</button>
+        <button onclick="registerAccount()">Criar conta</button>
+      </div>
+      <button class="full" onclick="guestLogin()">Entrar como convidado</button>
+      <p class="small" style="margin-top:10px">Login com Google/Gmail real exige configurar OAuth no Google Cloud. Esta versão já salva contas por e-mail/senha no servidor.</p>
     </div>
-    <button class="full" onclick="enterGame()">Entrar no jogo</button>
-    <p class="small" style="margin-top:12px">WASD • Espaço • I inventário • L loja • M mercado • H atributos • R ranking</p>
+
+    <div id="characterScreen" style="display:none">
+      <h2 style="color:#7ee787;font-size:16px">Selecionar personagem</h2>
+      <div id="characterList" style="margin:10px 0"></div>
+
+      <h2 style="color:#7ee787;font-size:16px;margin-top:14px">Criar personagem</h2>
+      <input id="nameInput" class="full" maxlength="16" placeholder="Nome do personagem">
+      <div class="classes">
+        <div class="classCard selected" data-class="swordsman" onclick="selectClass('swordsman')"><h3>⚔️ Espadachim</h3><p class="small">Curto alcance. Escala com ATK e Vigor.</p></div>
+        <div class="classCard" data-class="archer" onclick="selectClass('archer')"><h3>🏹 Arqueiro</h3><p class="small">Longo alcance. Escala com Destreza.</p></div>
+        <div class="classCard" data-class="mage" onclick="selectClass('mage')"><h3>🔮 Mago</h3><p class="small">Magia longa. Escala com Inteligência.</p></div>
+      </div>
+      <button class="full" onclick="createCharacter()">Criar novo personagem</button>
+      <p class="small" style="margin-top:12px">WASD • Espaço • Q missões • I inventário • H atributos • R ranking</p>
+    </div>
   </div>
 </div>
 
@@ -90,6 +108,7 @@ button,input,select{border:none;outline:none;border-radius:10px;padding:9px}butt
 <div id="marketPanel" class="panel modal"><h2>📦 Mercado Local</h2><p class="small">M para abrir. Compra com confirmação.</p><br><div class="grid2"><select id="sellItem"><option value="herb">Erva</option><option value="crystal">Cristal</option><option value="fang">Presa</option><option value="potion">Poção Vida</option><option value="manaPotion">Poção Mana</option></select><input id="sellAmount" type="number" value="1" min="1"></div><input id="sellPrice" class="full" type="number" value="20" min="1" style="margin-top:7px"><button class="full" onclick="sellMarket()">Colocar à venda</button><br><br><div id="marketList"></div></div>
 <div id="statsPanel" class="panel modal"><h2>📊 Atributos</h2><p class="small">H para abrir. Distribua pontos ganhos por nível.</p><br><div id="statsList"></div></div>
 <div id="rankPanel" class="panel modal"><h2>🏆 Ranking de Level</h2><p class="small">R para abrir/fechar.</p><br><div id="rankList"></div></div>
+<div id="questPanel" class="panel modal"><h2>📜 Missões</h2><p class="small">Q para abrir/fechar. Complete e receba recompensas.</p><br><div id="questList"></div></div>
 
 <div id="chat" class="panel">
   <div class="chatTabs"><button id="tabGlobal" class="tab active" onclick="setChatTab('global')">Global</button><button id="tabActions" class="tab" onclick="setChatTab('actions')">Ações Privadas</button></div>
@@ -148,6 +167,7 @@ let chatTab="global";
 let globalMessages=[];
 let actionMessages=[];
 let pendingMarketBuy=null;
+let quests=[];
 
 const decor={trees:[],rocks:[],flowers:[],lakes:[],bones:[],crystals:[],lava:[]};
 
@@ -171,22 +191,86 @@ function selectClass(id){
   document.querySelector(`[data-class="${id}"]`).classList.add("selected");
 }
 
-function enterGame(){
-  const name=document.getElementById("nameInput").value.trim()||localStorage.getItem("ecoName")||"Aventureiro";
-  localStorage.setItem("ecoName",name);
-  localStorage.setItem("ecoClass",chosenClass);
-  document.getElementById("menu").style.display="none";
+function loginAccount(){
+  socket.emit("login",{
+    email:document.getElementById("authEmail").value.trim(),
+    password:document.getElementById("authPassword").value
+  });
+}
+
+function registerAccount(){
+  socket.emit("register",{
+    email:document.getElementById("authEmail").value.trim(),
+    password:document.getElementById("authPassword").value
+  });
+}
+
+function guestLogin(){
+  const name="Convidado"+Math.floor(Math.random()*999);
   socket.emit("join",{name,classId:chosenClass});
+  document.getElementById("menu").style.display="none";
   joined=true;
 }
 
-document.getElementById("nameInput").value=localStorage.getItem("ecoName")||"";
+function createCharacter(){
+  const name=document.getElementById("nameInput").value.trim()||"Aventureiro";
+  localStorage.setItem("ecoClass",chosenClass);
+  socket.emit("createCharacter",{name,classId:chosenClass});
+}
+
+function selectCharacter(id){
+  socket.emit("selectCharacter",id);
+}
+
+function renderCharacters(chars){
+  const list=document.getElementById("characterList");
+  list.innerHTML="";
+  if(!chars.length){
+    list.innerHTML='<p class="small">Nenhum personagem criado ainda.</p>';
+    return;
+  }
+  chars.forEach(c=>{
+    const row=document.createElement("div");
+    row.className="marketRow";
+    row.innerHTML=`<b>${c.name}</b><br>Classe: ${c.className} | Nível ${c.level} | Ouro ${c.gold}`;
+    const btn=document.createElement("button");
+    btn.className="full";
+    btn.textContent="Jogar com este personagem";
+    btn.addEventListener("mousedown",e=>{
+      e.preventDefault();
+      selectCharacter(c.id);
+    });
+    row.appendChild(btn);
+    list.appendChild(row);
+  });
+}
+
 chosenClass=localStorage.getItem("ecoClass")||"swordsman";
 selectClass(chosenClass);
 
 socket.on("connect",()=>{
   myId=socket.id;
   showNotice("Conectado ao servidor.");
+});
+
+socket.on("authOk",data=>{
+  showNotice("Login realizado.");
+  document.getElementById("authScreen").style.display="none";
+  document.getElementById("characterScreen").style.display="block";
+  renderCharacters(data.characters||[]);
+});
+
+socket.on("authError",msg=>{
+  showNotice(msg);
+});
+
+socket.on("characters",chars=>{
+  renderCharacters(chars||[]);
+});
+
+socket.on("gameStarted",()=>{
+  document.getElementById("menu").style.display="none";
+  joined=true;
 });
 
 socket.on("state",s=>{
@@ -221,6 +305,11 @@ socket.on("attackEffect",e=>{
 
 socket.on("damageTaken",e=>{
   floatTexts.push({x:e.x,y:e.y,text:"-"+e.damage,life:44,color:"#ff4d6d"});
+});
+
+socket.on("quests",q=>{
+  quests=q||[];
+  renderQuests();
 });
 
 function setChatTab(tab){
@@ -261,6 +350,7 @@ document.addEventListener("keydown",e=>{
   if(key==="m")togglePanel("marketPanel");
   if(key==="h")togglePanel("statsPanel");
   if(key==="r")togglePanel("rankPanel");
+  if(key==="q")togglePanel("questPanel");
 
   if(tag==="INPUT"||tag==="SELECT"||tag==="BUTTON")return;
 
@@ -317,6 +407,7 @@ setInterval(()=>{
 function usePotion(type){socket.emit("usePotion",type);}
 function buyNpcPotion(type){socket.emit("buyNpcPotion",type);}
 function addStat(stat){socket.emit("addStat",stat);showNotice("Adicionando atributo...");}
+function claimQuest(id){socket.emit("claimQuest",id);}
 
 function renamePlayer(){
   const name=document.getElementById("renameInput").value.trim();
@@ -565,6 +656,21 @@ function drawExtraDecor(){
   });
 }
 
+
+function drawQuestNpc(){
+  const n=state.world.questNpc||{x:3040,y:2185,name:"Capitão Rowan"};
+  const p=screen(n.x,n.y);
+  ctx.fillStyle="rgba(0,0,0,.3)";
+  ctx.beginPath();ctx.ellipse(p.x,p.y+28,22,8,0,0,Math.PI*2);ctx.fill();
+  ctx.fillStyle="#7ee787";ctx.fillRect(p.x-14,p.y-25,28,44);
+  ctx.fillStyle="#f4bf77";ctx.fillRect(p.x-11,p.y-43,22,20);
+  ctx.fillStyle="#111";ctx.fillText("📜",p.x-12,p.y-50);
+  ctx.fillStyle="#fff";ctx.font="13px Arial";ctx.textAlign="center";
+  ctx.fillText(n.name,p.x,p.y-62);
+  ctx.fillText("Missões [Q]",p.x,p.y+42);
+  ctx.textAlign="left";
+}
+
 function drawDrop(d){
   const p=screen(d.x,d.y);
   ctx.fillStyle="rgba(0,0,0,.25)";
@@ -732,6 +838,7 @@ function draw(){
   decor.trees.forEach(drawTree);
   drawSafeZone();
   drawNpc();
+  drawQuestNpc();
   state.drops.forEach(drawDrop);
   state.enemies.forEach(drawEnemy);
   for(const id in state.players)drawPlayer(state.players[id],id===myId);
@@ -866,6 +973,35 @@ function updateUI(){
   });
 }
 
+
+function renderQuests(){
+  const list=document.getElementById("questList");
+  if(!list)return;
+  list.innerHTML="";
+  if(!quests.length){
+    list.innerHTML='<p class="small">Nenhuma missão disponível.</p>';
+    return;
+  }
+  quests.forEach(q=>{
+    const st=q.state||{progress:0,completed:false,claimed:false};
+    const row=document.createElement("div");
+    row.className="marketRow";
+    const status=st.claimed?"Recebida":st.completed?"Concluída":"Em andamento";
+    row.innerHTML=`<b>${q.type==="main"?"⭐":q.type==="boss"?"👑":"•"} ${q.title}</b><br>${q.description}<br>Progresso: ${st.progress||0}/${q.target.total}<br>Status: ${status}<br>Recompensa: ${q.reward.gold||0} ouro, ${q.reward.xp||0} XP`;
+    if(st.completed&&!st.claimed){
+      const btn=document.createElement("button");
+      btn.className="full";
+      btn.textContent="Receber recompensa";
+      btn.addEventListener("mousedown",e=>{
+        e.preventDefault();
+        claimQuest(q.id);
+      });
+      row.appendChild(btn);
+    }
+    list.appendChild(row);
+  });
+}
+
 function roundRect(x,y,w,h,r){
   ctx.beginPath();
   ctx.moveTo(x+r,y);
@@ -879,7 +1015,7 @@ function roundRect(x,y,w,h,r){
 function loop(){
   updateRenderPositions();
   if(noticeTimer>0)noticeTimer--;
-  else document.getElementById("notice").textContent="Mapa maior • Biomas vivos • Mobs sombrios • XP/ouro no chat privado";
+  else document.getElementById("notice").textContent="Q missões • Personagens salvos • Biomas vivos • XP/ouro no chat privado";
   draw();
   requestAnimationFrame(loop);
 }

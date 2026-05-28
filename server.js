@@ -495,9 +495,12 @@ io.on("connection", socket => {
     if (!p) return;
 
     const allowed = ["atk", "vigor", "dex", "int"];
-    if (!allowed.includes(stat)) return;
+    if (!allowed.includes(stat)) {
+      io.to(socket.id).emit("notice", "Atributo inválido.");
+      return;
+    }
 
-    if (p.attrPoints <= 0) {
+    if ((p.attrPoints || 0) <= 0) {
       io.to(socket.id).emit("notice", "Você não tem pontos disponíveis.");
       return;
     }
@@ -506,9 +509,10 @@ io.on("connection", socket => {
     p.stats[stat]++;
     recalcDerived(p);
 
-    if (stat === "vigor") p.hp = Math.min(p.maxHp, p.hp + 7);
-    if (stat === "int") p.mana = Math.min(p.maxMana, p.mana + 5);
+    if (stat === "vigor") p.hp = Math.min(p.maxHp, p.hp + 20);
+    if (stat === "int") p.mana = Math.min(p.maxMana, p.mana + 20);
 
+    io.to(socket.id).emit("notice", `+1 em ${stat}. Pontos restantes: ${p.attrPoints}.`);
     privateLog(p.id, `Você adicionou +1 em ${stat}. Pontos restantes: ${p.attrPoints}.`);
     forceState();
   });

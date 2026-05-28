@@ -1,14 +1,14 @@
-  <!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
-<title>Eco Arandor Online V19 3D</title>
+<title>Eco Arandor Online V19 3D Corrigida</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <style>
 *{box-sizing:border-box;margin:0;padding:0;font-family:Arial,Helvetica,sans-serif;user-select:none}
 body{overflow:hidden;background:#080b10;color:white}
-canvas{display:block;background:#1f6f36}#threeGame{position:absolute;inset:0;overflow:hidden;background:#08120c}
+canvas{display:block;background:#1f6f36;position:absolute;inset:0;z-index:1}#threeGame{position:absolute;inset:0;z-index:0;background:#08120c}body.mode3d canvas#game{display:none}
 .panel{position:absolute;background:rgba(9,13,20,.84);border:1px solid rgba(255,255,255,.14);border-radius:16px;box-shadow:0 14px 40px rgba(0,0,0,.42);backdrop-filter:blur(8px)}
 #topHud{top:14px;left:14px;width:360px;height:118px;padding:10px 12px 10px 98px;border-radius:18px;background:rgba(8,12,18,.86)}
 #topHud h1{font-size:18px;color:#ffd166;margin-bottom:3px}
@@ -72,7 +72,7 @@ button,input,select{border:none;outline:none;border-radius:10px;padding:9px}butt
 </head>
 
 <body>
-<div id="threeGame"></div><canvas id="game" style="display:none"></canvas>
+<div id="threeGame"></div><canvas id="game"></canvas>
 
 <div id="menu">
   <div id="menuCard">
@@ -291,6 +291,7 @@ function registerAccount(){
 
 function guestLogin(){
   if(audioSettings.musicEnabled) startMusic();
+  enable3D();
   const name="Convidado"+Math.floor(Math.random()*999);
   socket.emit("join",{name,classId:chosenClass});
   document.getElementById("menu").style.display="none";
@@ -1129,6 +1130,394 @@ function drawEnemy(e){
 }
 
 
+
+let renderMode3D=false;
+const three3d={
+  ok:false,
+  scene:null,
+  camera:null,
+  renderer:null,
+  playerMeshes:{},
+  enemyMeshes:{},
+  dropMeshes:{},
+  worldBuilt:false,
+  decorGroup:null
+};
+
+function enable3D(){
+  try{
+    if(typeof THREE==="undefined"){
+      showNotice("Three.js não carregou. Usando modo 2D.");
+      return false;
+    }
+    if(three3d.ok)return true;
+
+    const container=document.getElementById("threeGame");
+    if(!container)return false;
+
+    const scene=new THREE.Scene();
+    scene.background=new THREE.Color(0x08120c);
+    scene.fog=new THREE.FogExp2(0x08120c,0.00022);
+
+    const camera=new THREE.PerspectiveCamera(52,innerWidth/innerHeight,1,9000);
+    const renderer=new THREE.WebGLRenderer({antialias:true,alpha:false,powerPreference:"high-performance"});
+    renderer.setSize(innerWidth,innerHeight);
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio||1,2));
+    renderer.shadowMap.enabled=true;
+    renderer.shadowMap.type=THREE.PCFSoftShadowMap;
+    container.innerHTML="";
+    container.appendChild(renderer.domElement);
+
+    const hemi=new THREE.HemisphereLight(0xcfefff,0x22301e,1.2);
+    scene.add(hemi);
+
+    const sun=new THREE.DirectionalLight(0xfff1c7,2.4);
+    sun.position.set(1200,2400,900);
+    sun.castShadow=true;
+    sun.shadow.mapSize.width=1024;
+    sun.shadow.mapSize.height=1024;
+    scene.add(sun);
+
+    const ambient=new THREE.AmbientLight(0x6b7f75,0.45);
+    scene.add(ambient);
+
+    three3d.scene=scene;
+    three3d.camera=camera;
+    three3d.renderer=renderer;
+    three3d.decorGroup=new THREE.Group();
+    scene.add(three3d.decorGroup);
+    three3d.ok=true;
+    renderMode3D=true;
+    document.body.classList.add("mode3d");
+
+    addEventListener("resize",()=>{
+      if(!three3d.ok)return;
+      three3d.camera.aspect=innerWidth/innerHeight;
+      three3d.camera.updateProjectionMatrix();
+      three3d.renderer.setSize(innerWidth,innerHeight);
+    });
+
+    build3DWorld();
+    showNotice("Modo 3D ativado.");
+    return true;
+  }catch(err){
+    console.error("Erro ao iniciar 3D:",err);
+    renderMode3D=false;
+    document.body.classList.remove("mode3d");
+    showNotice("Erro no 3D. Voltando para modo 2D.");
+    return false;
+  }
+}
+
+function mat3D(color,rough=0.8,metal=0.05){
+  return new THREE.MeshStandardMaterial({color,roughness:rough,metalness:metal});
+}
+
+function biomeColor3D(id){
+  if(id==="forest")return 0x2d7a3a;
+  if(id==="ruins")return 0x3d3650;
+  if(id==="swamp")return 0x263f2a;
+  if(id==="desert")return 0xb9823a;
+  if(id==="volcanic")return 0x4a221d;
+  if(id==="ice")return 0x8fd8e8;
+  if(id==="base")return 0x476b4f;
+  return 0x326b38;
+}
+
+function biomeAt3D(x,z){
+  const biomes=state.world.biomes||[];
+  for(const b of biomes){
+    if(x>=b.x&&x<=b.x+b.w&&z>=b.y&&z<=b.y+b.h)return b.id;
+  }
+  return "meadow";
+}
+
+function addGround3D(x,z,w,h,id){
+  const mesh=new THREE.Mesh(
+    new THREE.PlaneGeometry(w,h,12,12),
+    mat3D(biomeColor3D(id),0.95,0.02)
+  );
+  mesh.rotation.x=-Math.PI/2;
+  mesh.position.set(x+w/2,0,z+h/2);
+  mesh.receiveShadow=true;
+  three3d.scene.add(mesh);
+}
+
+function addTree3D(x,z,biome){
+  const g=new THREE.Group();
+  const trunk=new THREE.Mesh(
+    new THREE.CylinderGeometry(5,8,55,7),
+    mat3D(biome==="desert"?0x8a5b2f:biome==="ice"?0x6a7d83:0x5a361d)
+  );
+  trunk.position.y=28;
+  trunk.castShadow=true;
+  g.add(trunk);
+
+  const leaves=new THREE.Mesh(
+    new THREE.ConeGeometry(34,82,9),
+    mat3D(
+      biome==="ice"?0xc8f4ff:
+      biome==="volcanic"?0x8a2e22:
+      biome==="ruins"?0x6b42a0:
+      biome==="desert"?0xc4a04a:
+      biome==="swamp"?0x456b3f:0x1f7a3b
+    )
+  );
+  leaves.position.y=88;
+  leaves.castShadow=true;
+  g.add(leaves);
+  g.position.set(x,0,z);
+  g.scale.setScalar(0.75+Math.random()*0.5);
+  three3d.decorGroup.add(g);
+}
+
+function addRock3D(x,z,biome){
+  const mesh=new THREE.Mesh(
+    new THREE.DodecahedronGeometry(16+Math.random()*16,0),
+    mat3D(
+      biome==="ice"?0xcff9ff:
+      biome==="desert"?0xa4743f:
+      biome==="volcanic"?0x211819:
+      biome==="ruins"?0x5d526b:0x777d83
+    )
+  );
+  mesh.position.set(x,14,z);
+  mesh.rotation.set(Math.random(),Math.random(),Math.random());
+  mesh.castShadow=true;
+  mesh.receiveShadow=true;
+  three3d.decorGroup.add(mesh);
+}
+
+function build3DWorld(){
+  if(!three3d.ok||three3d.worldBuilt)return;
+  addGround3D(0,0,state.world.width,state.world.height,"meadow");
+  (state.world.biomes||[]).forEach(b=>addGround3D(b.x,b.y,b.w,b.h,b.id));
+
+  for(let i=0;i<330;i++){
+    const x=Math.random()*state.world.width;
+    const z=Math.random()*state.world.height;
+    const biome=biomeAt3D(x,z);
+    if(biome==="base")continue;
+    if(Math.random()<0.72 && biome!=="desert" && biome!=="volcanic")addTree3D(x,z,biome);
+    else addRock3D(x,z,biome);
+  }
+
+  three3d.worldBuilt=true;
+}
+
+function createPlayer3D(p){
+  const g=new THREE.Group();
+  const skin=mat3D(0xf4bf77,0.72);
+  const armor=mat3D(p.classId==="archer"?0xbfc8d6:(p.color||0x49a6ff),0.45,0.25);
+  const green=mat3D(0x758b76,0.72);
+  const white=mat3D(0xf4f6ff,0.55);
+  const gold=mat3D(0xd6a84a,0.42,0.25);
+  const blue=mat3D(0x58bfe8,0.45);
+
+  const body=new THREE.Mesh(new THREE.BoxGeometry(28,44,18),armor);
+  body.position.y=66; body.castShadow=true; g.add(body);
+
+  const head=new THREE.Mesh(new THREE.SphereGeometry(16,20,14),skin);
+  head.position.y=106; head.castShadow=true; g.add(head);
+
+  for(const side of [-1,1]){
+    const leg=new THREE.Mesh(new THREE.BoxGeometry(10,38,12),p.classId==="archer"?green:mat3D(0x1a2433));
+    leg.position.set(side*8,25,0); leg.castShadow=true; g.add(leg);
+    const arm=new THREE.Mesh(new THREE.BoxGeometry(8,34,10),skin);
+    arm.position.set(side*24,66,0); arm.castShadow=true; g.add(arm);
+  }
+
+  if(p.classId==="archer"){
+    const hair=new THREE.Mesh(new THREE.SphereGeometry(18,18,10),white);
+    hair.position.set(0,118,-2); hair.scale.set(1.05,0.55,1); hair.castShadow=true; g.add(hair);
+
+    const crown=new THREE.Mesh(new THREE.ConeGeometry(12,18,3),gold);
+    crown.position.set(0,136,4); crown.rotation.y=Math.PI/3; crown.castShadow=true; g.add(crown);
+
+    for(const side of [-1,1]){
+      const wing=new THREE.Mesh(new THREE.ConeGeometry(8,30,3),blue);
+      wing.position.set(side*25,128,0); wing.rotation.z=side*1.2; wing.castShadow=true; g.add(wing);
+    }
+
+    for(const side of [-1,1]){
+      for(let i=0;i<4;i++){
+        const f=new THREE.Mesh(new THREE.ConeGeometry(5,20,5),white);
+        f.position.set(side*(20+i*4),86-i*2,0);
+        f.rotation.z=side*1.2;
+        f.castShadow=true;
+        g.add(f);
+      }
+    }
+
+    const bow=new THREE.Group();
+    const arc=new THREE.Mesh(new THREE.TorusGeometry(30,2,8,36,Math.PI*1.35),mat3D(0x1b3440,0.38,0.2));
+    arc.rotation.x=Math.PI/2; arc.rotation.z=Math.PI/2; bow.add(arc);
+    const string=new THREE.Mesh(new THREE.BoxGeometry(1,60,1),mat3D(0xe8f2ff));
+    bow.add(string);
+    bow.position.set(34,66,3);
+    bow.rotation.z=-0.3;
+    g.add(bow);
+    g.userData.bow=bow;
+  }else{
+    const weapon=new THREE.Mesh(new THREE.BoxGeometry(5,48,5),mat3D(0xd6a84a,0.42,0.3));
+    weapon.position.set(30,62,2);
+    weapon.rotation.z=0.55;
+    weapon.castShadow=true;
+    g.add(weapon);
+  }
+
+  g.traverse(o=>{if(o.isMesh){o.castShadow=true;o.receiveShadow=true;}});
+  return g;
+}
+
+function createEnemy3D(e){
+  const g=new THREE.Group();
+  const mat=mat3D(e.color||0x9b5de5,0.75);
+  let body;
+
+  if(e.shape==="bird"){
+    body=new THREE.Mesh(new THREE.SphereGeometry(21,18,12),mat);
+    body.scale.set(1.3,0.65,0.85);
+    body.position.y=58;
+    g.add(body);
+    for(const side of [-1,1]){
+      const wing=new THREE.Mesh(new THREE.ConeGeometry(17,50,3),mat);
+      wing.position.set(side*33,58,0);
+      wing.rotation.z=side*1.5;
+      g.add(wing);
+    }
+  }else if(e.shape==="minotaur"){
+    body=new THREE.Mesh(new THREE.BoxGeometry(50,70,34),mat);
+    body.position.y=55;
+    g.add(body);
+    const head=new THREE.Mesh(new THREE.BoxGeometry(34,30,28),mat);
+    head.position.y=105;
+    g.add(head);
+    for(const side of [-1,1]){
+      const horn=new THREE.Mesh(new THREE.ConeGeometry(7,34,8),mat3D(0xf0d28a));
+      horn.position.set(side*25,112,0);
+      horn.rotation.z=side*-1.2;
+      g.add(horn);
+    }
+  }else if(e.isBoss){
+    body=new THREE.Mesh(new THREE.DodecahedronGeometry(48,1),mat);
+    body.position.y=65;
+    g.add(body);
+    const aura=new THREE.Mesh(new THREE.TorusGeometry(48,3,8,36),mat3D(0xffd166,0.3,0.25));
+    aura.position.y=112;
+    aura.rotation.x=Math.PI/2;
+    g.add(aura);
+  }else{
+    body=new THREE.Mesh(new THREE.DodecahedronGeometry(28,0),mat);
+    body.position.y=36;
+    g.add(body);
+  }
+
+  g.traverse(o=>{if(o.isMesh){o.castShadow=true;o.receiveShadow=true;}});
+  return g;
+}
+
+function createDropMesh3D(d){
+  const color=d.item==="crystal"?0x8ed8ff:d.item==="fang"?0xe8d0aa:d.item==="potion"?0xef476f:d.item==="manaPotion"?0x118ab2:0x7ee787;
+  const mesh=new THREE.Mesh(new THREE.OctahedronGeometry(14,0),mat3D(color,0.35,0.18));
+  mesh.position.set(d.x,18,d.y);
+  mesh.castShadow=true;
+  return mesh;
+}
+
+function sync3D(){
+  if(!three3d.ok)return;
+  const scene=three3d.scene;
+
+  for(const id in state.players){
+    const p=state.players[id];
+    let mesh=three3d.playerMeshes[id];
+    if(!mesh || mesh.userData.classId!==p.classId){
+      if(mesh)scene.remove(mesh);
+      mesh=createPlayer3D(p);
+      mesh.userData.classId=p.classId;
+      scene.add(mesh);
+      three3d.playerMeshes[id]=mesh;
+    }
+    mesh.position.x+=(p.x-mesh.position.x)*0.28;
+    mesh.position.z+=(p.y-mesh.position.z)*0.28;
+    mesh.position.y=Math.sin(Date.now()/120+p.x)*2;
+    if(p.vx||p.vy)mesh.rotation.y=Math.atan2(p.vx,p.vy);
+    if(mesh.userData.bow)mesh.userData.bow.rotation.z=-0.3+((p.attackCd||0)>8?Math.sin(Date.now()/45)*0.35:0);
+  }
+  for(const id in three3d.playerMeshes){
+    if(!state.players[id]){
+      scene.remove(three3d.playerMeshes[id]);
+      delete three3d.playerMeshes[id];
+    }
+  }
+
+  const enemyIds=new Set();
+  state.enemies.forEach(e=>{
+    enemyIds.add(String(e.id));
+    let mesh=three3d.enemyMeshes[e.id];
+    if(!mesh){
+      mesh=createEnemy3D(e);
+      scene.add(mesh);
+      three3d.enemyMeshes[e.id]=mesh;
+    }
+    mesh.position.x+=(e.x-mesh.position.x)*0.25;
+    mesh.position.z+=(e.y-mesh.position.z)*0.25;
+    mesh.position.y=Math.sin(Date.now()/240+e.id)*3;
+    mesh.scale.setScalar((e.size||32)/34);
+  });
+  for(const id in three3d.enemyMeshes){
+    if(!enemyIds.has(id)){
+      scene.remove(three3d.enemyMeshes[id]);
+      delete three3d.enemyMeshes[id];
+    }
+  }
+
+  const dropIds=new Set();
+  state.drops.forEach(d=>{
+    dropIds.add(String(d.id));
+    let mesh=three3d.dropMeshes[d.id];
+    if(!mesh){
+      mesh=createDropMesh3D(d);
+      scene.add(mesh);
+      three3d.dropMeshes[d.id]=mesh;
+    }
+    mesh.rotation.y+=0.03;
+    mesh.position.y=18+Math.sin(Date.now()/250+d.id)*4;
+  });
+  for(const id in three3d.dropMeshes){
+    if(!dropIds.has(id)){
+      scene.remove(three3d.dropMeshes[id]);
+      delete three3d.dropMeshes[id];
+    }
+  }
+}
+
+function render3D(){
+  if(!renderMode3D){
+    if(!enable3D())return false;
+  }
+  try{
+    sync3D();
+    const p=me();
+    if(p){
+      const cam=three3d.camera;
+      const target=new THREE.Vector3(p.x,70,p.y);
+      const desired=new THREE.Vector3(p.x-360,420,p.y+520);
+      cam.position.lerp(desired,0.08);
+      cam.lookAt(target);
+    }
+    three3d.renderer.render(three3d.scene,three3d.camera);
+    return true;
+  }catch(err){
+    console.error("Erro render3D:",err);
+    renderMode3D=false;
+    document.body.classList.remove("mode3d");
+    return false;
+  }
+}
+
+
 function drawArcherPortrait(){
   const c=document.getElementById("portraitCanvas");
   if(!c)return;
@@ -1651,14 +2040,17 @@ function roundRect(x,y,w,h,r){
 function loop(){
   updateRenderPositions();
   if(noticeTimer>0)noticeTimer--;
-  else document.getElementById("notice").textContent="Modo 3D • iluminação • texturas vivas • minimapa";
-  if(window.render3DGame) window.render3DGame(); else draw();
+  else document.getElementById("notice").textContent="Modo 3D corrigido • fallback 2D automático";
+
+  if(!render3D()){
+    draw();
+  }
+
   drawMinimap();
   requestAnimationFrame(loop);
 }
 
 loop();
 </script>
-<script src="/three-game.js"></script>
 </body>
 </html>

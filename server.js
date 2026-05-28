@@ -1,6 +1,8 @@
 const express = require("express");
 const http = require("http");
 const path = require("path");
+const fs = require("fs");
+const crypto = require("crypto");
 const { Server } = require("socket.io");
 
 const app = express();
@@ -10,12 +12,14 @@ const io = new Server(server, { cors: { origin: "*" } });
 app.use(express.static(path.join(__dirname, "public")));
 
 const PORT = process.env.PORT || 3000;
+const DB_FILE = path.join(__dirname, "database.json");
 
 const WORLD = {
   width: 6200,
   height: 4600,
   safeZone: { x: 2800, y: 2000, w: 620, h: 480 },
   npcShop: { x: 3110, y: 2250, name: "Lia, Mercadora" },
+  questNpc: { x: 3040, y: 2185, name: "Capitão Rowan" },
   biomes: [
     { id: "forest", name: "Floresta Viva", x: 220, y: 220, w: 1550, h: 1250 },
     { id: "ruins", name: "Ruínas Profanas", x: 2350, y: 250, w: 1500, h: 1200 },
@@ -90,8 +94,53 @@ const CLASSES = {
   }
 };
 
+const QUESTS = {
+  main_1: {
+    id: "main_1",
+    type: "main",
+    title: "Primeiros Passos",
+    description: "Derrote 5 monstros comuns para provar seu valor.",
+    target: { kind: "killAny", total: 5 },
+    reward: { gold: 80, xp: 120, items: { potion: 2 } }
+  },
+  main_2: {
+    id: "main_2",
+    type: "main",
+    title: "Cristais de Energia",
+    description: "Colete 3 Cristais para fortalecer a base.",
+    target: { kind: "collect", item: "crystal", total: 3 },
+    reward: { gold: 120, xp: 180, items: { manaPotion: 2 } },
+    requires: "main_1"
+  },
+  side_1: {
+    id: "side_1",
+    type: "side",
+    title: "Ervas Medicinais",
+    description: "Colete 5 Ervas para a mercadora Lia.",
+    target: { kind: "collect", item: "herb", total: 5 },
+    reward: { gold: 60, xp: 80, items: { potion: 3 } }
+  },
+  side_2: {
+    id: "side_2",
+    type: "side",
+    title: "Presas de Predador",
+    description: "Colete 4 Presas derrotando feras.",
+    target: { kind: "collect", item: "fang", total: 4 },
+    reward: { gold: 100, xp: 130, items: { crystal: 1 } }
+  },
+  boss_1: {
+    id: "boss_1",
+    type: "boss",
+    title: "Ameaça dos Biomas",
+    description: "Derrote 1 Boss de qualquer bioma.",
+    target: { kind: "killBoss", total: 1 },
+    reward: { gold: 300, xp: 450, items: { crystal: 5 } }
+  }
+};
+
 const players = {};
 const inputs = {};
+const sessions = {};
 const enemies = [];
 const drops = [];
 const market = [];
@@ -99,6 +148,33 @@ const market = [];
 let enemyId = 1;
 let dropId = 1;
 let marketId = 1;
+
+function loadDb() {
+  try {
+    if (!fs.existsSync(DB_FILE)) {
+      return { users: {} };
+    }
+    return JSON.parse(fs.readFileSync(DB_FILE, "utf8"));
+  } catch {
+    return { users: {} };
+  }
+}
+
+let db = loadDb();
+
+function saveDb() {
+  fs.writeFileSync(DB_FILE, JSON.stringify(db, null, 2));
+}
+
+function hashPassword(password, salt = crypto.randomBytes(16).toString("hex")) {
+  const hash = crypto.pbkdf2Sync(String(password), salt, 120000, 32, "sha256").toString("hex");
+  return { salt, hash };
+}
+
+function verifyPassword(password, record) {
+  const attempt = hashPassword(password, record.salt);
+  return attempt.hash === record.hash;
+}
 
 function rand(min, max) {
   return Math.random() * (max - min) + min;
@@ -110,6 +186,10 @@ function dist(a, b) {
 
 function cleanName(name) {
   return String(name || "Aventureiro").replace(/[<>]/g, "").trim().slice(0, 16) || "Aventureiro";
+}
+
+function cleanEmail(email) {
+  return String(email || "").trim().toLowerCase().slice(0, 80);
 }
 
 function inRect(pos, rect) {
@@ -156,9 +236,34 @@ function privateLog(playerId, message) {
   io.to(playerId).emit("actionLog", message);
 }
 
-function createPlayer(id, name, classId) {
+function publicCharacter(character) {
+  return {
+    id: character.id,
+    name: character.name,
+    classId: character.classId,
+    className: character.className,
+    level: character.level || 1,
+    gold: character.gold || 0,
+    kills: character.kills || 0
+  };
+}
+
+function userCharacters(email) {
+  return Object.values(db.users[email]?.characters || {}).map(publicCharacter);
+}
+
+function defaultQuestState() {
+  const state = {};
+  for (const id in QUESTS) {
+    state[id] = { accepted: ["main_1", "side_1", "side_2", "boss_1"].includes(id), completed: false, claimed: false, progress: 0 };
+  }
+  return state;
+}
+
+function createCharacterData(name, classId) {
   const cls = CLASSES[classId] || CLASSES.swordsman;
   const pos = spawnPoint();
+  const id = crypto.randomUUID();
 
   return {
     id,
@@ -184,14 +289,123 @@ function createPlayer(id, name, classId) {
     attrPoints: 0,
     color: cls.color,
     stats: { ...cls.stats },
-    inventory: {
-      herb: 2,
-      crystal: 0,
-      fang: 0,
-      potion: 3,
-      manaPotion: 1
-    }
+    inventory: { herb: 2, crystal: 0, fang: 0, potion: 3, manaPotion: 1 },
+    quests: defaultQuestState()
   };
+}
+
+function createPlayerFromCharacter(socketId, email, character) {
+  return {
+    ...character,
+    id: socketId,
+    accountEmail: email,
+    characterId: character.id,
+    vx: 0,
+    vy: 0,
+    attackCd: 0,
+    quests: character.quests || defaultQuestState()
+  };
+}
+
+function savePlayerCharacter(player) {
+  if (!player?.accountEmail || !player?.characterId) return;
+  const user = db.users[player.accountEmail];
+  if (!user || !user.characters[player.characterId]) return;
+
+  const saved = { ...player };
+  saved.id = player.characterId;
+  delete saved.accountEmail;
+  delete saved.characterId;
+  delete saved.vx;
+  delete saved.vy;
+  delete saved.attackCd;
+
+  user.characters[player.characterId] = saved;
+  saveDb();
+}
+
+function availableQuestList(p) {
+  const quests = [];
+
+  for (const id in QUESTS) {
+    const q = QUESTS[id];
+    const st = p.quests?.[id] || { accepted: false, completed: false, claimed: false, progress: 0 };
+
+    const reqOk = !q.requires || p.quests?.[q.requires]?.claimed;
+
+    if (reqOk) {
+      quests.push({ ...q, state: st });
+    }
+  }
+
+  return quests;
+}
+
+function sendQuestState(p) {
+  io.to(p.id).emit("quests", availableQuestList(p));
+}
+
+function updateQuestProgress(p, event) {
+  if (!p.quests) p.quests = defaultQuestState();
+
+  for (const id in QUESTS) {
+    const q = QUESTS[id];
+    const st = p.quests[id] || { accepted: false, completed: false, claimed: false, progress: 0 };
+
+    if (!st.accepted || st.completed || st.claimed) continue;
+
+    let match = false;
+
+    if (q.target.kind === "killAny" && event.kind === "killAny") match = true;
+    if (q.target.kind === "killBoss" && event.kind === "killBoss") match = true;
+    if (q.target.kind === "collect" && event.kind === "collect" && q.target.item === event.item) match = true;
+
+    if (match) {
+      st.progress += event.amount || 1;
+      if (st.progress >= q.target.total) {
+        st.progress = q.target.total;
+        st.completed = true;
+        io.to(p.id).emit("notice", `Missão concluída: ${q.title}. Abra Q para receber.`);
+        privateLog(p.id, `Missão concluída: ${q.title}.`);
+      }
+      p.quests[id] = st;
+    }
+  }
+
+  sendQuestState(p);
+}
+
+function claimQuest(p, questId) {
+  const q = QUESTS[questId];
+  if (!q) return;
+
+  if (!p.quests) p.quests = defaultQuestState();
+
+  const st = p.quests[questId];
+
+  if (!st || !st.completed || st.claimed) {
+    io.to(p.id).emit("notice", "Essa missão ainda não pode ser recebida.");
+    return;
+  }
+
+  st.claimed = true;
+  p.gold += q.reward.gold || 0;
+  addXp(p, q.reward.xp || 0);
+
+  if (q.reward.items) {
+    for (const item in q.reward.items) {
+      p.inventory[item] = (p.inventory[item] || 0) + q.reward.items[item];
+    }
+  }
+
+  if (questId === "main_1" && p.quests.main_2) {
+    p.quests.main_2.accepted = true;
+  }
+
+  io.to(p.id).emit("notice", `Recompensa recebida: ${q.title}.`);
+  privateLog(p.id, `Missão "${q.title}" entregue. +${q.reward.gold || 0} ouro e +${q.reward.xp || 0} XP.`);
+  sendQuestState(p);
+  savePlayerCharacter(p);
 }
 
 function enemyProfile(biome) {
@@ -274,7 +488,6 @@ function createEnemy() {
   const profile = enemyProfile(biome);
   const level = mobLevelByPosition(pos);
   const biomeBonus = ["ruins", "volcanic"].includes(biome) ? 1.35 : ["ice", "desert", "swamp"].includes(biome) ? 1.18 : 1;
-
   const hp = Math.floor((profile.hp + level * 18) * biomeBonus);
 
   return {
@@ -374,6 +587,7 @@ function updatePlayers() {
         drops.splice(i, 1);
         io.to(id).emit("notice", `Coletado: ${d.amount}x ${ITEM_INFO[d.item]?.name || d.item}.`);
         privateLog(id, `Você coletou ${d.amount}x ${ITEM_INFO[d.item]?.name || d.item}.`);
+        updateQuestProgress(p, { kind: "collect", item: d.item, amount: d.amount });
       }
     }
   }
@@ -386,7 +600,6 @@ function updateEnemies() {
 
     for (const id in players) {
       const p = players[id];
-
       if (inSafeZone(p)) continue;
 
       const d = dist(e, p);
@@ -406,7 +619,6 @@ function updateEnemies() {
 
     if (target && best < (e.isBoss ? 58 : 40) && e.cd <= 0) {
       e.cd = e.isBoss ? 60 : 45;
-
       const damage = Math.max(1, e.damage - Math.floor(target.stats.vigor * 0.12));
       target.hp -= damage;
 
@@ -430,7 +642,6 @@ function updateEnemies() {
 
 function killEnemy(index, killer) {
   const e = enemies[index];
-
   if (!e) return;
 
   enemies.splice(index, 1);
@@ -439,13 +650,13 @@ function killEnemy(index, killer) {
   if (e.isBoss) {
     const goldGain = 260;
     const xpGain = 520;
-
     killer.gold += goldGain;
     addXp(killer, xpGain);
     addDrop(e.x, e.y, "crystal", 6);
     addDrop(e.x + 24, e.y, "fang", 4);
-
     privateLog(killer.id, `Você derrotou o BOSS ${e.name}! +${goldGain} ouro e +${xpGain} XP.`);
+    updateQuestProgress(killer, { kind: "killBoss", amount: 1 });
+    savePlayerCharacter(killer);
     setTimeout(spawnEnemies, 20000);
     return;
   }
@@ -463,6 +674,8 @@ function killEnemy(index, killer) {
   }
 
   privateLog(killer.id, `Você matou ${e.name} Nv.${e.level}. +${goldGain} ouro e +${xpGain} XP.`);
+  updateQuestProgress(killer, { kind: "killAny", amount: 1 });
+  savePlayerCharacter(killer);
   setTimeout(spawnEnemies, 900);
 }
 
@@ -483,7 +696,6 @@ function attackEnemy(player) {
   }
 
   player.attackCd = Math.max(8, cls.cooldown - Math.floor(player.stats.dex * 0.06));
-
   if (cls.manaCost) player.mana -= cls.manaCost;
 
   let bestIndex = -1;
@@ -506,7 +718,6 @@ function attackEnemy(player) {
 
   const e = enemies[bestIndex];
   const damage = calcDamage(player, cls);
-
   e.hp -= damage;
 
   io.emit("attackEffect", {
@@ -524,7 +735,6 @@ function attackEnemy(player) {
 
 function buyNpcPotion(socket, type) {
   const p = players[socket.id];
-
   if (!p) return;
 
   if (dist(p, WORLD.npcShop) > 115) {
@@ -582,28 +792,121 @@ function forceState() {
 }
 
 io.on("connection", socket => {
-  socket.on("join", data => {
-    const classId = data?.classId || "swordsman";
-    players[socket.id] = createPlayer(socket.id, data?.name, classId);
-    inputs[socket.id] = {};
+  socket.on("register", data => {
+    const email = cleanEmail(data?.email);
+    const password = String(data?.password || "");
 
+    if (!email.includes("@") || password.length < 6) {
+      socket.emit("authError", "Use um e-mail válido e senha com no mínimo 6 caracteres.");
+      return;
+    }
+
+    if (db.users[email]) {
+      socket.emit("authError", "Essa conta já existe.");
+      return;
+    }
+
+    const pass = hashPassword(password);
+    db.users[email] = {
+      email,
+      salt: pass.salt,
+      hash: pass.hash,
+      characters: {},
+      createdAt: Date.now()
+    };
+    saveDb();
+
+    const token = crypto.randomUUID();
+    sessions[socket.id] = { email, token };
+    socket.emit("authOk", { email, token, characters: [] });
+  });
+
+  socket.on("login", data => {
+    const email = cleanEmail(data?.email);
+    const password = String(data?.password || "");
+    const user = db.users[email];
+
+    if (!user || !verifyPassword(password, user)) {
+      socket.emit("authError", "E-mail ou senha incorretos.");
+      return;
+    }
+
+    const token = crypto.randomUUID();
+    sessions[socket.id] = { email, token };
+    socket.emit("authOk", { email, token, characters: userCharacters(email) });
+  });
+
+  socket.on("listCharacters", () => {
+    const session = sessions[socket.id];
+    if (!session) return socket.emit("authError", "Faça login primeiro.");
+    socket.emit("characters", userCharacters(session.email));
+  });
+
+  socket.on("createCharacter", data => {
+    const session = sessions[socket.id];
+    if (!session) return socket.emit("authError", "Faça login primeiro.");
+
+    const user = db.users[session.email];
+    if (!user) return socket.emit("authError", "Conta não encontrada.");
+
+    const count = Object.keys(user.characters || {}).length;
+    if (count >= 4) {
+      socket.emit("authError", "Limite de 4 personagens por conta.");
+      return;
+    }
+
+    const character = createCharacterData(data?.name, data?.classId);
+    user.characters[character.id] = character;
+    saveDb();
+
+    socket.emit("characters", userCharacters(session.email));
+  });
+
+  socket.on("selectCharacter", characterId => {
+    const session = sessions[socket.id];
+    if (!session) return socket.emit("authError", "Faça login primeiro.");
+
+    const user = db.users[session.email];
+    const character = user?.characters?.[characterId];
+
+    if (!character) {
+      socket.emit("authError", "Personagem não encontrado.");
+      return;
+    }
+
+    if (players[socket.id]) {
+      savePlayerCharacter(players[socket.id]);
+      delete players[socket.id];
+    }
+
+    players[socket.id] = createPlayerFromCharacter(socket.id, session.email, character);
+    inputs[socket.id] = {};
+    socket.emit("gameStarted");
+    socket.emit("quests", availableQuestList(players[socket.id]));
     io.emit("chat", `Servidor: ${players[socket.id].name} entrou como ${players[socket.id].className}.`);
-    privateLog(socket.id, "Você entrou no servidor com 200 ouro.");
+    privateLog(socket.id, "Personagem carregado com sucesso.");
     forceState();
   });
 
-  socket.on("rename", name => {
+  socket.on("join", data => {
+    const guest = createCharacterData(data?.name || "Convidado", data?.classId || "swordsman");
+    players[socket.id] = createPlayerFromCharacter(socket.id, "guest:" + socket.id, guest);
+    inputs[socket.id] = {};
+    socket.emit("gameStarted");
+    socket.emit("quests", availableQuestList(players[socket.id]));
+    io.emit("chat", `Servidor: ${players[socket.id].name} entrou como convidado.`);
+    forceState();
+  });
+
+  socket.on("claimQuest", questId => {
     const p = players[socket.id];
-
     if (!p) return;
-
-    p.name = cleanName(name);
+    claimQuest(p, questId);
     forceState();
   });
 
   socket.on("input", input => {
     if (!players[socket.id]) return;
-
     inputs[socket.id] = {
       up: !!input.up,
       down: !!input.down,
@@ -612,9 +915,16 @@ io.on("connection", socket => {
     };
   });
 
+  socket.on("rename", name => {
+    const p = players[socket.id];
+    if (!p) return;
+    p.name = cleanName(name);
+    savePlayerCharacter(p);
+    forceState();
+  });
+
   socket.on("attack", () => {
     const p = players[socket.id];
-
     if (!p) return;
 
     if (inSafeZone(p)) {
@@ -627,7 +937,6 @@ io.on("connection", socket => {
 
   socket.on("usePotion", type => {
     const p = players[socket.id];
-
     if (!p) return;
 
     if (type === "mana") {
@@ -637,6 +946,7 @@ io.on("connection", socket => {
       p.inventory.manaPotion--;
       p.mana = Math.min(p.maxMana, p.mana + 55);
       privateLog(p.id, "Você usou uma Poção de Mana.");
+      savePlayerCharacter(p);
       forceState();
       return;
     }
@@ -647,32 +957,26 @@ io.on("connection", socket => {
     p.inventory.potion--;
     p.hp = Math.min(p.maxHp, p.hp + 55);
     privateLog(p.id, "Você usou uma Poção de Vida.");
+    savePlayerCharacter(p);
     forceState();
   });
 
   socket.on("buyNpcPotion", type => {
     buyNpcPotion(socket, type);
+    if (players[socket.id]) savePlayerCharacter(players[socket.id]);
     forceState();
   });
 
   socket.on("addStat", stat => {
     const p = players[socket.id];
-
     if (!p) return;
 
     if (stat === "vit") stat = "vigor";
 
     const allowed = ["atk", "vigor", "dex", "int"];
 
-    if (!allowed.includes(stat)) {
-      io.to(socket.id).emit("notice", "Atributo inválido.");
-      return;
-    }
-
-    if ((p.attrPoints || 0) <= 0) {
-      io.to(socket.id).emit("notice", "Você não tem pontos disponíveis.");
-      return;
-    }
+    if (!allowed.includes(stat)) return io.to(socket.id).emit("notice", "Atributo inválido.");
+    if ((p.attrPoints || 0) <= 0) return io.to(socket.id).emit("notice", "Você não tem pontos disponíveis.");
 
     p.attrPoints--;
     p.stats[stat]++;
@@ -683,12 +987,12 @@ io.on("connection", socket => {
 
     io.to(socket.id).emit("notice", `+1 em ${stat}. Pontos restantes: ${p.attrPoints}.`);
     privateLog(p.id, `Você adicionou +1 em ${stat}. Pontos restantes: ${p.attrPoints}.`);
+    savePlayerCharacter(p);
     forceState();
   });
 
   socket.on("marketSell", data => {
     const seller = players[socket.id];
-
     if (!seller) return;
 
     const item = String(data?.item || "");
@@ -703,7 +1007,6 @@ io.on("connection", socket => {
     }
 
     seller.inventory[item] -= amount;
-
     market.push({
       id: marketId++,
       sellerId: seller.id,
@@ -716,12 +1019,12 @@ io.on("connection", socket => {
 
     io.to(socket.id).emit("notice", `${amount}x ${ITEM_INFO[item].name} foi colocado no mercado.`);
     privateLog(socket.id, `Você anunciou ${amount}x ${ITEM_INFO[item].name} por ${price} ouro.`);
+    savePlayerCharacter(seller);
     forceState();
   });
 
   socket.on("marketBuy", rawId => {
     const buyer = players[socket.id];
-
     if (!buyer) return;
 
     const listingId = Number(rawId);
@@ -735,15 +1038,8 @@ io.on("connection", socket => {
 
     const listing = market[index];
 
-    if (listing.sellerId === buyer.id) {
-      io.to(socket.id).emit("notice", "Você não pode comprar seu próprio item.");
-      return;
-    }
-
-    if (buyer.gold < listing.price) {
-      io.to(socket.id).emit("notice", "Ouro insuficiente.");
-      return;
-    }
+    if (listing.sellerId === buyer.id) return io.to(socket.id).emit("notice", "Você não pode comprar seu próprio item.");
+    if (buyer.gold < listing.price) return io.to(socket.id).emit("notice", "Ouro insuficiente.");
 
     const seller = players[listing.sellerId];
 
@@ -754,6 +1050,7 @@ io.on("connection", socket => {
       seller.gold += listing.price;
       io.to(seller.id).emit("notice", "Venda realizada!");
       privateLog(seller.id, `Venda realizada: ${buyer.name} comprou ${listing.amount}x ${ITEM_INFO[listing.item].name} por ${listing.price} ouro.`);
+      savePlayerCharacter(seller);
     }
 
     listing.sold = true;
@@ -761,26 +1058,27 @@ io.on("connection", socket => {
 
     io.to(socket.id).emit("notice", `Compra realizada: ${listing.amount}x ${ITEM_INFO[listing.item].name}.`);
     privateLog(socket.id, `Você comprou ${listing.amount}x ${ITEM_INFO[listing.item].name} de ${listing.seller} por ${listing.price} ouro.`);
+    savePlayerCharacter(buyer);
     forceState();
   });
 
   socket.on("chat", msg => {
     const p = players[socket.id];
-
     if (!p) return;
 
     const clean = String(msg || "").replace(/[<>]/g, "").trim().slice(0, 90);
-
     if (clean) io.emit("chat", `${p.name}: ${clean}`);
   });
 
   socket.on("disconnect", () => {
     if (players[socket.id]) {
+      savePlayerCharacter(players[socket.id]);
       io.emit("chat", `Servidor: ${players[socket.id].name} saiu do mundo.`);
     }
 
     delete players[socket.id];
     delete inputs[socket.id];
+    delete sessions[socket.id];
     forceState();
   });
 });
@@ -792,6 +1090,10 @@ setInterval(() => {
   updateEnemies();
   io.emit("state", publicState());
 }, 1000 / 30);
+
+setInterval(() => {
+  for (const id in players) savePlayerCharacter(players[id]);
+}, 15000);
 
 server.listen(PORT, () => {
   console.log(`Servidor online na porta ${PORT}`);

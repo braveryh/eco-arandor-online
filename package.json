@@ -1,7 +1,7 @@
 {
   "name": "eco-arandor-online",
-  "version": "19.1.0",
-  "description": "MMORPG indie multiplayer V19 3D Corrigida - contas, personagens e missoes",
+  "version": "20.0.0",
+  "description": "MMORPG indie multiplayer V20 Anime MMORPG - contas, personagens e missoes",
   "main": "server.js",
   "scripts": {
     "start": "node server.js"

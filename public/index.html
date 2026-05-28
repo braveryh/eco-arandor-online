@@ -2,7 +2,7 @@
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
-<title>Eco Arandor Online V14</title>
+<title>Eco Arandor Online V15</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <style>
@@ -32,6 +32,11 @@ button,input,select{border:none;outline:none;border-radius:10px;padding:9px}butt
 #menuCard{width:540px;padding:24px;background:rgba(10,14,22,.94);border:1px solid rgba(255,255,255,.16);border-radius:20px;box-shadow:0 20px 80px rgba(0,0,0,.55)}
 #menuCard h1{color:#ffd166;margin-bottom:8px}.classes{display:grid;grid-template-columns:repeat(3,1fr);gap:11px;margin:14px 0}.classCard{cursor:pointer;border:1px solid rgba(255,255,255,.14);border-radius:14px;background:#101722;padding:12px;min-height:126px}.classCard.selected{border-color:#ffd166;box-shadow:0 0 0 2px rgba(255,209,102,.22)}.classCard h3{color:#7ee787;font-size:15px;margin-bottom:6px}
 .modal{top:14px;width:340px;max-height:calc(100vh - 28px);padding:14px;overflow-y:auto;display:none}.modal.open{display:block}.modal h2{font-size:16px;color:#7ee787;margin-bottom:8px}
+.closeBtn{position:absolute;top:8px;right:10px;background:#ef476f;color:white;border-radius:8px;padding:4px 8px;margin:0;font-size:12px}
+.chatMinBtn{position:absolute;top:6px;right:8px;background:#101722;color:#ffd166;border:1px solid rgba(255,255,255,.15);border-radius:8px;padding:3px 8px;margin:0;font-size:13px}
+.questTabs{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px}
+.questTab{background:#101722;color:#cbd5e1}
+.questTab.active{background:linear-gradient(135deg,#7ee787,#06d6a0);color:#06130b}
 #inventoryPanel{right:14px}#shopPanel{right:370px}#marketPanel{right:14px;top:355px}#statsPanel{left:340px;top:14px}#rankPanel{left:340px;top:355px}#questPanel{left:690px;top:14px}
 .itemGrid{display:grid;grid-template-columns:repeat(4,1fr);gap:7px}.slot{min-height:54px;background:#101722;border:1px solid rgba(255,255,255,.12);border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:24px;position:relative}.slot span{position:absolute;right:6px;bottom:4px;color:#ffd166;font-size:11px}
 .marketRow,.rankRow{background:#101722;border:1px solid rgba(255,255,255,.1);border-radius:10px;padding:8px;margin-bottom:7px;font-size:12px}.marketRow button{padding:6px;font-size:12px}
@@ -108,23 +113,32 @@ button,input,select{border:none;outline:none;border-radius:10px;padding:9px}butt
   <div><div class="row"><span>Mana</span><span id="manaText">80/80</span></div><div class="bar"><div id="manaBar" class="fill mana"></div></div><button class="full quickBtn" onclick="usePotion('mana')">Poção Mana</button></div>
 </div>
 
-<div id="inventoryPanel" class="panel modal"><h2>🎒 Inventário</h2><p class="small">I para abrir/fechar.</p><br><div id="inventory" class="itemGrid"></div><h2 style="margin-top:14px">Nome</h2><input id="renameInput" class="full" maxlength="16" placeholder="Novo nome"><button class="full" onclick="renamePlayer()">Mudar nome</button></div>
-<div id="shopPanel" class="panel modal"><h2>🏪 Loja NPC</h2><p class="small">Fique perto da Lia. Cada poção custa 15 ouro.</p><br><button class="full" onclick="buyNpcPotion('hp')">Comprar Poção de Vida - 15 ouro</button><button class="full" onclick="buyNpcPotion('mana')">Comprar Poção de Mana - 15 ouro</button></div>
-<div id="marketPanel" class="panel modal"><h2>📦 Mercado Local</h2><p class="small">M para abrir. Compra com confirmação.</p><br><div class="grid2"><select id="sellItem"><option value="herb">Erva</option><option value="crystal">Cristal</option><option value="fang">Presa</option><option value="potion">Poção Vida</option><option value="manaPotion">Poção Mana</option></select><input id="sellAmount" type="number" value="1" min="1"></div><input id="sellPrice" class="full" type="number" value="20" min="1" style="margin-top:7px"><button class="full" onclick="sellMarket()">Colocar à venda</button><br><br><div id="marketList"></div></div>
-<div id="statsPanel" class="panel modal"><h2>📊 Atributos</h2><p class="small">H para abrir. Distribua pontos ganhos por nível.</p><br><div id="statsList"></div></div>
-<div id="rankPanel" class="panel modal"><h2>🏆 Ranking de Level</h2><p class="small">R para abrir/fechar.</p><br><div id="rankList"></div></div>
-<div id="questPanel" class="panel modal"><h2>📜 Missões</h2><p class="small">Q para abrir/fechar. Complete e receba recompensas.</p><br><div id="questList"></div></div>
+<div id="inventoryPanel" class="panel modal"><button class="closeBtn" onclick="closePanel(\'inventoryPanel\')">X</button><h2>🎒 Inventário</h2><p class="small">I para abrir/fechar.</p><br><div id="inventory" class="itemGrid"></div><h2 style="margin-top:14px">Nome</h2><input id="renameInput" class="full" maxlength="16" placeholder="Novo nome"><button class="full" onclick="renamePlayer()">Mudar nome</button></div>
+<div id="shopPanel" class="panel modal"><button class="closeBtn" onclick="closePanel(\'shopPanel\')">X</button><h2>🏪 Loja NPC</h2><p class="small">Fique perto da Lia. Cada poção custa 15 ouro.</p><br><button class="full" onclick="buyNpcPotion('hp')">Comprar Poção de Vida - 15 ouro</button><button class="full" onclick="buyNpcPotion('mana')">Comprar Poção de Mana - 15 ouro</button></div>
+<div id="marketPanel" class="panel modal"><button class="closeBtn" onclick="closePanel(\'marketPanel\')">X</button><h2>📦 Mercado Local</h2><p class="small">M para abrir. Compra com confirmação.</p><br><div class="grid2"><select id="sellItem"><option value="herb">Erva</option><option value="crystal">Cristal</option><option value="fang">Presa</option><option value="potion">Poção Vida</option><option value="manaPotion">Poção Mana</option></select><input id="sellAmount" type="number" value="1" min="1"></div><input id="sellPrice" class="full" type="number" value="20" min="1" style="margin-top:7px"><button class="full" onclick="sellMarket()">Colocar à venda</button><br><br><div id="marketList"></div></div>
+<div id="statsPanel" class="panel modal"><button class="closeBtn" onclick="closePanel(\'statsPanel\')">X</button><h2>📊 Atributos</h2><p class="small">H para abrir. Distribua pontos ganhos por nível.</p><br><div id="statsList"></div></div>
+<div id="rankPanel" class="panel modal"><button class="closeBtn" onclick="closePanel(\'rankPanel\')">X</button><h2>🏆 Ranking de Level</h2><p class="small">R para abrir/fechar.</p><br><div id="rankList"></div></div>
+<div id="questPanel" class="panel modal">
+  <button class="closeBtn" onclick="closePanel('questPanel')">X</button>
+  <h2>📜 Missões</h2>
+  <p class="small">Q para abrir/fechar. Complete e receba recompensas.</p><br>
+  <div class="questTabs">
+    <button id="tabQuestActive" class="questTab active" onclick="setQuestTab('active')">Ativas</button>
+    <button id="tabQuestDone" class="questTab" onclick="setQuestTab('done')">Finalizadas</button>
+  </div>
+  <div id="questList"></div>
+</div>
 
 <div id="chat" class="panel">
   <div id="chatCollapsed">Chat</div>
-  <div id="chatContent">
+  <div id="chatContent"><button class="chatMinBtn" onclick="minimizeChat(event)">=</button>
     <div class="chatTabs"><button id="tabGlobal" class="tab active" onclick="setChatTab('global')">Global</button><button id="tabActions" class="tab" onclick="setChatTab('actions')">Ações Privadas</button></div>
     <div id="messages"></div>
     <input id="chatInput" class="full" placeholder="Digite no chat global e aperte Enter">
   </div>
 </div>
 
-<div class="panel keyHelp"><b>Atalhos</b><br>WASD: mover<br>Espaço: atacar<br>I: inventário<br>L: loja NPC<br>M: mercado<br>H: atributos<br>R: ranking<br>Chat minimizado. Clique esquerdo ataca, direito move.</div>
+<div class="panel keyHelp"><b>Atalhos</b><br>WASD: mover<br>Espaço: atacar<br>I: inventário<br>L: loja NPC<br>M: mercado<br>H: atributos<br>R: ranking<br>Chat minimizado. Chat minimizável, X fecha painéis, Q missões.</div>
 
 <script src="/socket.io/socket.io.js"></script>
 <script>
@@ -177,6 +191,7 @@ let globalMessages=[];
 let actionMessages=[];
 let pendingMarketBuy=null;
 let quests=[];
+let questTab='active';
 
 const decor={trees:[],rocks:[],flowers:[],lakes:[],bones:[],crystals:[],lava:[]};
 
@@ -441,6 +456,18 @@ document.getElementById("confirmNo").addEventListener("mousedown",e=>{
 
 function togglePanel(id){
   document.getElementById(id).classList.toggle("open");
+}
+
+function closePanel(id){
+  document.getElementById(id).classList.remove("open");
+}
+
+function minimizeChat(e){
+  if(e){
+    e.preventDefault();
+    e.stopPropagation();
+  }
+  document.getElementById("chat").classList.remove("open");
 }
 
 setInterval(()=>{
@@ -1087,20 +1114,42 @@ function updateUI(){
 }
 
 
+function setQuestTab(tab){
+  questTab=tab;
+  const a=document.getElementById("tabQuestActive");
+  const d=document.getElementById("tabQuestDone");
+  if(a&&d){
+    a.classList.toggle("active",tab==="active");
+    d.classList.toggle("active",tab==="done");
+  }
+  renderQuests();
+}
+
 function renderQuests(){
   const list=document.getElementById("questList");
   if(!list)return;
   list.innerHTML="";
-  if(!quests.length){
-    list.innerHTML='<p class="small">Nenhuma missão disponível.</p>';
+
+  const filtered=quests.filter(q=>{
+    const st=q.state||{};
+    if(questTab==="done")return !!st.claimed;
+    return !st.claimed;
+  });
+
+  if(!filtered.length){
+    list.innerHTML=questTab==="done"
+      ? '<p class="small">Nenhuma missão finalizada ainda.</p>'
+      : '<p class="small">Nenhuma missão ativa disponível.</p>';
     return;
   }
-  quests.forEach(q=>{
+
+  filtered.forEach(q=>{
     const st=q.state||{progress:0,completed:false,claimed:false};
     const row=document.createElement("div");
     row.className="marketRow";
-    const status=st.claimed?"Recebida":st.completed?"Concluída":"Em andamento";
+    const status=st.claimed?"Finalizada":st.completed?"Concluída":"Em andamento";
     row.innerHTML=`<b>${q.type==="main"?"⭐":q.type==="boss"?"👑":"•"} ${q.title}</b><br>${q.description}<br>Progresso: ${st.progress||0}/${q.target.total}<br>Status: ${status}<br>Recompensa: ${q.reward.gold||0} ouro, ${q.reward.xp||0} XP`;
+
     if(st.completed&&!st.claimed){
       const btn=document.createElement("button");
       btn.className="full";
@@ -1111,6 +1160,7 @@ function renderQuests(){
       });
       row.appendChild(btn);
     }
+
     list.appendChild(row);
   });
 }
@@ -1128,7 +1178,7 @@ function roundRect(x,y,w,h,r){
 function loop(){
   updateRenderPositions();
   if(noticeTimer>0)noticeTimer--;
-  else document.getElementById("notice").textContent="Clique esquerdo ataca • Direito move • Chat minimizado";
+  else document.getElementById("notice").textContent="Chat minimizável • X fecha painéis • Q missões";
   draw();
   requestAnimationFrame(loop);
 }

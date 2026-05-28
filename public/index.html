@@ -2,7 +2,7 @@
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
-<title>Eco Arandor Online V17</title>
+<title>Eco Arandor Online V18</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <style>
@@ -10,8 +10,17 @@
 body{overflow:hidden;background:#080b10;color:white}
 canvas{display:block;background:#1f6f36}
 .panel{position:absolute;background:rgba(9,13,20,.84);border:1px solid rgba(255,255,255,.14);border-radius:16px;box-shadow:0 14px 40px rgba(0,0,0,.42);backdrop-filter:blur(8px)}
-#topHud{top:14px;left:14px;width:310px;padding:14px}
-#topHud h1{font-size:20px;color:#ffd166;margin-bottom:5px}
+#topHud{top:14px;left:14px;width:360px;height:118px;padding:10px 12px 10px 98px;border-radius:18px;background:rgba(8,12,18,.86)}
+#topHud h1{font-size:18px;color:#ffd166;margin-bottom:3px}
+#classPortrait{position:absolute;left:12px;top:12px;width:74px;height:74px;border-radius:50%;border:3px solid #c9a64d;background:radial-gradient(circle,#24364f,#0c111b);box-shadow:0 0 18px rgba(255,209,102,.22);overflow:hidden}
+#classPortrait canvas{width:100%;height:100%;background:transparent}
+#portraitLevel{position:absolute;left:4px;top:70px;width:34px;height:34px;border-radius:50%;background:#14100a;border:2px solid #c9a64d;color:#ffd166;font-weight:bold;display:flex;align-items:center;justify-content:center;font-size:13px}
+.hudBarWrap{height:18px;background:#14151b;border:1px solid rgba(255,255,255,.18);border-radius:4px;margin-top:4px;overflow:hidden;position:relative}
+.hudBarWrap span{position:absolute;inset:0;text-align:center;font-size:12px;line-height:17px;text-shadow:1px 1px #000;color:#fff;font-weight:bold}
+#topHpFill{height:100%;background:linear-gradient(90deg,#8b0000,#e63946,#ff6b6b)}
+#topManaFill{height:100%;background:linear-gradient(90deg,#003b8e,#118ab2,#5ecbff)}
+#topXpText{position:absolute;left:98px;bottom:8px;color:#ffd166;font-size:12px}
+#topInfoLine{font-size:12px;color:#dbe4f0;margin-top:4px}
 .small{font-size:12px;color:#b9c2d3}.row{display:flex;justify-content:space-between;gap:8px;font-size:13px;margin-top:8px}
 .bar{height:10px;width:100%;background:#101722;border-radius:99px;overflow:hidden;margin-top:4px;border:1px solid rgba(255,255,255,.09)}
 .fill{height:100%;transition:width .12s linear}.hp{background:linear-gradient(90deg,#ef476f,#ff8c42)}.mana{background:linear-gradient(90deg,#118ab2,#7b61ff)}.xp{background:linear-gradient(90deg,#06d6a0,#ffd166)}
@@ -112,14 +121,16 @@ button,input,select{border:none;outline:none;border-radius:10px;padding:9px}butt
 </div>
 
 <div id="topHud" class="panel"><button class="closeBtn" onclick="closePanelDirect('topHud')">X</button>
-  <h1>Eco Arandor</h1>
-  <p class="small">Servidor: <span id="serverClock">--:--:--</span></p>
-  <div class="row"><span id="pName">---</span><span>Online: <b id="online">0</b></span></div>
-  <div class="row"><span>Classe: <b id="className">---</b></span><span>Nv. <b id="level">1</b></span></div>
-  <div class="row"><span>Arma: <b id="weaponName">---</b></span><span>Ouro: <b id="gold">0</b></span></div>
-  <div class="row"><span>Kills: <b id="kills">0</b></span><span>Pontos: <b id="attrPoints">0</b></span></div>
-  <div class="row"><span>XP</span><span id="xpText">0/100</span></div>
-  <div class="bar"><div id="xpBar" class="fill xp"></div></div>
+  <div id="classPortrait"><canvas id="portraitCanvas" width="74" height="74"></canvas></div>
+  <div id="portraitLevel">1</div>
+  <h1><span id="pName">---</span></h1>
+  <div id="topInfoLine">Classe: <b id="className">---</b> • Arma: <b id="weaponName">---</b></div>
+  <div class="hudBarWrap"><div id="topHpFill"></div><span id="hpText">100/100</span></div>
+  <div class="hudBarWrap"><div id="topManaFill"></div><span id="manaText">80/80</span></div>
+  <div id="topXpText">EXP <span id="xpText">0/100</span> • Ouro <b id="gold">0</b> • Kills <b id="kills">0</b> • Online <b id="online">0</b> • <span id="serverClock">--:--:--</span></div>
+  <span style="display:none" id="level">1</span>
+  <span style="display:none" id="attrPoints">0</span>
+  <div style="display:none" class="bar"><div id="xpBar" class="fill xp"></div></div>
 </div>
 
 <div id="minimapPanel" class="panel">
@@ -1116,6 +1127,148 @@ function drawEnemy(e){
   ctx.textAlign="left";
 }
 
+
+function drawArcherPortrait(){
+  const c=document.getElementById("portraitCanvas");
+  if(!c)return;
+  const pc=c.getContext("2d");
+  const p=me();
+  pc.clearRect(0,0,74,74);
+
+  pc.fillStyle="#111827";
+  pc.beginPath();
+  pc.arc(37,37,36,0,Math.PI*2);
+  pc.fill();
+
+  if(!p)return;
+
+  if(p.classId==="archer"){
+    pc.fillStyle="#e8f2ff";
+    pc.beginPath();pc.arc(37,31,18,0,Math.PI*2);pc.fill();
+    pc.fillStyle="#f4bf77";
+    pc.beginPath();pc.arc(37,35,14,0,Math.PI*2);pc.fill();
+    pc.fillStyle="#ffffff";
+    pc.fillRect(22,16,30,10);
+    pc.fillStyle="#ffd166";
+    pc.beginPath();pc.moveTo(26,17);pc.lineTo(37,7);pc.lineTo(48,17);pc.closePath();pc.fill();
+    pc.fillStyle="#8ed8ff";
+    pc.beginPath();pc.moveTo(16,20);pc.lineTo(4,9);pc.lineTo(24,16);pc.closePath();pc.fill();
+    pc.beginPath();pc.moveTo(58,20);pc.lineTo(70,9);pc.lineTo(50,16);pc.closePath();pc.fill();
+    pc.fillStyle="#24364f";
+    pc.fillRect(24,49,26,18);
+    pc.strokeStyle="#ffd166";pc.lineWidth=2;
+    pc.beginPath();pc.arc(57,46,11,-1.2,1.2);pc.stroke();
+  }else{
+    pc.fillStyle=p.color||"#49a6ff";
+    pc.beginPath();pc.arc(37,36,18,0,Math.PI*2);pc.fill();
+    pc.font="28px Arial";pc.textAlign="center";pc.fillText(p.weaponIcon||"⚔️",37,47);
+  }
+}
+
+function drawArcherSkin(pos,p,bob,step,attacking,swing){
+  // sombra
+  ctx.fillStyle="rgba(0,0,0,.34)";
+  ctx.beginPath();ctx.ellipse(pos.x,pos.y+29,23,8,0,0,Math.PI*2);ctx.fill();
+
+  // botas verdes com detalhes vermelhos/dourados
+  ctx.fillStyle="#344d45";
+  ctx.fillRect(pos.x-13,pos.y+11+bob+step*2,9,23);
+  ctx.fillRect(pos.x+4,pos.y+11+bob-step*2,9,23);
+  ctx.fillStyle="#8c2630";
+  ctx.fillRect(pos.x-14,pos.y+17+bob+step*2,11,4);
+  ctx.fillRect(pos.x+3,pos.y+17+bob-step*2,11,4);
+  ctx.fillStyle="#d6a84a";
+  ctx.fillRect(pos.x-14,pos.y+28+bob+step*2,11,3);
+  ctx.fillRect(pos.x+3,pos.y+28+bob-step*2,11,3);
+
+  // calça clara
+  ctx.fillStyle="#9fb0a6";
+  ctx.fillRect(pos.x-10,pos.y+2+bob+step*2,8,18);
+  ctx.fillRect(pos.x+2,pos.y+2+bob-step*2,8,18);
+
+  // torso pele + armadura prata
+  ctx.fillStyle="#f4bf77";
+  ctx.fillRect(pos.x-9,pos.y-19+bob,18,25);
+  ctx.fillStyle="#d9e0e8";
+  ctx.beginPath();ctx.moveTo(pos.x-18,pos.y-17+bob);ctx.lineTo(pos.x-5,pos.y-21+bob);ctx.lineTo(pos.x-10,pos.y+9+bob);ctx.lineTo(pos.x-20,pos.y+8+bob);ctx.closePath();ctx.fill();
+  ctx.beginPath();ctx.moveTo(pos.x+18,pos.y-17+bob);ctx.lineTo(pos.x+5,pos.y-21+bob);ctx.lineTo(pos.x+10,pos.y+9+bob);ctx.lineTo(pos.x+20,pos.y+8+bob);ctx.closePath();ctx.fill();
+  ctx.strokeStyle="#233044";ctx.lineWidth=1;
+  ctx.strokeRect(pos.x-14,pos.y-15+bob,28,23);
+
+  // ombreiras de plumas
+  ctx.fillStyle="#eef2ff";
+  for(let i=0;i<5;i++){
+    ctx.beginPath();
+    ctx.ellipse(pos.x-19-i*2,pos.y-18+bob+i*2,7,3,0,0,Math.PI*2);
+    ctx.fill();
+    ctx.beginPath();
+    ctx.ellipse(pos.x+19+i*2,pos.y-18+bob+i*2,7,3,0,0,Math.PI*2);
+    ctx.fill();
+  }
+
+  // braços e braceletes dourado/laranja
+  ctx.fillStyle="#f4bf77";
+  ctx.fillRect(pos.x-23,pos.y-12+bob-step*2,7,22);
+  ctx.fillRect(pos.x+16,pos.y-12+bob+step*2,7,22);
+  ctx.fillStyle="#ff8c24";
+  ctx.fillRect(pos.x-25,pos.y+1+bob-step*2,11,10);
+  ctx.fillRect(pos.x+14,pos.y+1+bob+step*2,11,10);
+  ctx.fillStyle="#ffd166";
+  ctx.fillRect(pos.x-25,pos.y+1+bob-step*2,11,3);
+  ctx.fillRect(pos.x+14,pos.y+1+bob+step*2,11,3);
+
+  // cabeça, cabelo branco, tiara alada
+  ctx.fillStyle="#f4bf77";
+  ctx.fillRect(pos.x-11,pos.y-40+bob,22,20);
+  ctx.fillStyle="#ffffff";
+  ctx.fillRect(pos.x-13,pos.y-45+bob,26,9);
+  ctx.beginPath();ctx.arc(pos.x,pos.y-40+bob,13,Math.PI,Math.PI*2);ctx.fill();
+
+  // asas laterais da tiara
+  ctx.fillStyle="#bde9ff";
+  ctx.beginPath();ctx.moveTo(pos.x-12,pos.y-43+bob);ctx.lineTo(pos.x-34,pos.y-55+bob);ctx.lineTo(pos.x-18,pos.y-38+bob);ctx.closePath();ctx.fill();
+  ctx.beginPath();ctx.moveTo(pos.x+12,pos.y-43+bob);ctx.lineTo(pos.x+34,pos.y-55+bob);ctx.lineTo(pos.x+18,pos.y-38+bob);ctx.closePath();ctx.fill();
+  ctx.strokeStyle="#6aa9e8";ctx.beginPath();ctx.moveTo(pos.x-30,pos.y-52+bob);ctx.lineTo(pos.x-18,pos.y-40+bob);ctx.moveTo(pos.x+30,pos.y-52+bob);ctx.lineTo(pos.x+18,pos.y-40+bob);ctx.stroke();
+
+  ctx.fillStyle="#d6a84a";
+  ctx.beginPath();ctx.moveTo(pos.x-9,pos.y-44+bob);ctx.lineTo(pos.x,pos.y-53+bob);ctx.lineTo(pos.x+9,pos.y-44+bob);ctx.closePath();ctx.fill();
+  ctx.fillStyle="#d22";
+  ctx.fillRect(pos.x-3,pos.y-46+bob,6,4);
+
+  // olhos
+  ctx.fillStyle="#111";
+  ctx.fillRect(pos.x-5,pos.y-33+bob,3,3);
+  ctx.fillRect(pos.x+4,pos.y-33+bob,3,3);
+
+  // arco grande estilizado
+  ctx.save();
+  ctx.translate(pos.x+28,pos.y-3+bob);
+  ctx.rotate(((attacking?35:12)+swing)*Math.PI/180);
+  ctx.strokeStyle="#192c36";
+  ctx.lineWidth=4;
+  ctx.beginPath();
+  ctx.arc(0,0,31,-1.25,1.25);
+  ctx.stroke();
+  ctx.strokeStyle="#d6a84a";
+  ctx.lineWidth=2;
+  ctx.beginPath();
+  ctx.arc(0,0,33,-1.2,1.2);
+  ctx.stroke();
+  ctx.strokeStyle="#8ed8ff";
+  ctx.lineWidth=2;
+  ctx.beginPath();ctx.moveTo(10,-27);ctx.lineTo(28,-39);ctx.moveTo(10,27);ctx.lineTo(28,39);ctx.stroke();
+  ctx.strokeStyle="#e8f2ff";ctx.lineWidth=1;
+  ctx.beginPath();ctx.moveTo(9,-29);ctx.lineTo(9,29);ctx.stroke();
+  ctx.restore();
+
+  if(attacking){
+    ctx.strokeStyle="#ffd166";
+    ctx.lineWidth=3;
+    ctx.beginPath();ctx.arc(pos.x+20,pos.y-8+bob,30,.1,1.4);ctx.stroke();
+    ctx.lineWidth=1;
+  }
+}
+
 function drawPlayer(p,isMe){
   const r=renderPlayers[p.id]||p;
   const pos=screen(r.x,r.y);
@@ -1125,6 +1278,19 @@ function drawPlayer(p,isMe){
   const bob=moving?step*2:0;
   const attacking=(p.attackCd||0)>8;
   const swing=attacking?Math.sin(t/45)*10:0;
+
+  if(p.classId==="archer"){
+    drawArcherSkin(pos,p,bob,step,attacking,swing);
+    drawMiniBar(pos.x,pos.y-74,58,p.hp/p.maxHp,"#ef476f");
+    drawMiniBar(pos.x,pos.y-66,58,p.mana/p.maxMana,"#118ab2");
+    ctx.fillStyle=isMe?"#7ee787":"#fff";
+    ctx.font="13px Arial";ctx.textAlign="center";
+    ctx.fillText(`${p.name} [Nv.${p.level}]`,pos.x,pos.y-82);
+    ctx.font="11px Arial";ctx.fillStyle="#cdd6e5";
+    ctx.fillText(p.className,pos.x,pos.y-50);
+    ctx.textAlign="left";
+    return;
+  }
 
   ctx.fillStyle="rgba(0,0,0,.34)";
   ctx.beginPath();ctx.ellipse(pos.x,pos.y+29,22,8,0,0,Math.PI*2);ctx.fill();
@@ -1310,6 +1476,7 @@ function updateUI(){
   document.getElementById("className").textContent=p.className;
   document.getElementById("weaponName").textContent=`${p.weaponIcon} ${p.weapon}`;
   document.getElementById("level").textContent=p.level;
+  document.getElementById("portraitLevel").textContent=p.level;
   document.getElementById("gold").textContent=p.gold;
   document.getElementById("kills").textContent=p.kills;
   document.getElementById("attrPoints").textContent=p.attrPoints||0;
@@ -1319,6 +1486,9 @@ function updateUI(){
   document.getElementById("hpBar").style.width=`${100*p.hp/p.maxHp}%`;
   document.getElementById("manaBar").style.width=`${100*p.mana/p.maxMana}%`;
   document.getElementById("xpBar").style.width=`${100*p.xp/p.nextXp}%`;
+  document.getElementById("topHpFill").style.width=`${100*p.hp/p.maxHp}%`;
+  document.getElementById("topManaFill").style.width=`${100*p.mana/p.maxMana}%`;
+  drawArcherPortrait();
 
   const inv=document.getElementById("inventory");
   inv.innerHTML="";

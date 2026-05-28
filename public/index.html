@@ -1,8 +1,8 @@
-<!DOCTYPE html>
+  <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
-<title>Eco Arandor Online V7</title>
+<title>Eco Arandor Online V8</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <style>
@@ -33,6 +33,29 @@ button,input,select{border:none;outline:none;border-radius:10px;padding:9px}butt
 .rankRow{background:#101722;border:1px solid rgba(255,255,255,.1);border-radius:10px;padding:8px;margin-bottom:6px;font-size:12px}
 .attrBtn{padding:5px 8px;font-size:12px;margin-top:0}
 .keyHelp{position:absolute;right:14px;bottom:14px;padding:12px;width:275px;font-size:12px;color:#c9d4e5}#serverClock{color:#ffd166;font-weight:bold}
+
+#confirmOverlay{
+  position:absolute;
+  inset:0;
+  background:rgba(0,0,0,.45);
+  display:none;
+  align-items:center;
+  justify-content:center;
+  z-index:40;
+}
+#confirmOverlay.open{display:flex}
+#confirmBox{
+  width:380px;
+  padding:22px;
+  background:rgba(9,13,20,.96);
+  border:1px solid rgba(255,255,255,.18);
+  border-radius:18px;
+  box-shadow:0 20px 80px rgba(0,0,0,.65);
+}
+#confirmBox h2{color:#ffd166;margin-bottom:8px}
+#confirmText{font-size:14px;color:#dbe4f0;line-height:1.4;margin-bottom:14px}
+.dangerBtn{background:linear-gradient(135deg,#ef476f,#ff8c42);color:white}
+
 @media(max-width:900px){.keyHelp{display:none}#chat{width:calc(100vw - 28px)}.modal{width:calc(100vw - 28px);left:14px!important;right:14px!important;top:14px!important}#menuCard{width:calc(100vw - 28px)}.classes{grid-template-columns:1fr}#bottomHud{width:calc(100vw - 28px)}}
 </style>
 </head>
@@ -56,6 +79,18 @@ button,input,select{border:none;outline:none;border-radius:10px;padding:9px}butt
 </div>
 
 <div id="notice">Conectando...</div>
+
+<div id="confirmOverlay">
+  <div id="confirmBox">
+    <h2>Confirmar compra</h2>
+    <p id="confirmText">Deseja comprar este item?</p>
+    <div class="grid2">
+      <button id="confirmYes" type="button">Sim, comprar</button>
+      <button id="confirmNo" type="button" class="dangerBtn">Cancelar</button>
+    </div>
+  </div>
+</div>
+
 
 <div id="topHud" class="panel">
   <h1>Eco Arandor</h1>
@@ -136,7 +171,7 @@ function setChatTab(tab){chatTab=tab;document.getElementById("tabGlobal").classL
 function renderChat(){const box=document.getElementById("messages");box.innerHTML="";const arr=chatTab==="global"?globalMessages:actionMessages;arr.slice(-45).forEach(msg=>{const div=document.createElement("div");div.textContent=msg;box.appendChild(div)});box.scrollTop=box.scrollHeight}
 function showNotice(text){document.getElementById("notice").textContent=text;noticeTimer=180}
 
-document.addEventListener("keydown",e=>{const tag=document.activeElement.tagName,focusedChat=document.activeElement.id==="chatInput";if(focusedChat)return;if(e.key.toLowerCase()==="i")togglePanel("inventoryPanel");if(e.key.toLowerCase()==="l")togglePanel("shopPanel");if(e.key.toLowerCase()==="m")togglePanel("marketPanel");if(e.key.toLowerCase()==="h")togglePanel("statsPanel");if(e.key.toLowerCase()==="r")togglePanel("rankPanel");if(tag==="INPUT"||tag==="SELECT")return;keys[e.key.toLowerCase()]=true;if(e.code==="Space")socket.emit("attack")});
+document.addEventListener("keydown",e=>{const tag=document.activeElement.tagName,focusedChat=document.activeElement.id==="chatInput";if(focusedChat)return;if(e.key.toLowerCase()==="i")togglePanel("inventoryPanel");if(e.key.toLowerCase()==="l")togglePanel("shopPanel");if(e.key.toLowerCase()==="m")togglePanel("marketPanel");if(e.key.toLowerCase()==="h")togglePanel("statsPanel");if(e.key.toLowerCase()==="r")togglePanel("rankPanel");if(tag==="INPUT"||tag==="SELECT"||tag==="BUTTON")return;keys[e.key.toLowerCase()]=true;if(e.code==="Space")socket.emit("attack")});
 document.addEventListener("keyup",e=>{keys[e.key.toLowerCase()]=false});
 document.getElementById("chatInput").addEventListener("keydown",e=>{if(e.key==="Enter"){const v=e.target.value.trim();if(v)socket.emit("chat",v);e.target.value="";e.target.blur()}});
 function togglePanel(id){document.getElementById(id).classList.toggle("open")}
@@ -147,12 +182,34 @@ function buyNpcPotion(type){socket.emit("buyNpcPotion",type)}
 function addStat(stat){socket.emit("addStat",stat)}
 function renamePlayer(){const name=document.getElementById("renameInput").value.trim();if(!name)return;localStorage.setItem("ecoName",name);socket.emit("rename",name);showNotice("Nome alterado.")}
 function sellMarket(){socket.emit("marketSell",{item:document.getElementById("sellItem").value,amount:Number(document.getElementById("sellAmount").value),price:Number(document.getElementById("sellPrice").value)})}
+let pendingMarketBuy=null;
+
 function confirmBuyMarket(id, itemName, amount, price, seller){
-  const ok = confirm(`Deseja comprar ${amount}x ${itemName} de ${seller} por ${price} ouro?`);
-  if(ok){
-    socket.emit("marketBuy", Number(id));
-  }
+  pendingMarketBuy={id:Number(id), itemName, amount, price, seller};
+  document.getElementById("confirmText").textContent =
+    `Deseja comprar ${amount}x ${itemName} de ${seller} por ${price} ouro?`;
+  document.getElementById("confirmOverlay").classList.add("open");
 }
+
+document.getElementById("confirmYes").addEventListener("mousedown", e=>{
+  e.preventDefault();
+  e.stopPropagation();
+
+  if(pendingMarketBuy){
+    socket.emit("marketBuy", Number(pendingMarketBuy.id));
+    showNotice("Solicitação de compra enviada...");
+  }
+
+  pendingMarketBuy=null;
+  document.getElementById("confirmOverlay").classList.remove("open");
+});
+
+document.getElementById("confirmNo").addEventListener("mousedown", e=>{
+  e.preventDefault();
+  e.stopPropagation();
+  pendingMarketBuy=null;
+  document.getElementById("confirmOverlay").classList.remove("open");
+});
 function me(){return state.players[myId]}function camera(){const p=renderPlayers[myId]||me()||{x:2100,y:1550};return{x:p.x-W/2,y:p.y-H/2}}function screen(x,y){const c=camera();return{x:x-c.x,y:y-c.y}}
 
 function drawGround(){const c=camera(),tile=64,startX=Math.floor(c.x/tile)*tile,startY=Math.floor(c.y/tile)*tile;ctx.fillStyle="#226b36";ctx.fillRect(0,0,W,H);for(let x=startX;x<c.x+W+tile;x+=tile){for(let y=startY;y<c.y+H+tile;y+=tile){const p=screen(x,y);ctx.fillStyle=((x+y)/tile)%2===0?"#28763b":"#236d35";ctx.fillRect(p.x,p.y,tile,tile)}}}
@@ -230,8 +287,11 @@ function updateUI(){
     btn.textContent="+";
     btn.type="button";
     btn.dataset.stat=key;
-    btn.addEventListener("click",()=>{
+    btn.addEventListener("mousedown", e=>{
+      e.preventDefault();
+      e.stopPropagation();
       socket.emit("addStat", key);
+      showNotice("Adicionando atributo...");
     });
 
     right.appendChild(strong);
@@ -273,7 +333,9 @@ function updateUI(){
     btn.className="full";
     btn.type="button";
     btn.textContent="Comprar";
-    btn.addEventListener("click",()=>{
+    btn.addEventListener("mousedown", e=>{
+      e.preventDefault();
+      e.stopPropagation();
       confirmBuyMarket(m.id, itemName, m.amount, m.price, m.seller);
     });
 

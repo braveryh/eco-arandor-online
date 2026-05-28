@@ -124,6 +124,45 @@ function enemySpawnPoint() {
   return p;
 }
 
+
+function biomeAt(pos) {
+  for (const b of WORLD.biomes || []) {
+    if (pos.x >= b.x && pos.x <= b.x + b.w && pos.y >= b.y && pos.y <= b.y + b.h) {
+      return b.id;
+    }
+  }
+  return "forest";
+}
+
+function createBoss(spawn) {
+  const bossData = {
+    forest: { type: "ent", icon: "🌳", damage: 24, hp: 620, color: "#2d8f46" },
+    swamp: { type: "hydra", icon: "🐍", damage: 28, hp: 760, color: "#4b7f52" },
+    desert: { type: "scorpion", icon: "🦂", damage: 30, hp: 700, color: "#d07a2d" },
+    ice: { type: "golem", icon: "🧊", damage: 26, hp: 800, color: "#84d8ff" }
+  }[spawn.biome] || { type: "boss", icon: "👑", damage: 25, hp: 650, color: "#ffd166" };
+
+  return {
+    id: enemyId++,
+    bossId: spawn.id,
+    isBoss: true,
+    type: bossData.type,
+    name: spawn.name,
+    biome: spawn.biome,
+    icon: bossData.icon,
+    color: bossData.color,
+    level: 10,
+    x: spawn.x,
+    y: spawn.y,
+    size: 74,
+    hp: bossData.hp,
+    maxHp: bossData.hp,
+    speed: 0.8,
+    damage: bossData.damage,
+    cd: 0
+  };
+}
+
 function privateLog(id, text) {
   io.to(id).emit("actionLog", text);
 }

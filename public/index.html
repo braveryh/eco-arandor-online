@@ -2,7 +2,7 @@
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
-<title>Eco Arandor Online V15</title>
+<title>Eco Arandor Online V16</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <style>
@@ -41,7 +41,17 @@ button,input,select{border:none;outline:none;border-radius:10px;padding:9px}butt
 .itemGrid{display:grid;grid-template-columns:repeat(4,1fr);gap:7px}.slot{min-height:54px;background:#101722;border:1px solid rgba(255,255,255,.12);border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:24px;position:relative}.slot span{position:absolute;right:6px;bottom:4px;color:#ffd166;font-size:11px}
 .marketRow,.rankRow{background:#101722;border:1px solid rgba(255,255,255,.1);border-radius:10px;padding:8px;margin-bottom:7px;font-size:12px}.marketRow button{padding:6px;font-size:12px}
 .attrBtn{padding:5px 8px;font-size:12px;margin-top:0}
-.keyHelp{position:absolute;right:14px;bottom:14px;padding:12px;width:285px;font-size:12px;color:#c9d4e5}#serverClock{color:#ffd166;font-weight:bold}
+.keyHelp{display:none}
+#gameMenu{left:14px;bottom:62px;width:92px;height:42px;padding:10px;overflow:hidden;cursor:pointer;transition:.18s ease}
+#gameMenu.open{width:285px;height:auto;padding:12px;cursor:default}
+#gameMenuTitle{display:block;text-align:center;font-weight:bold;color:#ffd166}
+#gameMenu.open #gameMenuTitle{display:none}
+#gameMenuContent{display:none}
+#gameMenu.open #gameMenuContent{display:block}
+.menuBtn{width:100%;margin-top:7px;background:#101722;color:#ffd166;border:1px solid rgba(255,255,255,.15)}
+#infoPanel{right:370px;top:355px}
+.infoBox{background:#101722;border:1px solid rgba(255,255,255,.1);border-radius:10px;padding:9px;margin-top:8px;font-size:12px;color:#dbe4f0;line-height:1.4}
+#serverClock{color:#ffd166;font-weight:bold}
 #confirmOverlay{position:absolute;inset:0;background:rgba(0,0,0,.45);display:none;align-items:center;justify-content:center;z-index:40}
 #confirmOverlay.open{display:flex}#confirmBox{width:380px;padding:22px;background:rgba(9,13,20,.96);border:1px solid rgba(255,255,255,.18);border-radius:18px;box-shadow:0 20px 80px rgba(0,0,0,.65)}#confirmBox h2{color:#ffd166;margin-bottom:8px}#confirmText{font-size:14px;color:#dbe4f0;line-height:1.4;margin-bottom:14px}.dangerBtn{background:linear-gradient(135deg,#ef476f,#ff8c42);color:white}
 @media(max-width:900px){.keyHelp{display:none}#chat{width:calc(100vw - 28px)}.modal{width:calc(100vw - 28px);left:14px!important;right:14px!important;top:14px!important}#menuCard{width:calc(100vw - 28px)}.classes{grid-template-columns:1fr}#bottomHud{width:calc(100vw - 28px)}}
@@ -97,7 +107,7 @@ button,input,select{border:none;outline:none;border-radius:10px;padding:9px}butt
   </div>
 </div>
 
-<div id="topHud" class="panel">
+<div id="topHud" class="panel"><button class="closeBtn" onclick="closePanelDirect('topHud')">X</button>
   <h1>Eco Arandor</h1>
   <p class="small">Servidor: <span id="serverClock">--:--:--</span></p>
   <div class="row"><span id="pName">---</span><span>Online: <b id="online">0</b></span></div>
@@ -108,16 +118,16 @@ button,input,select{border:none;outline:none;border-radius:10px;padding:9px}butt
   <div class="bar"><div id="xpBar" class="fill xp"></div></div>
 </div>
 
-<div id="bottomHud" class="panel">
+<div id="bottomHud" class="panel"><button class="closeBtn" onclick="closePanelDirect('bottomHud')">X</button>
   <div><div class="row"><span>Vida</span><span id="hpText">100/100</span></div><div class="bar"><div id="hpBar" class="fill hp"></div></div><button class="full quickBtn" onclick="usePotion('hp')">Poção Vida</button></div>
   <div><div class="row"><span>Mana</span><span id="manaText">80/80</span></div><div class="bar"><div id="manaBar" class="fill mana"></div></div><button class="full quickBtn" onclick="usePotion('mana')">Poção Mana</button></div>
 </div>
 
-<div id="inventoryPanel" class="panel modal"><button class="closeBtn" onclick="closePanel(\'inventoryPanel\')">X</button><h2>🎒 Inventário</h2><p class="small">I para abrir/fechar.</p><br><div id="inventory" class="itemGrid"></div><h2 style="margin-top:14px">Nome</h2><input id="renameInput" class="full" maxlength="16" placeholder="Novo nome"><button class="full" onclick="renamePlayer()">Mudar nome</button></div>
-<div id="shopPanel" class="panel modal"><button class="closeBtn" onclick="closePanel(\'shopPanel\')">X</button><h2>🏪 Loja NPC</h2><p class="small">Fique perto da Lia. Cada poção custa 15 ouro.</p><br><button class="full" onclick="buyNpcPotion('hp')">Comprar Poção de Vida - 15 ouro</button><button class="full" onclick="buyNpcPotion('mana')">Comprar Poção de Mana - 15 ouro</button></div>
-<div id="marketPanel" class="panel modal"><button class="closeBtn" onclick="closePanel(\'marketPanel\')">X</button><h2>📦 Mercado Local</h2><p class="small">M para abrir. Compra com confirmação.</p><br><div class="grid2"><select id="sellItem"><option value="herb">Erva</option><option value="crystal">Cristal</option><option value="fang">Presa</option><option value="potion">Poção Vida</option><option value="manaPotion">Poção Mana</option></select><input id="sellAmount" type="number" value="1" min="1"></div><input id="sellPrice" class="full" type="number" value="20" min="1" style="margin-top:7px"><button class="full" onclick="sellMarket()">Colocar à venda</button><br><br><div id="marketList"></div></div>
-<div id="statsPanel" class="panel modal"><button class="closeBtn" onclick="closePanel(\'statsPanel\')">X</button><h2>📊 Atributos</h2><p class="small">H para abrir. Distribua pontos ganhos por nível.</p><br><div id="statsList"></div></div>
-<div id="rankPanel" class="panel modal"><button class="closeBtn" onclick="closePanel(\'rankPanel\')">X</button><h2>🏆 Ranking de Level</h2><p class="small">R para abrir/fechar.</p><br><div id="rankList"></div></div>
+<div id="inventoryPanel" class="panel modal"><button class="closeBtn" onclick="closePanel('inventoryPanel')">X</button><h2>🎒 Inventário</h2><p class="small">I para abrir/fechar.</p><br><div id="inventory" class="itemGrid"></div><h2 style="margin-top:14px">Nome</h2><input id="renameInput" class="full" maxlength="16" placeholder="Novo nome"><button class="full" onclick="renamePlayer()">Mudar nome</button></div>
+<div id="shopPanel" class="panel modal"><button class="closeBtn" onclick="closePanel('shopPanel')">X</button><h2>🏪 Loja NPC</h2><p class="small">Fique perto da Lia. Cada poção custa 15 ouro.</p><br><button class="full" onclick="buyNpcPotion('hp')">Comprar Poção de Vida - 15 ouro</button><button class="full" onclick="buyNpcPotion('mana')">Comprar Poção de Mana - 15 ouro</button></div>
+<div id="marketPanel" class="panel modal"><button class="closeBtn" onclick="closePanel('marketPanel')">X</button><h2>📦 Mercado Local</h2><p class="small">M para abrir. Compra com confirmação.</p><br><div class="grid2"><select id="sellItem"><option value="herb">Erva</option><option value="crystal">Cristal</option><option value="fang">Presa</option><option value="potion">Poção Vida</option><option value="manaPotion">Poção Mana</option></select><input id="sellAmount" type="number" value="1" min="1"></div><input id="sellPrice" class="full" type="number" value="20" min="1" style="margin-top:7px"><button class="full" onclick="sellMarket()">Colocar à venda</button><br><br><div id="marketList"></div></div>
+<div id="statsPanel" class="panel modal"><button class="closeBtn" onclick="closePanel('statsPanel')">X</button><h2>📊 Atributos</h2><p class="small">H para abrir. Distribua pontos ganhos por nível.</p><br><div id="statsList"></div></div>
+<div id="rankPanel" class="panel modal"><button class="closeBtn" onclick="closePanel('rankPanel')">X</button><h2>🏆 Ranking de Level</h2><p class="small">R para abrir/fechar.</p><br><div id="rankList"></div></div>
 <div id="questPanel" class="panel modal">
   <button class="closeBtn" onclick="closePanel('questPanel')">X</button>
   <h2>📜 Missões</h2>
@@ -129,6 +139,26 @@ button,input,select{border:none;outline:none;border-radius:10px;padding:9px}butt
   <div id="questList"></div>
 </div>
 
+
+<div id="gameMenu" class="panel">
+  <div id="gameMenuTitle">Menu</div>
+  <div id="gameMenuContent">
+    <button class="chatMinBtn" onclick="minimizeGameMenu(event)">=</button>
+    <h2 style="font-size:16px;color:#7ee787;margin-bottom:8px">☰ Menu</h2>
+    <button class="menuBtn" onclick="showMenuInfo('shortcuts')">Atalhos</button>
+    <button class="menuBtn" onclick="showMenuInfo('settings')">Configurações</button>
+    <button class="menuBtn" onclick="showMenuInfo('characters')">Personagens da conta</button>
+    <button class="menuBtn" onclick="openMarketFromMenu()">Mercado</button>
+    <button class="menuBtn" onclick="teleportSpawn()">Voltar para o spawn</button>
+  </div>
+</div>
+
+<div id="infoPanel" class="panel modal">
+  <button class="closeBtn" onclick="closePanel('infoPanel')">X</button>
+  <h2 id="infoTitle">Informação</h2>
+  <div id="infoContent" class="infoBox"></div>
+</div>
+
 <div id="chat" class="panel">
   <div id="chatCollapsed">Chat</div>
   <div id="chatContent"><button class="chatMinBtn" onclick="minimizeChat(event)">=</button>
@@ -138,7 +168,7 @@ button,input,select{border:none;outline:none;border-radius:10px;padding:9px}butt
   </div>
 </div>
 
-<div class="panel keyHelp"><b>Atalhos</b><br>WASD: mover<br>Espaço: atacar<br>I: inventário<br>L: loja NPC<br>M: mercado<br>H: atributos<br>R: ranking<br>Chat minimizado. Chat minimizável, X fecha painéis, Q missões.</div>
+<div class="panel keyHelp"><b>Atalhos</b><br>WASD: mover<br>Espaço: atacar<br>I: inventário<br>L: loja NPC<br>M: mercado<br>H: atributos<br>R: ranking<br>Chat minimizado. Menu inferior esquerdo, X fecha HUDs, spawn pelo menu.</div>
 
 <script src="/socket.io/socket.io.js"></script>
 <script>
@@ -404,6 +434,14 @@ document.getElementById("chat").addEventListener("mousedown",e=>{
   }
 });
 
+document.getElementById("gameMenu").addEventListener("mousedown",e=>{
+  if(!document.getElementById("gameMenu").classList.contains("open")){
+    e.preventDefault();
+    e.stopPropagation();
+    document.getElementById("gameMenu").classList.add("open");
+  }
+});
+
 document.addEventListener("mousedown",e=>{
   const chat=document.getElementById("chat");
   if(chat.contains(e.target))return;
@@ -468,6 +506,51 @@ function minimizeChat(e){
     e.stopPropagation();
   }
   document.getElementById("chat").classList.remove("open");
+}
+
+function closePanelDirect(id){
+  const el=document.getElementById(id);
+  if(el)el.style.display="none";
+}
+
+function minimizeGameMenu(e){
+  if(e){
+    e.preventDefault();
+    e.stopPropagation();
+  }
+  document.getElementById("gameMenu").classList.remove("open");
+}
+
+function showMenuInfo(type){
+  const panel=document.getElementById("infoPanel");
+  const title=document.getElementById("infoTitle");
+  const content=document.getElementById("infoContent");
+
+  panel.classList.add("open");
+
+  if(type==="shortcuts"){
+    title.textContent="⌨️ Atalhos";
+    content.innerHTML="WASD ou setas: mover<br>Espaço: atacar<br>Clique esquerdo no monstro: atacar<br>Botão direito no chão: andar<br>I: inventário<br>Q: missões<br>H: atributos<br>R: ranking<br>M: mercado<br>L: loja NPC";
+  }
+
+  if(type==="settings"){
+    title.textContent="⚙️ Configurações";
+    content.innerHTML="Configurações disponíveis nesta versão:<br>• HUDs podem ser fechados no X<br>• Chat pode ser minimizado<br>• Menu pode ser minimizado<br>• Movimento por teclado ou mouse<br><br>Mais opções podem ser adicionadas depois, como volume, gráficos e resolução.";
+  }
+
+  if(type==="characters"){
+    title.textContent="🧙 Personagens da conta";
+    content.innerHTML="Para trocar de personagem, atualize a página e volte para a tela de seleção.<br><br>Personagem atual:<br><b>"+(me()?.name||"---")+"</b><br>Classe: "+(me()?.className||"---")+"<br>Nível: "+(me()?.level||1)+"<br>Ouro: "+(me()?.gold||0);
+  }
+}
+
+function openMarketFromMenu(){
+  document.getElementById("marketPanel").classList.add("open");
+}
+
+function teleportSpawn(){
+  socket.emit("teleportSpawn");
+  showNotice("Voltando para o spawn...");
 }
 
 setInterval(()=>{
@@ -1178,7 +1261,7 @@ function roundRect(x,y,w,h,r){
 function loop(){
   updateRenderPositions();
   if(noticeTimer>0)noticeTimer--;
-  else document.getElementById("notice").textContent="Chat minimizável • X fecha painéis • Q missões";
+  else document.getElementById("notice").textContent="Menu inferior esquerdo • X fecha HUDs • Spawn no menu";
   draw();
   requestAnimationFrame(loop);
 }

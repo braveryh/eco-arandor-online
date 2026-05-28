@@ -1,7 +1,7 @@
 {
   "name": "eco-arandor-online",
-  "version": "8.0.0",
-  "description": "MMORPG indie multiplayer V8 - HUD mercado e atributos corrigidos",
+  "version": "9.0.0",
+  "description": "MMORPG indie multiplayer V9 - WebGL render, sharpen e alta definição",
   "main": "server.js",
   "scripts": {
     "start": "node server.js"

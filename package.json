@@ -1,7 +1,7 @@
 {
   "name": "eco-arandor-online",
-  "version": "12.0.0",
-  "description": "MMORPG indie multiplayer corrigido com biomas vivos",
+  "version": "13.0.0",
+  "description": "MMORPG indie multiplayer V13 - contas, personagens e missoes",
   "main": "server.js",
   "scripts": {
     "start": "node server.js"

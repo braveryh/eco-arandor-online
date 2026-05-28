@@ -1,7 +1,7 @@
 {
   "name": "eco-arandor-online",
-  "version": "9.0.0",
-  "description": "MMORPG indie multiplayer V9 - WebGL render, sharpen e alta definição",
+  "version": "10.0.0",
+  "description": "MMORPG indie multiplayer V10 - biomas, bosses e animações",
   "main": "server.js",
   "scripts": {
     "start": "node server.js"

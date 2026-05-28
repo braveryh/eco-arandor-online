@@ -14,12 +14,8 @@ const PORT = process.env.PORT || 3000;
 const WORLD = {
   width: 2800,
   height: 2100,
-  safeZone: {
-    x: 1120,
-    y: 780,
-    w: 560,
-    h: 420
-  }
+  safeZone: { x: 1120, y: 780, w: 560, h: 420 },
+  npcShop: { x: 1400, y: 990, name: "Lia, Mercadora" }
 };
 
 const players = {};
@@ -36,40 +32,45 @@ const ITEM_INFO = {
   herb: { name: "Erva", icon: "🌿" },
   crystal: { name: "Cristal", icon: "💎" },
   fang: { name: "Presa", icon: "🦷" },
-  potion: { name: "Poção", icon: "🧪" },
+  potion: { name: "Poção de Vida", icon: "🧪" },
   manaPotion: { name: "Poção de Mana", icon: "🔷" }
 };
 
 const CLASSES = {
   swordsman: {
     label: "Espadachim",
+    weapon: "Espada",
+    weaponIcon: "⚔️",
     maxHp: 130,
     maxMana: 50,
     range: 72,
     damage: 30,
     cooldown: 16,
-    projectile: false,
+    manaCost: 0,
     color: "#49a6ff"
   },
   archer: {
     label: "Arqueiro",
+    weapon: "Arco",
+    weaponIcon: "🏹",
     maxHp: 95,
     maxMana: 65,
     range: 260,
     damage: 23,
     cooldown: 22,
-    projectile: true,
+    manaCost: 0,
     color: "#06d6a0"
   },
   mage: {
     label: "Mago",
+    weapon: "Cajado",
+    weaponIcon: "🔮",
     maxHp: 80,
     maxMana: 130,
     range: 285,
     damage: 34,
     cooldown: 28,
     manaCost: 14,
-    projectile: true,
     color: "#b388ff"
   }
 };
@@ -93,18 +94,19 @@ function inSafeZone(obj) {
 
 function spawnPoint() {
   const z = WORLD.safeZone;
-  return {
-    x: z.x + z.w / 2 + rand(-90, 90),
-    y: z.y + z.h / 2 + rand(-70, 70)
-  };
+  return { x: z.x + z.w / 2 + rand(-85, 85), y: z.y + z.h / 2 + rand(-60, 60) };
 }
 
 function enemySpawnPoint() {
   let p;
   do {
     p = { x: rand(100, WORLD.width - 100), y: rand(100, WORLD.height - 100) };
-  } while (inSafeZone(p) || dist(p, { x: WORLD.safeZone.x + 280, y: WORLD.safeZone.y + 210 }) < 520);
+  } while (inSafeZone(p) || dist(p, WORLD.npcShop) < 620);
   return p;
+}
+
+function actionLog(text) {
+  io.emit("actionLog", text);
 }
 
 function createPlayer(id, name, classId) {
@@ -116,6 +118,8 @@ function createPlayer(id, name, classId) {
     name: cleanName(name),
     classId: CLASSES[classId] ? classId : "swordsman",
     className: cls.label,
+    weapon: cls.weapon,
+    weaponIcon: cls.weaponIcon,
     x: pos.x,
     y: pos.y,
     vx: 0,
@@ -128,7 +132,7 @@ function createPlayer(id, name, classId) {
     level: 1,
     xp: 0,
     nextXp: 100,
-    gold: 80,
+    gold: 200,
     kills: 0,
     attackCd: 0,
     lastDirX: 1,
@@ -151,6 +155,7 @@ function createEnemy() {
   return {
     id: enemyId++,
     type,
+    name: type === "slime" ? "Slime" : "Lobo",
     x: pos.x,
     y: pos.y,
     size: type === "slime" ? 28 : 34,
@@ -168,29 +173,21 @@ function spawnEnemies() {
 
 function addXp(p, amount) {
   p.xp += amount;
-
   while (p.xp >= p.nextXp) {
     p.xp -= p.nextXp;
     p.level++;
     p.nextXp = Math.floor(p.nextXp * 1.45);
-
     p.maxHp += 12;
     p.maxMana += 8;
     p.hp = p.maxHp;
     p.mana = p.maxMana;
-
     io.to(p.id).emit("notice", `Level up! Você chegou ao nível ${p.level}.`);
+    actionLog(`${p.name} subiu para o nível ${p.level}.`);
   }
 }
 
 function addDrop(x, y, item, amount = 1) {
-  drops.push({
-    id: dropId++,
-    x,
-    y,
-    item,
-    amount
-  });
+  drops.push({ id: dropId++, x, y, item, amount });
 }
 
 function updatePlayers() {
@@ -199,9 +196,7 @@ function updatePlayers() {
     const input = inputs[id] || {};
     const speed = 4.3;
 
-    let dx = 0;
-    let dy = 0;
-
+    let dx = 0, dy = 0;
     if (input.up) dy -= 1;
     if (input.down) dy += 1;
     if (input.left) dx -= 1;
@@ -217,12 +212,10 @@ function updatePlayers() {
 
     p.vx = dx * speed;
     p.vy = dy * speed;
-
     p.x = Math.max(25, Math.min(WORLD.width - 25, p.x + p.vx));
     p.y = Math.max(25, Math.min(WORLD.height - 25, p.y + p.vy));
 
     if (p.attackCd > 0) p.attackCd--;
-
     p.hp = Math.min(p.maxHp, p.hp + 0.018);
     p.mana = Math.min(p.maxMana, p.mana + 0.065);
 
@@ -232,6 +225,7 @@ function updatePlayers() {
         p.inventory[d.item] = (p.inventory[d.item] || 0) + d.amount;
         drops.splice(i, 1);
         io.to(id).emit("notice", `Coletado: ${d.amount}x ${ITEM_INFO[d.item]?.name || d.item}.`);
+        actionLog(`${p.name} coletou ${d.amount}x ${ITEM_INFO[d.item]?.name || d.item}.`);
       }
     }
   }
@@ -245,7 +239,6 @@ function updateEnemies() {
     for (const id in players) {
       const p = players[id];
       if (inSafeZone(p)) continue;
-
       const d = dist(e, p);
       if (d < best) {
         best = d;
@@ -263,7 +256,7 @@ function updateEnemies() {
     if (target && best < 40 && e.cd <= 0) {
       e.cd = 45;
       target.hp -= e.damage;
-      io.to(target.id).emit("notice", `${e.type === "slime" ? "Slime" : "Lobo"} causou ${e.damage} de dano.`);
+      io.to(target.id).emit("notice", `${e.name} causou ${e.damage} de dano.`);
 
       if (target.hp <= 0) {
         const pos = spawnPoint();
@@ -273,6 +266,7 @@ function updateEnemies() {
         target.y = pos.y;
         target.gold = Math.max(0, target.gold - 20);
         io.to(target.id).emit("notice", "Você foi derrotado e voltou para a base segura.");
+        actionLog(`${target.name} foi derrotado e voltou para a base.`);
       }
     }
   }
@@ -283,17 +277,14 @@ function killEnemy(index, killer) {
   if (!e) return;
 
   enemies.splice(index, 1);
-
   killer.kills++;
   killer.gold += e.type === "slime" ? 9 : 18;
   addXp(killer, e.type === "slime" ? 36 : 65);
 
-  if (e.type === "slime") {
-    addDrop(e.x, e.y, Math.random() > 0.45 ? "herb" : "crystal");
-  } else {
-    addDrop(e.x, e.y, Math.random() > 0.45 ? "fang" : "crystal");
-  }
+  if (e.type === "slime") addDrop(e.x, e.y, Math.random() > 0.45 ? "herb" : "crystal");
+  else addDrop(e.x, e.y, Math.random() > 0.45 ? "fang" : "crystal");
 
+  actionLog(`${killer.name} matou ${e.name} e recebeu ouro/XP.`);
   setTimeout(spawnEnemies, 900);
 }
 
@@ -315,7 +306,6 @@ function attackEnemy(player) {
   for (let i = 0; i < enemies.length; i++) {
     const e = enemies[i];
     const d = dist(player, e);
-
     if (d <= cls.range && d < bestDistance) {
       bestDistance = d;
       bestIndex = i;
@@ -331,15 +321,43 @@ function attackEnemy(player) {
   const damage = cls.damage + player.level * 5;
   e.hp -= damage;
 
-  io.to(player.id).emit("attackEffect", {
+  io.emit("attackEffect", {
     from: { x: player.x, y: player.y },
     to: { x: e.x, y: e.y },
-    classId: player.classId
+    classId: player.classId,
+    damage,
+    targetId: e.id
   });
 
   io.to(player.id).emit("notice", `${cls.label}: ${damage} de dano.`);
+  actionLog(`${player.name} causou ${damage} de dano em ${e.name}.`);
 
   if (e.hp <= 0) killEnemy(bestIndex, player);
+}
+
+function buyNpcPotion(socket, type) {
+  const p = players[socket.id];
+  if (!p) return;
+
+  if (dist(p, WORLD.npcShop) > 115) {
+    io.to(socket.id).emit("notice", "Chegue perto da NPC da loja para comprar.");
+    return;
+  }
+
+  const item = type === "mana" ? "manaPotion" : "potion";
+  const price = 15;
+
+  if (p.gold < price) {
+    io.to(socket.id).emit("notice", "Ouro insuficiente.");
+    return;
+  }
+
+  p.gold -= price;
+  p.inventory[item] = (p.inventory[item] || 0) + 1;
+
+  const itemName = ITEM_INFO[item].name;
+  io.to(socket.id).emit("notice", `Você comprou 1 ${itemName} por ${price} ouro.`);
+  actionLog(`${p.name} comprou 1 ${itemName} por ${price} ouro na NPC Lia.`);
 }
 
 function publicState() {
@@ -363,8 +381,8 @@ io.on("connection", socket => {
     const classId = data?.classId || "swordsman";
     players[socket.id] = createPlayer(socket.id, data?.name, classId);
     inputs[socket.id] = {};
-
     io.emit("chat", `Servidor: ${players[socket.id].name} entrou como ${players[socket.id].className}.`);
+    actionLog(`${players[socket.id].name} entrou no servidor com 200 ouro.`);
   });
 
   socket.on("rename", name => {
@@ -386,12 +404,10 @@ io.on("connection", socket => {
   socket.on("attack", () => {
     const p = players[socket.id];
     if (!p) return;
-
     if (inSafeZone(p)) {
       io.to(socket.id).emit("notice", "Você está na base segura. Saia da base para lutar.");
       return;
     }
-
     attackEnemy(p);
   });
 
@@ -404,47 +420,25 @@ io.on("connection", socket => {
       if (p.mana >= p.maxMana) return io.to(socket.id).emit("notice", "Sua mana já está cheia.");
       p.inventory.manaPotion--;
       p.mana = Math.min(p.maxMana, p.mana + 55);
+      actionLog(`${p.name} usou uma Poção de Mana.`);
       return;
     }
 
-    if ((p.inventory.potion || 0) <= 0) return io.to(socket.id).emit("notice", "Você não tem poções.");
+    if ((p.inventory.potion || 0) <= 0) return io.to(socket.id).emit("notice", "Você não tem poções de vida.");
     if (p.hp >= p.maxHp) return io.to(socket.id).emit("notice", "Sua vida já está cheia.");
 
     p.inventory.potion--;
     p.hp = Math.min(p.maxHp, p.hp + 55);
+    actionLog(`${p.name} usou uma Poção de Vida.`);
   });
 
-  socket.on("shopTrade", data => {
-    const p = players[socket.id];
-    if (!p) return;
-
-    const type = data?.type;
-
-    if (type === "potion") {
-      if ((p.inventory.herb || 0) < 2) return io.to(socket.id).emit("notice", "Você precisa de 2 Ervas.");
-      p.inventory.herb -= 2;
-      p.inventory.potion = (p.inventory.potion || 0) + 1;
-      io.to(socket.id).emit("notice", "Troca feita: 2 Ervas por 1 Poção.");
-    }
-
-    if (type === "manaPotion") {
-      if ((p.inventory.crystal || 0) < 1) return io.to(socket.id).emit("notice", "Você precisa de 1 Cristal.");
-      p.inventory.crystal -= 1;
-      p.inventory.manaPotion = (p.inventory.manaPotion || 0) + 1;
-      io.to(socket.id).emit("notice", "Troca feita: 1 Cristal por 1 Poção de Mana.");
-    }
-
-    if (type === "gold") {
-      if ((p.inventory.fang || 0) < 1) return io.to(socket.id).emit("notice", "Você precisa de 1 Presa.");
-      p.inventory.fang -= 1;
-      p.gold += 35;
-      io.to(socket.id).emit("notice", "Você vendeu 1 Presa por 35 ouro.");
-    }
+  socket.on("buyNpcPotion", type => {
+    buyNpcPotion(socket, type);
   });
 
   socket.on("marketSell", data => {
-    const p = players[socket.id];
-    if (!p) return;
+    const seller = players[socket.id];
+    if (!seller) return;
 
     const item = String(data?.item || "");
     const amount = Math.max(1, Math.floor(Number(data?.amount || 1)));
@@ -452,23 +446,26 @@ io.on("connection", socket => {
 
     if (!ITEM_INFO[item]) return;
 
-    if ((p.inventory[item] || 0) < amount) {
+    if ((seller.inventory[item] || 0) < amount) {
       io.to(socket.id).emit("notice", "Você não tem essa quantidade no inventário.");
       return;
     }
 
-    p.inventory[item] -= amount;
+    seller.inventory[item] -= amount;
 
-    market.push({
+    const listing = {
       id: marketId++,
-      sellerId: p.id,
-      seller: p.name,
+      sellerId: seller.id,
+      seller: seller.name,
       item,
       amount,
       price
-    });
+    };
 
-    io.emit("notice", `${p.name} anunciou ${amount}x ${ITEM_INFO[item].name} por ${price} ouro.`);
+    market.push(listing);
+
+    io.to(socket.id).emit("notice", `${amount}x ${ITEM_INFO[item].name} foi colocado no mercado.`);
+    actionLog(`${seller.name} colocou ${amount}x ${ITEM_INFO[item].name} no mercado por ${price} ouro.`);
   });
 
   socket.on("marketBuy", id => {
@@ -476,35 +473,40 @@ io.on("connection", socket => {
     if (!buyer) return;
 
     const listingId = Number(id);
-    const index = market.findIndex(m => m.id === listingId);
+    const index = market.findIndex(m => Number(m.id) === listingId);
+
     if (index === -1) {
-      io.to(socket.id).emit("notice", "Esse item já foi vendido ou removido.");
+      io.to(socket.id).emit("notice", "Esse item já foi vendido.");
       return;
     }
 
-    const item = market[index];
+    const listing = market[index];
 
-    if (item.sellerId === buyer.id) {
+    if (listing.sellerId === buyer.id) {
       io.to(socket.id).emit("notice", "Você não pode comprar seu próprio item.");
       return;
     }
 
-    if (buyer.gold < item.price) {
+    if (buyer.gold < listing.price) {
       io.to(socket.id).emit("notice", "Ouro insuficiente.");
       return;
     }
 
-    buyer.gold -= item.price;
-    buyer.inventory[item.item] = (buyer.inventory[item.item] || 0) + item.amount;
+    const seller = players[listing.sellerId];
 
-    const seller = players[item.sellerId];
+    buyer.gold -= listing.price;
+    buyer.inventory[listing.item] = (buyer.inventory[listing.item] || 0) + listing.amount;
+
     if (seller) {
-      seller.gold += item.price;
-      io.to(seller.id).emit("notice", `Seu item foi vendido por ${item.price} ouro.`);
+      seller.gold += listing.price;
     }
 
     market.splice(index, 1);
-    io.to(socket.id).emit("notice", `Compra feita: ${item.amount}x ${ITEM_INFO[item.item].name}.`);
+
+    io.to(socket.id).emit("notice", `Você comprou ${listing.amount}x ${ITEM_INFO[listing.item].name}.`);
+    if (seller) io.to(seller.id).emit("notice", `${buyer.name} comprou seu item por ${listing.price} ouro.`);
+
+    actionLog(`${buyer.name} comprou ${listing.amount}x ${ITEM_INFO[listing.item].name} de ${listing.seller} por ${listing.price} ouro.`);
   });
 
   socket.on("chat", msg => {
@@ -518,8 +520,8 @@ io.on("connection", socket => {
   socket.on("disconnect", () => {
     if (players[socket.id]) {
       io.emit("chat", `Servidor: ${players[socket.id].name} saiu do mundo.`);
+      actionLog(`${players[socket.id].name} saiu do servidor.`);
     }
-
     delete players[socket.id];
     delete inputs[socket.id];
   });

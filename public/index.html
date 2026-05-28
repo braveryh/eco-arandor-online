@@ -1,14 +1,14 @@
-  <!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
-<title>Eco Arandor Online V8</title>
+<title>Eco Arandor Online V9</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <style>
 *{box-sizing:border-box;margin:0;padding:0;font-family:Arial,Helvetica,sans-serif;user-select:none}
 body{overflow:hidden;background:#080b10;color:white}
-canvas{display:block;background:#1f6f36}
+canvas{display:block;background:#1f6f36;width:100vw;height:100vh;image-rendering:auto}
 .panel{position:absolute;background:rgba(9,13,20,.84);border:1px solid rgba(255,255,255,.14);border-radius:16px;box-shadow:0 14px 40px rgba(0,0,0,.42);backdrop-filter:blur(8px)}
 #topHud{top:14px;left:14px;width:310px;padding:14px}
 #topHud h1{font-size:20px;color:#ffd166;margin-bottom:5px}
@@ -33,6 +33,21 @@ button,input,select{border:none;outline:none;border-radius:10px;padding:9px}butt
 .rankRow{background:#101722;border:1px solid rgba(255,255,255,.1);border-radius:10px;padding:8px;margin-bottom:6px;font-size:12px}
 .attrBtn{padding:5px 8px;font-size:12px;margin-top:0}
 .keyHelp{position:absolute;right:14px;bottom:14px;padding:12px;width:275px;font-size:12px;color:#c9d4e5}#serverClock{color:#ffd166;font-weight:bold}
+
+
+#qualityBadge{
+  position:absolute;
+  left:50%;
+  top:58px;
+  transform:translateX(-50%);
+  padding:6px 12px;
+  border-radius:999px;
+  background:rgba(9,13,20,.72);
+  border:1px solid rgba(255,255,255,.14);
+  font-size:12px;
+  color:#cbd5e1;
+  pointer-events:none;
+}
 
 #confirmOverlay{
   position:absolute;
@@ -79,6 +94,7 @@ button,input,select{border:none;outline:none;border-radius:10px;padding:9px}butt
 </div>
 
 <div id="notice">Conectando...</div>
+<div id="qualityBadge">Render: iniciando...</div>
 
 <div id="confirmOverlay">
   <div id="confirmBox">
@@ -143,9 +159,195 @@ button,input,select{border:none;outline:none;border-radius:10px;padding:9px}butt
 
 <script src="/socket.io/socket.io.js"></script>
 <script>
-const socket=io(),canvas=document.getElementById("game"),ctx=canvas.getContext("2d");
-let W=canvas.width=innerWidth,H=canvas.height=innerHeight;
-addEventListener("resize",()=>{W=canvas.width=innerWidth;H=canvas.height=innerHeight});
+const socket=io();
+const canvas=document.getElementById("game");
+
+let W=innerWidth;
+let H=innerHeight;
+let DPR=Math.min(window.devicePixelRatio||1,2.25);
+
+const renderCanvas=document.createElement("canvas");
+const ctx=renderCanvas.getContext("2d",{alpha:false,desynchronized:true});
+
+const gl=canvas.getContext("webgl",{
+  alpha:false,
+  antialias:true,
+  depth:false,
+  stencil:false,
+  preserveDrawingBuffer:false,
+  premultipliedAlpha:false
+}) || canvas.getContext("experimental-webgl");
+
+let glProgram=null;
+let glTexture=null;
+let glBuffer=null;
+let glAnisoExt=null;
+let glTextureLocation=null;
+let glPixelLocation=null;
+let glSharpenLocation=null;
+let fallback2d=null;
+
+function resizeQualityCanvas(){
+  W=innerWidth;
+  H=innerHeight;
+  DPR=Math.min(window.devicePixelRatio||1,2.25);
+
+  canvas.style.width=W+"px";
+  canvas.style.height=H+"px";
+  canvas.width=Math.floor(W*DPR);
+  canvas.height=Math.floor(H*DPR);
+
+  renderCanvas.width=Math.floor(W*DPR);
+  renderCanvas.height=Math.floor(H*DPR);
+
+  ctx.setTransform(DPR,0,0,DPR,0,0);
+  ctx.imageSmoothingEnabled=true;
+  ctx.imageSmoothingQuality="high";
+
+  if(gl){
+    gl.viewport(0,0,canvas.width,canvas.height);
+  }else if(fallback2d){
+    fallback2d.imageSmoothingEnabled=true;
+    fallback2d.imageSmoothingQuality="high";
+  }
+}
+
+function initWebGLRenderer(){
+  if(!gl){
+    fallback2d=canvas.getContext("2d",{alpha:false});
+    document.getElementById("qualityBadge").textContent="Render: Canvas 2D HD";
+    return;
+  }
+
+  const vertexSource=`
+    attribute vec2 a_position;
+    attribute vec2 a_texCoord;
+    varying vec2 v_texCoord;
+    void main(){
+      gl_Position=vec4(a_position,0.0,1.0);
+      v_texCoord=a_texCoord;
+    }
+  `;
+
+  const fragmentSource=`
+    precision mediump float;
+    uniform sampler2D u_texture;
+    uniform vec2 u_pixel;
+    uniform float u_sharpen;
+    varying vec2 v_texCoord;
+
+    void main(){
+      vec4 c=texture2D(u_texture,v_texCoord);
+      vec4 up=texture2D(u_texture,v_texCoord+vec2(0.0,-u_pixel.y));
+      vec4 down=texture2D(u_texture,v_texCoord+vec2(0.0,u_pixel.y));
+      vec4 left=texture2D(u_texture,v_texCoord+vec2(-u_pixel.x,0.0));
+      vec4 right=texture2D(u_texture,v_texCoord+vec2(u_pixel.x,0.0));
+
+      vec4 sharp=c*(1.0+4.0*u_sharpen)-(up+down+left+right)*u_sharpen;
+      gl_FragColor=vec4(sharp.rgb,1.0);
+    }
+  `;
+
+  function compile(type,source){
+    const shader=gl.createShader(type);
+    gl.shaderSource(shader,source);
+    gl.compileShader(shader);
+    if(!gl.getShaderParameter(shader,gl.COMPILE_STATUS)){
+      console.warn(gl.getShaderInfoLog(shader));
+      return null;
+    }
+    return shader;
+  }
+
+  const vs=compile(gl.VERTEX_SHADER,vertexSource);
+  const fs=compile(gl.FRAGMENT_SHADER,fragmentSource);
+
+  glProgram=gl.createProgram();
+  gl.attachShader(glProgram,vs);
+  gl.attachShader(glProgram,fs);
+  gl.linkProgram(glProgram);
+
+  if(!gl.getProgramParameter(glProgram,gl.LINK_STATUS)){
+    console.warn(gl.getProgramInfoLog(glProgram));
+    fallback2d=canvas.getContext("2d",{alpha:false});
+    document.getElementById("qualityBadge").textContent="Render: Canvas 2D HD";
+    return;
+  }
+
+  gl.useProgram(glProgram);
+
+  const vertices=new Float32Array([
+    -1,-1, 0,1,
+     1,-1, 1,1,
+    -1, 1, 0,0,
+    -1, 1, 0,0,
+     1,-1, 1,1,
+     1, 1, 1,0
+  ]);
+
+  glBuffer=gl.createBuffer();
+  gl.bindBuffer(gl.ARRAY_BUFFER,glBuffer);
+  gl.bufferData(gl.ARRAY_BUFFER,vertices,gl.STATIC_DRAW);
+
+  const aPosition=gl.getAttribLocation(glProgram,"a_position");
+  const aTexCoord=gl.getAttribLocation(glProgram,"a_texCoord");
+
+  gl.enableVertexAttribArray(aPosition);
+  gl.vertexAttribPointer(aPosition,2,gl.FLOAT,false,16,0);
+
+  gl.enableVertexAttribArray(aTexCoord);
+  gl.vertexAttribPointer(aTexCoord,2,gl.FLOAT,false,16,8);
+
+  glTexture=gl.createTexture();
+  gl.bindTexture(gl.TEXTURE_2D,glTexture);
+
+  gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL,false);
+  gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_S,gl.CLAMP_TO_EDGE);
+  gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_T,gl.CLAMP_TO_EDGE);
+  gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MIN_FILTER,gl.LINEAR);
+  gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MAG_FILTER,gl.LINEAR);
+
+  glAnisoExt=
+    gl.getExtension("EXT_texture_filter_anisotropic") ||
+    gl.getExtension("MOZ_EXT_texture_filter_anisotropic") ||
+    gl.getExtension("WEBKIT_EXT_texture_filter_anisotropic");
+
+  if(glAnisoExt){
+    const max=gl.getParameter(glAnisoExt.MAX_TEXTURE_MAX_ANISOTROPY_EXT);
+    gl.texParameterf(gl.TEXTURE_2D,glAnisoExt.TEXTURE_MAX_ANISOTROPY_EXT,Math.min(8,max));
+  }
+
+  glTextureLocation=gl.getUniformLocation(glProgram,"u_texture");
+  glPixelLocation=gl.getUniformLocation(glProgram,"u_pixel");
+  glSharpenLocation=gl.getUniformLocation(glProgram,"u_sharpen");
+
+  gl.uniform1i(glTextureLocation,0);
+
+  document.getElementById("qualityBadge").textContent =
+    glAnisoExt ? "Render: WebGL HD + Sharpen + Anisotropic" : "Render: WebGL HD + Sharpen";
+}
+
+function presentFrame(){
+  if(gl && glProgram && glTexture){
+    gl.useProgram(glProgram);
+    gl.activeTexture(gl.TEXTURE0);
+    gl.bindTexture(gl.TEXTURE_2D,glTexture);
+    gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,gl.RGBA,gl.UNSIGNED_BYTE,renderCanvas);
+    gl.uniform2f(glPixelLocation,1/renderCanvas.width,1/renderCanvas.height);
+    gl.uniform1f(glSharpenLocation,0.18);
+    gl.drawArrays(gl.TRIANGLES,0,6);
+    return;
+  }
+
+  if(fallback2d){
+    fallback2d.clearRect(0,0,canvas.width,canvas.height);
+    fallback2d.drawImage(renderCanvas,0,0,canvas.width,canvas.height);
+  }
+}
+
+addEventListener("resize",resizeQualityCanvas);
+initWebGLRenderer();
+resizeQualityCanvas();
 const keys={},renderPlayers={};
 let state={players:{},enemies:[],drops:[],market:[],ranking:[],world:{width:4200,height:3200,safeZone:{x:1820,y:1340,w:560,h:420},npcShop:{x:2100,y:1550,name:"Lia, Mercadora"}},serverTime:"--:--:--"};
 let joined=false,myId=null,noticeTimer=0,chosenClass="swordsman",effects=[],floatTexts=[],chatTab="global",globalMessages=[],actionMessages=[];
@@ -358,7 +560,17 @@ function updateUI(){
 }
 
 function roundRect(x,y,w,h,r){ctx.beginPath();ctx.moveTo(x+r,y);ctx.arcTo(x+w,y,x+w,y+h,r);ctx.arcTo(x+w,y+h,x,y+h,r);ctx.arcTo(x,y+h,x,y,r);ctx.arcTo(x,y,x+w,y,r);ctx.closePath()}
-function loop(){updateRenderPositions();if(noticeTimer>0)noticeTimer--;else document.getElementById("notice").textContent="M mercado com confirmação • H atributos • R ranking • Mobs longe do spawn são mais fortes";draw();requestAnimationFrame(loop)}
+function loop(){
+  updateRenderPositions();
+
+  if(noticeTimer>0)noticeTimer--;
+  else document.getElementById("notice").textContent="Render WebGL HD • Sharpen • Anisotropic quando suportado";
+
+  draw();
+  presentFrame();
+
+  requestAnimationFrame(loop);
+}
 loop();
 </script>
 </body>

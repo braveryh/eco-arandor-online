@@ -15,27 +15,27 @@ const PORT = process.env.PORT || 3000;
 const DB_FILE = path.join(__dirname, "database.json");
 
 const WORLD = {
-  width: 6200,
-  height: 4600,
-  safeZone: { x: 2800, y: 2000, w: 620, h: 480 },
-  npcShop: { x: 3110, y: 2250, name: "Lia, Mercadora" },
-  questNpc: { x: 3040, y: 2185, name: "Capitão Rowan" },
+  width: 8200,
+  height: 6200,
+  safeZone: { x: 3790, y: 2860, w: 620, h: 480 },
+  npcShop: { x: 4100, y: 3110, name: "Lia, Mercadora" },
+  questNpc: { x: 4030, y: 3045, name: "Capitão Rowan" },
   biomes: [
-    { id: "forest", name: "Floresta Viva", x: 220, y: 220, w: 1550, h: 1250 },
-    { id: "ruins", name: "Ruínas Profanas", x: 2350, y: 250, w: 1500, h: 1200 },
-    { id: "swamp", name: "Pântano Sombrio", x: 4450, y: 260, w: 1500, h: 1250 },
-    { id: "desert", name: "Deserto Rubro", x: 240, y: 3000, w: 1550, h: 1250 },
-    { id: "volcanic", name: "Campos Vulcânicos", x: 2350, y: 3050, w: 1500, h: 1200 },
-    { id: "ice", name: "Tundra Cristalina", x: 4450, y: 3000, w: 1500, h: 1250 },
-    { id: "base", name: "Base Segura", x: 2700, y: 1900, w: 820, h: 700 }
+    { id: "forest", name: "Floresta Viva", x: 260, y: 260, w: 1800, h: 1450 },
+    { id: "ruins", name: "Ruínas Profanas", x: 3180, y: 350, w: 1700, h: 1400 },
+    { id: "swamp", name: "Pântano Sombrio", x: 6100, y: 300, w: 1800, h: 1450 },
+    { id: "desert", name: "Deserto Rubro", x: 300, y: 4450, w: 1850, h: 1450 },
+    { id: "volcanic", name: "Campos Vulcânicos", x: 3150, y: 4500, w: 1750, h: 1400 },
+    { id: "ice", name: "Tundra Cristalina", x: 6100, y: 4400, w: 1800, h: 1450 },
+    { id: "base", name: "Base Segura", x: 3690, y: 2760, w: 820, h: 700 }
   ],
   bosses: [
-    { id: "boss_forest", name: "Ent Corrompido", x: 790, y: 700, biome: "forest" },
-    { id: "boss_ruins", name: "Arconte Profano", x: 3100, y: 730, biome: "ruins" },
-    { id: "boss_swamp", name: "Hidra Putrefata", x: 5220, y: 760, biome: "swamp" },
-    { id: "boss_desert", name: "Carrasco das Dunas", x: 840, y: 3710, biome: "desert" },
-    { id: "boss_volcanic", name: "Behemoth de Cinzas", x: 3130, y: 3710, biome: "volcanic" },
-    { id: "boss_ice", name: "Titã Glacial", x: 5200, y: 3710, biome: "ice" }
+    { id: "boss_forest", name: "Ent Corrompido", x: 850, y: 790, biome: "forest" },
+    { id: "boss_ruins", name: "Arconte Profano", x: 4030, y: 870, biome: "ruins" },
+    { id: "boss_swamp", name: "Hidra Putrefata", x: 7150, y: 850, biome: "swamp" },
+    { id: "boss_desert", name: "Carrasco das Dunas", x: 900, y: 5250, biome: "desert" },
+    { id: "boss_volcanic", name: "Behemoth de Cinzas", x: 4070, y: 5250, biome: "volcanic" },
+    { id: "boss_ice", name: "Titã Glacial", x: 7150, y: 5250, biome: "ice" }
   ]
 };
 
@@ -413,22 +413,27 @@ function enemyProfile(biome) {
     forest: [
       { type: "thornfiend", name: "Demônio Espinheiro", color: "#3fbf5f", hp: 70, dmg: 12, size: 34, speed: 1.08, shape: "beast" },
       { type: "direwolf", name: "Lobo Predador", color: "#7a5cff", hp: 100, dmg: 17, size: 40, speed: 1.25, shape: "wolf" },
+      { type: "feralwolf", name: "Lobo Feroz", color: "#b23a48", hp: 130, dmg: 23, size: 44, speed: 1.34, shape: "wolf" },
+      { type: "stormbird", name: "Pássaro Tempestade", color: "#9de2ff", hp: 82, dmg: 19, size: 34, speed: 1.45, shape: "bird" },
       { type: "venomcrawler", name: "Rastejante Venenoso", color: "#65d96e", hp: 88, dmg: 15, size: 36, speed: 1.14, shape: "crawler" }
     ],
     ruins: [
       { type: "voidacolyte", name: "Acólito do Vazio", color: "#8f5bff", hp: 130, dmg: 24, size: 40, speed: 1.1, shape: "mage" },
       { type: "boneknight", name: "Cavaleiro Ósseo", color: "#d8d0bf", hp: 180, dmg: 28, size: 46, speed: 0.98, shape: "knight" },
+      { type: "minotaur", name: "Minotauro Profano", color: "#8a4b2a", hp: 260, dmg: 38, size: 58, speed: 0.92, shape: "minotaur" },
       { type: "abyssspawn", name: "Cria Abissal", color: "#d84dff", hp: 150, dmg: 30, size: 44, speed: 1.18, shape: "demon" }
     ],
     swamp: [
       { type: "plaguemaw", name: "Boca da Praga", color: "#5f8d43", hp: 92, dmg: 16, size: 38, speed: 1.04, shape: "beast" },
       { type: "bogreaver", name: "Ceifador do Brejo", color: "#3d5b38", hp: 125, dmg: 21, size: 42, speed: 1.16, shape: "knight" },
-      { type: "leechhorror", name: "Horror Sanguessuga", color: "#7e394d", hp: 112, dmg: 19, size: 40, speed: 1.12, shape: "crawler" }
+      { type: "leechhorror", name: "Horror Sanguessuga", color: "#7e394d", hp: 112, dmg: 19, size: 40, speed: 1.12, shape: "crawler" },
+      { type: "nightbat", name: "Morcego Noturno", color: "#403060", hp: 70, dmg: 16, size: 32, speed: 1.55, shape: "bird" }
     ],
     desert: [
       { type: "bonescarab", name: "Escaravelho Ósseo", color: "#d39442", hp: 95, dmg: 17, size: 37, speed: 1.14, shape: "crawler" },
       { type: "sandwraith", name: "Espectro de Areia", color: "#ce6a38", hp: 110, dmg: 22, size: 39, speed: 1.22, shape: "mage" },
-      { type: "dunebutcher", name: "Carniceiro das Dunas", color: "#a94a2e", hp: 145, dmg: 25, size: 45, speed: 1.08, shape: "demon" }
+      { type: "dunebutcher", name: "Carniceiro das Dunas", color: "#a94a2e", hp: 145, dmg: 25, size: 45, speed: 1.08, shape: "demon" },
+      { type: "sandminotaur", name: "Minotauro das Dunas", color: "#c07b3e", hp: 240, dmg: 35, size: 56, speed: 0.96, shape: "minotaur" }
     ],
     volcanic: [
       { type: "ashimp", name: "Diabrete de Cinzas", color: "#ff6b35", hp: 120, dmg: 23, size: 38, speed: 1.18, shape: "demon" },
@@ -511,7 +516,7 @@ function createEnemy() {
 }
 
 function spawnEnemies() {
-  while (enemies.filter(e => !e.isBoss).length < 72) {
+  while (enemies.filter(e => !e.isBoss).length < 95) {
     enemies.push(createEnemy());
   }
 

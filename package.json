@@ -1,7 +1,7 @@
 {
   "name": "eco-arandor-online",
-  "version": "6.0.0",
-  "description": "MMORPG indie multiplayer V6",
+  "version": "7.0.0",
+  "description": "MMORPG indie multiplayer V7 - mercado e atributos corrigidos",
   "main": "server.js",
   "scripts": {
     "start": "node server.js"

@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <title>MMORPG Indie</title>
+
+  <style>
+    body{
+      margin:0;
+      overflow:hidden;
+      background:#111;
+    }
+
+    canvas{
+      background:#1f5f2e;
+      display:block;
+      margin:auto;
+    }
+  </style>
+</head>
+<body>
+
+<canvas id="game" width="900" height="600"></canvas>
+
+<script src="/socket.io/socket.io.js"></script>
+
+<script>
+const socket = io();
+
+const canvas = document.getElementById("game");
+const ctx = canvas.getContext("2d");
+
+let players = {};
+
+const me = {
+  x:200,
+  y:200,
+  speed:4
+};
+
+const keys = {};
+
+window.addEventListener("keydown", e=>{
+  keys[e.key.toLowerCase()] = true;
+});
+
+window.addEventListener("keyup", e=>{
+  keys[e.key.toLowerCase()] = false;
+});
+
+function movePlayer(){
+
+  if(keys["w"]) me.y -= me.speed;
+  if(keys["s"]) me.y += me.speed;
+  if(keys["a"]) me.x -= me.speed;
+  if(keys["d"]) me.x += me.speed;
+
+  socket.emit("move", {
+    x: me.x,
+    y: me.y
+  });
+}
+
+socket.on("players", serverPlayers=>{
+  players = serverPlayers;
+});
+
+function draw(){
+
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+
+  for(let id in players){
+
+    const p = players[id];
+
+    ctx.fillStyle = id === socket.id ? "#00bfff" : "#ffd700";
+
+    ctx.fillRect(p.x,p.y,30,30);
+  }
+}
+
+function gameLoop(){
+
+  movePlayer();
+  draw();
+
+  requestAnimationFrame(gameLoop);
+}
+
+gameLoop();
+
+</script>
+
+</body>
+</html>

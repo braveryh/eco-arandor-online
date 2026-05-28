@@ -2,7 +2,7 @@
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
-<title>Eco Arandor Online V16</title>
+<title>Eco Arandor Online V17</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <style>
@@ -51,6 +51,10 @@ button,input,select{border:none;outline:none;border-radius:10px;padding:9px}butt
 .menuBtn{width:100%;margin-top:7px;background:#101722;color:#ffd166;border:1px solid rgba(255,255,255,.15)}
 #infoPanel{right:370px;top:355px}
 .infoBox{background:#101722;border:1px solid rgba(255,255,255,.1);border-radius:10px;padding:9px;margin-top:8px;font-size:12px;color:#dbe4f0;line-height:1.4}
+#minimapPanel{right:14px;top:14px;width:210px;padding:10px}
+#minimap{width:190px;height:140px;background:#101722;border:1px solid rgba(255,255,255,.15);border-radius:10px}
+.settingRow{display:grid;grid-template-columns:1fr 110px;gap:8px;align-items:center;margin:8px 0;font-size:12px}
+.settingRow input{width:110px}
 #serverClock{color:#ffd166;font-weight:bold}
 #confirmOverlay{position:absolute;inset:0;background:rgba(0,0,0,.45);display:none;align-items:center;justify-content:center;z-index:40}
 #confirmOverlay.open{display:flex}#confirmBox{width:380px;padding:22px;background:rgba(9,13,20,.96);border:1px solid rgba(255,255,255,.18);border-radius:18px;box-shadow:0 20px 80px rgba(0,0,0,.65)}#confirmBox h2{color:#ffd166;margin-bottom:8px}#confirmText{font-size:14px;color:#dbe4f0;line-height:1.4;margin-bottom:14px}.dangerBtn{background:linear-gradient(135deg,#ef476f,#ff8c42);color:white}
@@ -118,7 +122,13 @@ button,input,select{border:none;outline:none;border-radius:10px;padding:9px}butt
   <div class="bar"><div id="xpBar" class="fill xp"></div></div>
 </div>
 
-<div id="bottomHud" class="panel"><button class="closeBtn" onclick="closePanelDirect('bottomHud')">X</button>
+<div id="minimapPanel" class="panel">
+  <h2 style="font-size:15px;color:#7ee787;margin-bottom:6px">🗺️ Minimapa</h2>
+  <canvas id="minimap" width="190" height="140"></canvas>
+  <p class="small">Você: verde • Mobs: vermelho • Boss: amarelo</p>
+</div>
+
+<div id="bottomHud" class="panel">
   <div><div class="row"><span>Vida</span><span id="hpText">100/100</span></div><div class="bar"><div id="hpBar" class="fill hp"></div></div><button class="full quickBtn" onclick="usePotion('hp')">Poção Vida</button></div>
   <div><div class="row"><span>Mana</span><span id="manaText">80/80</span></div><div class="bar"><div id="manaBar" class="fill mana"></div></div><button class="full quickBtn" onclick="usePotion('mana')">Poção Mana</button></div>
 </div>
@@ -168,7 +178,7 @@ button,input,select{border:none;outline:none;border-radius:10px;padding:9px}butt
   </div>
 </div>
 
-<div class="panel keyHelp"><b>Atalhos</b><br>WASD: mover<br>Espaço: atacar<br>I: inventário<br>L: loja NPC<br>M: mercado<br>H: atributos<br>R: ranking<br>Chat minimizado. Menu inferior esquerdo, X fecha HUDs, spawn pelo menu.</div>
+<div class="panel keyHelp"><b>Atalhos</b><br>WASD: mover<br>Espaço: atacar<br>I: inventário<br>L: loja NPC<br>M: mercado<br>H: atributos<br>R: ranking<br>Chat minimizado. Som ambiente • minimapa • mobs novos • spawn no menu.</div>
 
 <script src="/socket.io/socket.io.js"></script>
 <script>
@@ -201,10 +211,10 @@ let state={
   market:[],
   ranking:[],
   world:{
-    width:6200,
-    height:4600,
-    safeZone:{x:2800,y:2000,w:620,h:460},
-    npcShop:{x:3110,y:2250,name:"Lia, Mercadora"},
+    width:8200,
+    height:6200,
+    safeZone:{x:3790,y:2860,w:620,h:480},
+    npcShop:{x:4100,y:3110,name:"Lia, Mercadora"},
     biomes:[]
   },
   serverTime:"--:--:--"
@@ -220,22 +230,30 @@ let chatTab="global";
 let globalMessages=[];
 let actionMessages=[];
 let pendingMarketBuy=null;
+let audioCtx=null;
+let musicNodes=null;
+const audioSettings={
+  music:Number(localStorage.getItem("musicVol")||"0.12"),
+  sfx:Number(localStorage.getItem("sfxVol")||"0.45"),
+  musicEnabled:localStorage.getItem("musicEnabled")!=="0"
+};
 let quests=[];
 let questTab='active';
 
 const decor={trees:[],rocks:[],flowers:[],lakes:[],bones:[],crystals:[],lava:[]};
 
 function createDecor(){
-  for(let i=0;i<680;i++)decor.trees.push({x:Math.random()*6200,y:Math.random()*4600,s:22+Math.random()*30,rot:Math.random()*6.28});
-  for(let i=0;i<360;i++)decor.rocks.push({x:Math.random()*6200,y:Math.random()*4600,s:8+Math.random()*20,rot:Math.random()*6.28});
-  for(let i=0;i<1400;i++)decor.flowers.push({x:Math.random()*6200,y:Math.random()*4600,c:Math.random()>.5?"#fff3b0":"#ffd166",s:2+Math.random()*3});
-  for(let i=0;i<80;i++)decor.bones.push({x:Math.random()*6200,y:Math.random()*4600});
-  for(let i=0;i<90;i++)decor.crystals.push({x:Math.random()*6200,y:Math.random()*4600});
-  for(let i=0;i<70;i++)decor.lava.push({x:Math.random()*6200,y:Math.random()*4600});
-  decor.lakes.push({x:520,y:620,w:440,h:250});
-  decor.lakes.push({x:4920,y:760,w:390,h:240});
-  decor.lakes.push({x:610,y:3660,w:420,h:230});
-  decor.lakes.push({x:4880,y:3570,w:440,h:250});
+  for(let i=0;i<680;i++)decor.trees.push({x:Math.random()*8200,y:Math.random()*6200,s:22+Math.random()*30,rot:Math.random()*6.28});
+  for(let i=0;i<360;i++)decor.rocks.push({x:Math.random()*8200,y:Math.random()*6200,s:8+Math.random()*20,rot:Math.random()*6.28});
+  for(let i=0;i<1400;i++)decor.flowers.push({x:Math.random()*8200,y:Math.random()*6200,c:Math.random()>.5?"#fff3b0":"#ffd166",s:2+Math.random()*3});
+  for(let i=0;i<80;i++)decor.bones.push({x:Math.random()*8200,y:Math.random()*6200});
+  for(let i=0;i<90;i++)decor.crystals.push({x:Math.random()*8200,y:Math.random()*6200});
+  for(let i=0;i<70;i++)decor.lava.push({x:Math.random()*8200,y:Math.random()*6200});
+  decor.lakes.push({x:620,y:720,w:520,h:310});
+  decor.lakes.push({x:6650,y:900,w:460,h:280});
+  decor.lakes.push({x:760,y:5160,w:470,h:260});
+  decor.lakes.push({x:6680,y:4980,w:520,h:300});
+  decor.lakes.push({x:3800,y:1250,w:420,h:240});
 }
 createDecor();
 
@@ -260,6 +278,7 @@ function registerAccount(){
 }
 
 function guestLogin(){
+  if(audioSettings.musicEnabled) startMusic();
   const name="Convidado"+Math.floor(Math.random()*999);
   socket.emit("join",{name,classId:chosenClass});
   document.getElementById("menu").style.display="none";
@@ -325,6 +344,7 @@ socket.on("characters",chars=>{
 socket.on("gameStarted",()=>{
   document.getElementById("menu").style.display="none";
   joined=true;
+  if(audioSettings.musicEnabled) startMusic();
 });
 
 socket.on("state",s=>{
@@ -353,11 +373,13 @@ socket.on("actionLog",msg=>{
 socket.on("notice",showNotice);
 
 socket.on("attackEffect",e=>{
+  if(e.from && me() && Math.hypot(e.from.x-me().x,e.from.y-me().y)<20) playAttackSound(e.classId);
   effects.push({...e,life:14});
   floatTexts.push({x:e.to.x,y:e.to.y-30,text:String(e.damage),life:44,color:e.classId==="mage"?"#b388ff":e.classId==="archer"?"#ffd166":"#ffffff"});
 });
 
 socket.on("damageTaken",e=>{
+  playDamageSound();
   floatTexts.push({x:e.x,y:e.y,text:"-"+e.damage,life:44,color:"#ff4d6d"});
 });
 
@@ -390,6 +412,112 @@ function showNotice(text){
   document.getElementById("notice").textContent=text;
   noticeTimer=180;
 }
+
+function ensureAudio(){
+  if(!audioCtx){
+    audioCtx=new (window.AudioContext||window.webkitAudioContext)();
+  }
+  if(audioCtx.state==="suspended")audioCtx.resume();
+}
+
+function playTone(freq,duration,type,volume,slideTo){
+  if(!audioSettings.sfx && volume !== "music") return;
+  ensureAudio();
+  const osc=audioCtx.createOscillator();
+  const gain=audioCtx.createGain();
+  osc.type=type||"sine";
+  osc.frequency.setValueAtTime(freq,audioCtx.currentTime);
+  if(slideTo)osc.frequency.exponentialRampToValueAtTime(slideTo,audioCtx.currentTime+duration);
+  gain.gain.setValueAtTime(0.0001,audioCtx.currentTime);
+  gain.gain.exponentialRampToValueAtTime(Math.max(0.0001,volume),audioCtx.currentTime+0.02);
+  gain.gain.exponentialRampToValueAtTime(0.0001,audioCtx.currentTime+duration);
+  osc.connect(gain).connect(audioCtx.destination);
+  osc.start();
+  osc.stop(audioCtx.currentTime+duration+0.02);
+}
+
+function playAttackSound(classId){
+  ensureAudio();
+  const v=audioSettings.sfx;
+  if(classId==="swordsman"){
+    playTone(520,0.11,"sawtooth",0.12*v,180);
+  }else if(classId==="archer"){
+    playTone(880,0.09,"triangle",0.10*v,420);
+    setTimeout(()=>playTone(240,0.05,"square",0.05*v,160),70);
+  }else if(classId==="mage"){
+    playTone(430,0.18,"sine",0.10*v,900);
+    setTimeout(()=>playTone(730,0.14,"triangle",0.07*v,1100),50);
+  }
+}
+
+function playDamageSound(){
+  playTone(160,0.16,"sawtooth",0.12*audioSettings.sfx,70);
+}
+
+function startMusic(){
+  if(!audioSettings.musicEnabled)return;
+  ensureAudio();
+  if(musicNodes)return;
+
+  const master=audioCtx.createGain();
+  master.gain.value=audioSettings.music;
+  master.connect(audioCtx.destination);
+
+  const bass=audioCtx.createOscillator();
+  bass.type="sine";
+  bass.frequency.value=55;
+
+  const pad=audioCtx.createOscillator();
+  pad.type="triangle";
+  pad.frequency.value=110;
+
+  const pad2=audioCtx.createOscillator();
+  pad2.type="sine";
+  pad2.frequency.value=165;
+
+  const lfo=audioCtx.createOscillator();
+  lfo.type="sine";
+  lfo.frequency.value=0.07;
+
+  const lfoGain=audioCtx.createGain();
+  lfoGain.gain.value=18;
+  lfo.connect(lfoGain);
+  lfoGain.connect(pad.frequency);
+
+  const g1=audioCtx.createGain();
+  const g2=audioCtx.createGain();
+  const g3=audioCtx.createGain();
+  g1.gain.value=0.16;
+  g2.gain.value=0.08;
+  g3.gain.value=0.05;
+
+  bass.connect(g1).connect(master);
+  pad.connect(g2).connect(master);
+  pad2.connect(g3).connect(master);
+
+  bass.start();
+  pad.start();
+  pad2.start();
+  lfo.start();
+
+  musicNodes={master,bass,pad,pad2,lfo};
+}
+
+function stopMusic(){
+  if(!musicNodes)return;
+  try{
+    musicNodes.bass.stop();
+    musicNodes.pad.stop();
+    musicNodes.pad2.stop();
+    musicNodes.lfo.stop();
+  }catch{}
+  musicNodes=null;
+}
+
+function updateMusicVolume(){
+  if(musicNodes)musicNodes.master.gain.value=audioSettings.music;
+}
+
 
 document.addEventListener("keydown",e=>{
   const tag=document.activeElement.tagName;
@@ -535,7 +663,37 @@ function showMenuInfo(type){
 
   if(type==="settings"){
     title.textContent="⚙️ Configurações";
-    content.innerHTML="Configurações disponíveis nesta versão:<br>• HUDs podem ser fechados no X<br>• Chat pode ser minimizado<br>• Menu pode ser minimizado<br>• Movimento por teclado ou mouse<br><br>Mais opções podem ser adicionadas depois, como volume, gráficos e resolução.";
+    content.innerHTML=`
+      <b>Áudio</b>
+      <div class="settingRow"><span>Música de fundo</span><input id="musicVol" type="range" min="0" max="100" value="${Math.round(audioSettings.music*100)}"></div>
+      <div class="settingRow"><span>Efeitos sonoros</span><input id="sfxVol" type="range" min="0" max="100" value="${Math.round(audioSettings.sfx*100)}"></div>
+      <button class="full" id="toggleMusicBtn">${audioSettings.musicEnabled?"Desligar música":"Ligar música"}</button>
+      <br><br>
+      <b>Interface</b><br>
+      • HUDs podem ser fechados no X<br>
+      • Chat pode ser minimizado<br>
+      • Menu pode ser minimizado<br>
+      • Movimento por teclado ou mouse
+    `;
+
+    document.getElementById("musicVol").addEventListener("input",e=>{
+      audioSettings.music=Number(e.target.value)/100;
+      localStorage.setItem("musicVol",String(audioSettings.music));
+      updateMusicVolume();
+    });
+
+    document.getElementById("sfxVol").addEventListener("input",e=>{
+      audioSettings.sfx=Number(e.target.value)/100;
+      localStorage.setItem("sfxVol",String(audioSettings.sfx));
+    });
+
+    document.getElementById("toggleMusicBtn").addEventListener("click",()=>{
+      audioSettings.musicEnabled=!audioSettings.musicEnabled;
+      localStorage.setItem("musicEnabled",audioSettings.musicEnabled?"1":"0");
+      if(audioSettings.musicEnabled) startMusic();
+      else stopMusic();
+      showMenuInfo("settings");
+    });
   }
 
   if(type==="characters"){
@@ -619,7 +777,7 @@ function confirmBuyMarket(id,itemName,amount,price,seller){
 function me(){return state.players[myId];}
 
 function camera(){
-  const p=renderPlayers[myId]||me()||{x:3110,y:2250};
+  const p=renderPlayers[myId]||me()||{x:4100,y:3110};
   return{x:p.x-W/2,y:p.y-H/2};
 }
 
@@ -910,7 +1068,18 @@ function drawEnemy(e){
 
   ctx.fillStyle=e.color||"#9b5de5";
 
-  if(e.shape==="crawler"){
+  if(e.shape==="bird"){
+    const flap=Math.sin(Date.now()/90+e.id)*size*.18;
+    ctx.beginPath();ctx.ellipse(p.x,p.y,size*.35,size*.25,0,0,Math.PI*2);ctx.fill();
+    ctx.beginPath();ctx.moveTo(p.x-size*.15,p.y);ctx.lineTo(p.x-size*.75,p.y-flap);ctx.lineTo(p.x-size*.25,p.y+size*.18);ctx.closePath();ctx.fill();
+    ctx.beginPath();ctx.moveTo(p.x+size*.15,p.y);ctx.lineTo(p.x+size*.75,p.y+flap);ctx.lineTo(p.x+size*.25,p.y+size*.18);ctx.closePath();ctx.fill();
+  }else if(e.shape==="minotaur"){
+    ctx.fillRect(p.x-size*.42,p.y-size*.42,size*.84,size*.9);
+    ctx.fillRect(p.x-size*.18,p.y-size*.72,size*.36,size*.34);
+    ctx.fillStyle="#f0d28a";
+    ctx.beginPath();ctx.moveTo(p.x-size*.18,p.y-size*.62);ctx.lineTo(p.x-size*.58,p.y-size*.85);ctx.lineTo(p.x-size*.3,p.y-size*.48);ctx.fill();
+    ctx.beginPath();ctx.moveTo(p.x+size*.18,p.y-size*.62);ctx.lineTo(p.x+size*.58,p.y-size*.85);ctx.lineTo(p.x+size*.3,p.y-size*.48);ctx.fill();
+  }else if(e.shape==="crawler"){
     ctx.beginPath();ctx.ellipse(p.x,p.y,size*.58,size*.32,0,0,Math.PI*2);ctx.fill();
     for(let i=-2;i<=2;i++)ctx.fillRect(p.x+i*size*.18,p.y+size*.1,4,size*.28);
   }else if(e.shape==="knight"){
@@ -1034,6 +1203,56 @@ function drawEffects(){
     f.life--;
     if(f.life<=0)floatTexts.splice(i,1);
   }
+}
+
+
+function drawMinimap(){
+  const mini=document.getElementById("minimap");
+  if(!mini)return;
+  const mctx=mini.getContext("2d");
+  const mw=mini.width;
+  const mh=mini.height;
+  const p=me();
+
+  mctx.clearRect(0,0,mw,mh);
+  mctx.fillStyle="#0b1220";
+  mctx.fillRect(0,0,mw,mh);
+
+  const sx=mw/state.world.width;
+  const sy=mh/state.world.height;
+
+  (state.world.biomes||[]).forEach(b=>{
+    const pal=biomePalette(b.id);
+    mctx.fillStyle=pal.a;
+    mctx.globalAlpha=b.id==="base"?0.8:0.45;
+    mctx.fillRect(b.x*sx,b.y*sy,b.w*sx,b.h*sy);
+    mctx.globalAlpha=1;
+  });
+
+  if(p){
+    const radiusWorld=850;
+    state.enemies.forEach(e=>{
+      const d=Math.hypot(e.x-p.x,e.y-p.y);
+      if(d>radiusWorld && !e.isBoss)return;
+      mctx.fillStyle=e.isBoss?"#ffd166":"#ef476f";
+      mctx.beginPath();
+      mctx.arc(e.x*sx,e.y*sy,e.isBoss?3:1.8,0,Math.PI*2);
+      mctx.fill();
+    });
+
+    mctx.fillStyle="#7ee787";
+    mctx.beginPath();
+    mctx.arc(p.x*sx,p.y*sy,3.2,0,Math.PI*2);
+    mctx.fill();
+
+    mctx.strokeStyle="rgba(126,231,135,.45)";
+    mctx.beginPath();
+    mctx.arc(p.x*sx,p.y*sy,radiusWorld*sx,0,Math.PI*2);
+    mctx.stroke();
+  }
+
+  mctx.strokeStyle="rgba(255,255,255,.25)";
+  mctx.strokeRect(0,0,mw,mh);
 }
 
 function draw(){
@@ -1261,8 +1480,9 @@ function roundRect(x,y,w,h,r){
 function loop(){
   updateRenderPositions();
   if(noticeTimer>0)noticeTimer--;
-  else document.getElementById("notice").textContent="Menu inferior esquerdo • X fecha HUDs • Spawn no menu";
+  else document.getElementById("notice").textContent="Som ambiente • minimapa • mobs novos";
   draw();
+  drawMinimap();
   requestAnimationFrame(loop);
 }
 

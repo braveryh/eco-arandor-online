@@ -1,1774 +1,630 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-<meta charset="UTF-8">
-<title>Eco Arandor Online V20 Anime MMORPG</title>
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1.0" />
+<title>Aetheria Online</title>
 <style>
-*{box-sizing:border-box;margin:0;padding:0;font-family:Arial,Helvetica,sans-serif;user-select:none}
-body{overflow:hidden;background:linear-gradient(180deg,#7cc9ff,#0b1d26);color:white}
-canvas{display:block;background:#64b95f}
-.panel{position:absolute;background:rgba(9,13,20,.84);border:1px solid rgba(255,255,255,.14);border-radius:16px;box-shadow:0 14px 40px rgba(0,0,0,.42);backdrop-filter:blur(8px)}
-#topHud{top:14px;left:14px;width:360px;height:118px;padding:10px 12px 10px 98px;border-radius:18px;background:rgba(8,12,18,.86)}
-#topHud h1{font-size:18px;color:#ffd166;margin-bottom:3px}
-#classPortrait{position:absolute;left:12px;top:12px;width:74px;height:74px;border-radius:50%;border:3px solid #c9a64d;background:radial-gradient(circle,#24364f,#0c111b);box-shadow:0 0 18px rgba(255,209,102,.22);overflow:hidden}
-#classPortrait canvas{width:100%;height:100%;background:transparent}
-#portraitLevel{position:absolute;left:4px;top:70px;width:34px;height:34px;border-radius:50%;background:#14100a;border:2px solid #c9a64d;color:#ffd166;font-weight:bold;display:flex;align-items:center;justify-content:center;font-size:13px}
-.hudBarWrap{height:18px;background:#14151b;border:1px solid rgba(255,255,255,.18);border-radius:4px;margin-top:4px;overflow:hidden;position:relative}
-.hudBarWrap span{position:absolute;inset:0;text-align:center;font-size:12px;line-height:17px;text-shadow:1px 1px #000;color:#fff;font-weight:bold}
-#topHpFill{height:100%;background:linear-gradient(90deg,#8b0000,#e63946,#ff6b6b)}
-#topManaFill{height:100%;background:linear-gradient(90deg,#003b8e,#118ab2,#5ecbff)}
-#topXpText{position:absolute;left:98px;bottom:8px;color:#ffd166;font-size:12px}
-#topInfoLine{font-size:12px;color:#dbe4f0;margin-top:4px}
-.small{font-size:12px;color:#b9c2d3}.row{display:flex;justify-content:space-between;gap:8px;font-size:13px;margin-top:8px}
-.bar{height:10px;width:100%;background:#101722;border-radius:99px;overflow:hidden;margin-top:4px;border:1px solid rgba(255,255,255,.09)}
-.fill{height:100%;transition:width .12s linear}.hp{background:linear-gradient(90deg,#ef476f,#ff8c42)}.mana{background:linear-gradient(90deg,#118ab2,#7b61ff)}.xp{background:linear-gradient(90deg,#06d6a0,#ffd166)}
-button,input,select{border:none;outline:none;border-radius:10px;padding:9px}button{cursor:pointer;background:linear-gradient(135deg,#ffd166,#ff9f1c);color:#1a1200;font-weight:bold;margin-top:7px}button:hover{filter:brightness(1.08)}input,select{background:#101722;color:white;border:1px solid rgba(255,255,255,.14)}.full{width:100%}.grid2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
-#bottomHud{position:absolute;left:50%;bottom:16px;transform:translateX(-50%);width:390px;padding:9px;display:grid;grid-template-columns:1fr 1fr;gap:8px}
-#bottomHud .row{font-size:12px;margin-top:0}.quickBtn{font-size:12px;padding:8px}
-#chat{left:14px;bottom:14px;width:86px;height:42px;padding:10px;overflow:hidden;cursor:pointer;transition:.18s ease}
-#chat.open{width:390px;height:auto;padding:12px;cursor:default}
-#chatCollapsed{display:block;text-align:center;font-weight:bold;color:#ffd166}
-#chat.open #chatCollapsed{display:none}
-#chatContent{display:none}
-#chat.open #chatContent{display:block}
-#messages{height:118px;overflow-y:auto;font-size:13px;line-height:1.35;margin-bottom:8px}
-#messages div{padding:3px 0;border-bottom:1px solid rgba(255,255,255,.05)}
-.chatTabs{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px}.tab{background:#101722;color:#cbd5e1}.tab.active{background:linear-gradient(135deg,#7ee787,#06d6a0);color:#06130b}
-#notice{position:absolute;top:18px;left:50%;transform:translateX(-50%);padding:10px 18px;border-radius:999px;background:rgba(0,0,0,.72);border:1px solid rgba(255,255,255,.18);font-size:14px;pointer-events:none}
-#menu{position:absolute;inset:0;background:radial-gradient(circle at center,rgba(38,78,54,.82),rgba(4,6,10,.97));display:flex;align-items:center;justify-content:center;z-index:20}
-#menuCard{width:540px;padding:24px;background:rgba(10,14,22,.94);border:1px solid rgba(255,255,255,.16);border-radius:20px;box-shadow:0 20px 80px rgba(0,0,0,.55)}
-#menuCard h1{color:#ffd166;margin-bottom:8px}.classes{display:grid;grid-template-columns:repeat(3,1fr);gap:11px;margin:14px 0}.classCard{cursor:pointer;border:1px solid rgba(255,255,255,.14);border-radius:14px;background:#101722;padding:12px;min-height:126px}.classCard.selected{border-color:#ffd166;box-shadow:0 0 0 2px rgba(255,209,102,.22)}.classCard h3{color:#7ee787;font-size:15px;margin-bottom:6px}
-.modal{top:14px;width:340px;max-height:calc(100vh - 28px);padding:14px;overflow-y:auto;display:none}.modal.open{display:block}.modal h2{font-size:16px;color:#7ee787;margin-bottom:8px}
-.closeBtn{position:absolute;top:8px;right:10px;background:#ef476f;color:white;border-radius:8px;padding:4px 8px;margin:0;font-size:12px}
-.chatMinBtn{position:absolute;top:6px;right:8px;background:#101722;color:#ffd166;border:1px solid rgba(255,255,255,.15);border-radius:8px;padding:3px 8px;margin:0;font-size:13px}
-.questTabs{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px}
-.questTab{background:#101722;color:#cbd5e1}
-.questTab.active{background:linear-gradient(135deg,#7ee787,#06d6a0);color:#06130b}
-#inventoryPanel{right:14px}#shopPanel{right:370px}#marketPanel{right:14px;top:355px}#statsPanel{left:340px;top:14px}#rankPanel{left:340px;top:355px}#questPanel{left:690px;top:14px}
-.itemGrid{display:grid;grid-template-columns:repeat(4,1fr);gap:7px}.slot{min-height:54px;background:#101722;border:1px solid rgba(255,255,255,.12);border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:24px;position:relative}.slot span{position:absolute;right:6px;bottom:4px;color:#ffd166;font-size:11px}
-.marketRow,.rankRow{background:#101722;border:1px solid rgba(255,255,255,.1);border-radius:10px;padding:8px;margin-bottom:7px;font-size:12px}.marketRow button{padding:6px;font-size:12px}
-.attrBtn{padding:5px 8px;font-size:12px;margin-top:0}
-.keyHelp{display:none}
-#gameMenu{left:14px;bottom:62px;width:92px;height:42px;padding:10px;overflow:hidden;cursor:pointer;transition:.18s ease}
-#gameMenu.open{width:285px;height:auto;padding:12px;cursor:default}
-#gameMenuTitle{display:block;text-align:center;font-weight:bold;color:#ffd166}
-#gameMenu.open #gameMenuTitle{display:none}
-#gameMenuContent{display:none}
-#gameMenu.open #gameMenuContent{display:block}
-.menuBtn{width:100%;margin-top:7px;background:#101722;color:#ffd166;border:1px solid rgba(255,255,255,.15)}
-#infoPanel{right:370px;top:355px}
-.infoBox{background:#101722;border:1px solid rgba(255,255,255,.1);border-radius:10px;padding:9px;margin-top:8px;font-size:12px;color:#dbe4f0;line-height:1.4}
-#minimapPanel{right:14px;top:14px;width:210px;padding:10px}
-#minimap{width:190px;height:140px;background:#101722;border:1px solid rgba(255,255,255,.15);border-radius:10px}
-.settingRow{display:grid;grid-template-columns:1fr 110px;gap:8px;align-items:center;margin:8px 0;font-size:12px}
-.settingRow input{width:110px}
-#serverClock{color:#ffd166;font-weight:bold}
-#confirmOverlay{position:absolute;inset:0;background:rgba(0,0,0,.45);display:none;align-items:center;justify-content:center;z-index:40}
-#confirmOverlay.open{display:flex}#confirmBox{width:380px;padding:22px;background:rgba(9,13,20,.96);border:1px solid rgba(255,255,255,.18);border-radius:18px;box-shadow:0 20px 80px rgba(0,0,0,.65)}#confirmBox h2{color:#ffd166;margin-bottom:8px}#confirmText{font-size:14px;color:#dbe4f0;line-height:1.4;margin-bottom:14px}.dangerBtn{background:linear-gradient(135deg,#ef476f,#ff8c42);color:white}
-@media(max-width:900px){.keyHelp{display:none}#chat{width:calc(100vw - 28px)}.modal{width:calc(100vw - 28px);left:14px!important;right:14px!important;top:14px!important}#menuCard{width:calc(100vw - 28px)}.classes{grid-template-columns:1fr}#bottomHud{width:calc(100vw - 28px)}}
+*{box-sizing:border-box;margin:0;padding:0;font-family:Inter,Arial,sans-serif;user-select:none}
+body{overflow:hidden;background:#86d5ff;color:white}
+#game{position:fixed;inset:0}
+.panel{position:absolute;background:rgba(11,16,28,.74);border:1px solid rgba(255,255,255,.18);box-shadow:0 14px 40px rgba(0,0,0,.28);backdrop-filter:blur(8px);border-radius:18px}
+button,input,select{border:0;outline:0;border-radius:12px;padding:10px}
+button{cursor:pointer;font-weight:800;background:linear-gradient(135deg,#ffd166,#ff9f1c);color:#221400}
+button:hover{filter:brightness(1.08)}
+.small{font-size:12px;color:#cbd5e1;line-height:1.35}
+#startScreen{position:fixed;inset:0;z-index:50;background:radial-gradient(circle at center,#79d7ff 0%,#3155b7 55%,#111827 100%);display:flex;align-items:center;justify-content:center}
+#startCard{width:min(900px,calc(100vw - 28px));padding:26px;border-radius:26px;background:rgba(10,18,40,.86);border:1px solid rgba(255,255,255,.24);box-shadow:0 30px 90px rgba(0,0,0,.42)}
+.logo{font-size:44px;letter-spacing:.5px;color:#ffd166;text-shadow:0 3px 0 #6b3e00;margin-bottom:8px}
+.classGrid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin:16px 0}
+.classCard{padding:16px;border-radius:18px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.16);cursor:pointer;min-height:160px}
+.classCard.active{outline:3px solid #ffd166;background:rgba(255,209,102,.15)}
+.classCard h3{color:#7ee787;margin-bottom:8px}
+#hud{top:14px;left:14px;width:380px;padding:14px 14px 12px 104px;min-height:118px}
+#portrait{position:absolute;left:14px;top:14px;width:76px;height:76px;border-radius:50%;background:radial-gradient(circle,#ffe8a3,#49a6ff);border:4px solid #ffd166;display:flex;align-items:center;justify-content:center;font-size:38px;box-shadow:0 0 24px rgba(255,209,102,.34)}
+#levelBadge{position:absolute;left:12px;top:82px;background:#111827;border:2px solid #ffd166;color:#ffd166;border-radius:99px;width:36px;height:36px;display:flex;align-items:center;justify-content:center;font-weight:900}
+#hud h2{font-size:20px;color:#fff}
+.bar{height:17px;border-radius:8px;background:#101827;overflow:hidden;margin-top:6px;border:1px solid rgba(255,255,255,.15);position:relative}
+.bar span{position:absolute;inset:0;text-align:center;line-height:16px;font-size:11px;font-weight:900;text-shadow:1px 1px #000}
+.fill{height:100%;transition:width .12s linear}
+.hp{background:linear-gradient(90deg,#9d0208,#ef476f,#ff9f1c)}
+.mp{background:linear-gradient(90deg,#023e8a,#118ab2,#90e0ef)}
+.xp{background:linear-gradient(90deg,#06d6a0,#ffd166)}
+#skillbar{bottom:18px;left:50%;transform:translateX(-50%);padding:10px;display:flex;gap:10px}
+.skill{width:70px;height:66px;border-radius:16px;background:rgba(11,16,28,.82);border:1px solid rgba(255,255,255,.18);display:flex;flex-direction:column;align-items:center;justify-content:center;font-weight:900}
+.skill b{font-size:22px}.skill span{font-size:11px;color:#cbd5e1}
+#questPanel{top:14px;right:14px;width:330px;padding:14px}
+#questPanel h2,#bossPanel h2,#inventory h2{font-size:17px;color:#7ee787;margin-bottom:8px}
+.quest{background:#101827;border:1px solid rgba(255,255,255,.12);border-radius:14px;padding:10px;margin-top:8px;font-size:13px}
+#bossPanel{display:none;top:165px;right:14px;width:330px;padding:14px}
+#minimapPanel{right:14px;bottom:14px;width:230px;padding:10px}
+#minimap{width:210px;height:150px;border-radius:12px;background:#101827;border:1px solid rgba(255,255,255,.15)}
+#inventory{display:none;left:14px;bottom:14px;width:320px;padding:14px}
+.items{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}.item{height:58px;background:#101827;border:1px solid rgba(255,255,255,.12);border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:24px;position:relative}.item span{position:absolute;right:7px;bottom:5px;color:#ffd166;font-size:12px}
+#dialogue{display:none;left:50%;bottom:110px;transform:translateX(-50%);width:min(720px,calc(100vw - 40px));padding:18px;background:rgba(8,13,24,.86)}
+#dialogueName{color:#ffd166;font-weight:900;margin-bottom:6px}
+#toast{top:50%;left:50%;transform:translate(-50%,-50%);padding:12px 18px;border-radius:999px;background:rgba(0,0,0,.72);display:none;z-index:80}
+#menu{left:14px;top:150px;width:74px;height:44px;overflow:hidden;padding:10px;cursor:pointer;transition:.18s}
+#menu.open{width:260px;height:auto;cursor:default}
+#menuTitle{text-align:center;color:#ffd166;font-weight:900}
+#menu.open #menuTitle{display:none}
+#menuContent{display:none}#menu.open #menuContent{display:block}
+.menuBtn{width:100%;margin-top:8px;background:#101827;color:#ffd166;border:1px solid rgba(255,255,255,.15)}
+#crosshair{position:fixed;left:50%;top:50%;width:16px;height:16px;margin-left:-8px;margin-top:-8px;border:2px solid rgba(255,255,255,.65);border-radius:50%;pointer-events:none}
+@media(max-width:800px){#questPanel,#bossPanel{display:none!important}.classGrid{grid-template-columns:1fr}.logo{font-size:34px}#hud{width:calc(100vw - 28px)}}
 </style>
 </head>
-
 <body>
-<canvas id="game"></canvas>
+<div id="game"></div>
 
-<div id="menu">
-  <div id="menuCard">
-    <h1>Eco Arandor Online</h1>
-    <p class="small">Conta, personagens salvos e missões MMORPG.</p><br>
-
-    <div id="authScreen">
-      <input id="authEmail" class="full" type="email" placeholder="E-mail">
-      <input id="authPassword" class="full" type="password" placeholder="Senha, mínimo 6 caracteres" style="margin-top:8px">
-      <div class="grid2" style="margin-top:8px">
-        <button onclick="loginAccount()">Entrar</button>
-        <button onclick="registerAccount()">Criar conta</button>
-      </div>
-      <button class="full" onclick="guestLogin()">Entrar como convidado</button>
-      <p class="small" style="margin-top:10px">Login com Google/Gmail real exige configurar OAuth no Google Cloud. Esta versão já salva contas por e-mail/senha no servidor.</p>
+<div id="startScreen">
+  <div id="startCard">
+    <div class="logo">Aetheria Online</div>
+    <p class="small">Anime Fantasy MMORPG prototype: voe por ilhas mágicas, complete missões, derrote bosses por fases e evolua seu herói.</p>
+    <br>
+    <input id="heroName" placeholder="Nome do personagem" value="Arandor" style="width:100%;background:#101827;color:white;border:1px solid rgba(255,255,255,.2)">
+    <div class="classGrid">
+      <div class="classCard active" data-class="blade"><h3>⚔️ Blade</h3><p class="small">Dano físico rápido, combos curtos e boa resistência.</p></div>
+      <div class="classCard" data-class="ranger"><h3>🏹 Ranger</h3><p class="small">Ataque à distância, crítico alto e mobilidade no ar.</p></div>
+      <div class="classCard" data-class="arcanist"><h3>🔮 Arcanist</h3><p class="small">Magias em área, explosões elementais e controle.</p></div>
     </div>
-
-    <div id="characterScreen" style="display:none">
-      <h2 style="color:#7ee787;font-size:16px">Selecionar personagem</h2>
-      <div id="characterList" style="margin:10px 0"></div>
-
-      <h2 style="color:#7ee787;font-size:16px;margin-top:14px">Criar personagem</h2>
-      <input id="nameInput" class="full" maxlength="16" placeholder="Nome do personagem">
-      <div class="classes">
-        <div class="classCard selected" data-class="swordsman" onclick="selectClass('swordsman')"><h3>⚔️ Espadachim</h3><p class="small">Curto alcance. Escala com ATK e Vigor.</p></div>
-        <div class="classCard" data-class="archer" onclick="selectClass('archer')"><h3>🏹 Arqueiro</h3><p class="small">Longo alcance. Escala com Destreza.</p></div>
-        <div class="classCard" data-class="mage" onclick="selectClass('mage')"><h3>🔮 Mago</h3><p class="small">Magia longa. Escala com Inteligência.</p></div>
-      </div>
-      <button class="full" onclick="createCharacter()">Criar novo personagem</button>
-      <p class="small" style="margin-top:12px">WASD • Espaço • Q missões • Clique esquerdo ataca • Direito move</p>
-    </div>
+    <button onclick="startGame()" style="width:100%;font-size:18px">Entrar em Aetheria</button>
+    <p class="small" style="margin-top:12px">Controles: WASD mover • Mouse mira • Clique esquerdo ataca • Q/E/R skills • F voar • I inventário • Shift dash</p>
   </div>
 </div>
 
-<div id="notice">Conectando...</div>
-<div id="flyBadge" style="position:absolute;left:50%;bottom:92px;transform:translateX(-50%);padding:8px 14px;border-radius:999px;background:rgba(9,13,20,.72);border:1px solid rgba(255,255,255,.18);color:#ffd166;font-size:13px;display:none">🛹 Voo ativo</div>
+<div id="hud" class="panel">
+  <div id="portrait">🏹</div><div id="levelBadge">1</div>
+  <h2 id="hudName">Arandor</h2>
+  <div class="small"><span id="hudClass">Ranger</span> • Ouro <b id="gold">0</b> • Fase <b id="phase">1</b></div>
+  <div class="bar"><div id="hpFill" class="fill hp"></div><span id="hpText"></span></div>
+  <div class="bar"><div id="mpFill" class="fill mp"></div><span id="mpText"></span></div>
+  <div class="bar" style="height:10px"><div id="xpFill" class="fill xp"></div></div>
+</div>
 
-<div id="confirmOverlay">
-  <div id="confirmBox">
-    <h2>Confirmar compra</h2>
-    <p id="confirmText">Deseja comprar este item?</p>
-    <div class="grid2">
-      <button id="confirmYes" type="button">Sim, comprar</button>
-      <button id="confirmNo" type="button" class="dangerBtn">Cancelar</button>
-    </div>
+<div id="menu" class="panel" onmousedown="openMenu(event)">
+  <div id="menuTitle">Menu</div>
+  <div id="menuContent">
+    <button class="menuBtn" onclick="toggleInventory(event)">Inventário</button>
+    <button class="menuBtn" onclick="toggleFly(event)">Voar / Descer</button>
+    <button class="menuBtn" onclick="returnSpawn(event)">Voltar ao Spawn</button>
+    <button class="menuBtn" onclick="showHelp(event)">Ajuda</button>
   </div>
 </div>
 
-<div id="topHud" class="panel"><button class="closeBtn" onclick="closePanelDirect('topHud')">X</button>
-  <div id="classPortrait"><canvas id="portraitCanvas" width="74" height="74"></canvas></div>
-  <div id="portraitLevel">1</div>
-  <h1><span id="pName">---</span></h1>
-  <div id="topInfoLine">Classe: <b id="className">---</b> • Arma: <b id="weaponName">---</b></div>
-  <div class="hudBarWrap"><div id="topHpFill"></div><span id="hpText">100/100</span></div>
-  <div class="hudBarWrap"><div id="topManaFill"></div><span id="manaText">80/80</span></div>
-  <div id="topXpText">EXP <span id="xpText">0/100</span> • Ouro <b id="gold">0</b> • Kills <b id="kills">0</b> • Online <b id="online">0</b> • <span id="serverClock">--:--:--</span></div>
-  <span style="display:none" id="level">1</span>
-  <span style="display:none" id="attrPoints">0</span>
-  <div style="display:none" class="bar"><div id="xpBar" class="fill xp"></div></div>
+<div id="questPanel" class="panel">
+  <h2>📜 Missões</h2>
+  <div id="quests"></div>
+</div>
+
+<div id="bossPanel" class="panel">
+  <h2>👑 Boss</h2>
+  <div class="small" id="bossName">---</div>
+  <div class="bar"><div id="bossHp" class="fill hp"></div><span id="bossHpText"></span></div>
+  <div class="quest" id="bossPhaseText">Fase 1</div>
+</div>
+
+<div id="inventory" class="panel">
+  <h2>🎒 Inventário</h2>
+  <div class="items" id="items"></div>
+</div>
+
+<div id="skillbar" class="panel">
+  <div class="skill"><b>⚔️</b><span>Click</span></div>
+  <div class="skill"><b>Q</b><span>Skill 1</span></div>
+  <div class="skill"><b>E</b><span>Skill 2</span></div>
+  <div class="skill"><b>R</b><span>Ultimate</span></div>
+  <div class="skill"><b>F</b><span>Voar</span></div>
 </div>
 
 <div id="minimapPanel" class="panel">
-  <h2 style="font-size:15px;color:#7ee787;margin-bottom:6px">🗺️ Minimapa</h2>
-  <canvas id="minimap" width="190" height="140"></canvas>
-  <p class="small">Você: verde • Mobs: vermelho • Boss: amarelo</p>
+  <canvas id="minimap" width="210" height="150"></canvas>
+  <p class="small">Verde: você • Vermelho: mobs • Amarelo: boss</p>
 </div>
 
-<div id="bottomHud" class="panel">
-  <div><div class="row"><span>Vida</span><span id="hpText">100/100</span></div><div class="bar"><div id="hpBar" class="fill hp"></div></div><button class="full quickBtn" onclick="usePotion('hp')">Poção Vida</button></div>
-  <div><div class="row"><span>Mana</span><span id="manaText">80/80</span></div><div class="bar"><div id="manaBar" class="fill mana"></div></div><button class="full quickBtn" onclick="usePotion('mana')">Poção Mana</button></div>
+<div id="dialogue" class="panel">
+  <div id="dialogueName">NPC</div>
+  <div id="dialogueText">...</div>
 </div>
 
-<div id="inventoryPanel" class="panel modal"><button class="closeBtn" onclick="closePanel('inventoryPanel')">X</button><h2>🎒 Inventário</h2><p class="small">I para abrir/fechar.</p><br><div id="inventory" class="itemGrid"></div><h2 style="margin-top:14px">Nome</h2><input id="renameInput" class="full" maxlength="16" placeholder="Novo nome"><button class="full" onclick="renamePlayer()">Mudar nome</button></div>
-<div id="shopPanel" class="panel modal"><button class="closeBtn" onclick="closePanel('shopPanel')">X</button><h2>🏪 Loja NPC</h2><p class="small">Fique perto da Lia. Cada poção custa 15 ouro.</p><br><button class="full" onclick="buyNpcPotion('hp')">Comprar Poção de Vida - 15 ouro</button><button class="full" onclick="buyNpcPotion('mana')">Comprar Poção de Mana - 15 ouro</button></div>
-<div id="marketPanel" class="panel modal"><button class="closeBtn" onclick="closePanel('marketPanel')">X</button><h2>📦 Mercado Local</h2><p class="small">M para abrir. Compra com confirmação.</p><br><div class="grid2"><select id="sellItem"><option value="herb">Erva</option><option value="crystal">Cristal</option><option value="fang">Presa</option><option value="potion">Poção Vida</option><option value="manaPotion">Poção Mana</option></select><input id="sellAmount" type="number" value="1" min="1"></div><input id="sellPrice" class="full" type="number" value="20" min="1" style="margin-top:7px"><button class="full" onclick="sellMarket()">Colocar à venda</button><br><br><div id="marketList"></div></div>
-<div id="statsPanel" class="panel modal"><button class="closeBtn" onclick="closePanel('statsPanel')">X</button><h2>📊 Atributos</h2><p class="small">H para abrir. Distribua pontos ganhos por nível.</p><br><div id="statsList"></div></div>
-<div id="rankPanel" class="panel modal"><button class="closeBtn" onclick="closePanel('rankPanel')">X</button><h2>🏆 Ranking de Level</h2><p class="small">R para abrir/fechar.</p><br><div id="rankList"></div></div>
-<div id="questPanel" class="panel modal">
-  <button class="closeBtn" onclick="closePanel('questPanel')">X</button>
-  <h2>📜 Missões</h2>
-  <p class="small">Q para abrir/fechar. Complete e receba recompensas.</p><br>
-  <div class="questTabs">
-    <button id="tabQuestActive" class="questTab active" onclick="setQuestTab('active')">Ativas</button>
-    <button id="tabQuestDone" class="questTab" onclick="setQuestTab('done')">Finalizadas</button>
-  </div>
-  <div id="questList"></div>
-</div>
+<div id="toast" class="panel"></div>
+<div id="crosshair"></div>
 
-
-<div id="gameMenu" class="panel">
-  <div id="gameMenuTitle">Menu</div>
-  <div id="gameMenuContent">
-    <button class="chatMinBtn" onclick="minimizeGameMenu(event)">=</button>
-    <h2 style="font-size:16px;color:#7ee787;margin-bottom:8px">☰ Menu</h2>
-    <button class="menuBtn" onclick="showMenuInfo('shortcuts')">Atalhos</button>
-    <button class="menuBtn" onclick="showMenuInfo('settings')">Configurações</button>
-    <button class="menuBtn" onclick="showMenuInfo('characters')">Personagens da conta</button>
-    <button class="menuBtn" onclick="openMarketFromMenu()">Mercado</button>
-    <button class="menuBtn" onclick="teleportSpawn()">Voltar para o spawn</button>
-  </div>
-</div>
-
-<div id="infoPanel" class="panel modal">
-  <button class="closeBtn" onclick="closePanel('infoPanel')">X</button>
-  <h2 id="infoTitle">Informação</h2>
-  <div id="infoContent" class="infoBox"></div>
-</div>
-
-<div id="chat" class="panel">
-  <div id="chatCollapsed">Chat</div>
-  <div id="chatContent"><button class="chatMinBtn" onclick="minimizeChat(event)">=</button>
-    <div class="chatTabs"><button id="tabGlobal" class="tab active" onclick="setChatTab('global')">Global</button><button id="tabActions" class="tab" onclick="setChatTab('actions')">Ações Privadas</button></div>
-    <div id="messages"></div>
-    <input id="chatInput" class="full" placeholder="Digite no chat global e aperte Enter">
-  </div>
-</div>
-
-<div class="panel keyHelp"><b>Atalhos</b><br>WASD: mover<br>Espaço: atacar<br>I: inventário<br>L: loja NPC<br>M: mercado<br>H: atributos<br>R: ranking<br>Chat minimizado. Estilo anime MMORPG • F voar • mundo mais vivo.</div>
-
-<script src="/socket.io/socket.io.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.min.js"></script>
 <script>
-const socket=io();
-const canvas=document.getElementById("game");
-const ctx=canvas.getContext("2d");
-let W=canvas.width=innerWidth;
-let H=canvas.height=innerHeight;
-
-addEventListener("resize",()=>{
-  W=canvas.width=innerWidth;
-  H=canvas.height=innerHeight;
-});
-
-const keys={};
-let mouseMoveTarget=null;
-const renderPlayers={};
-const ITEM_INFO={
-  herb:{name:"Erva",icon:"🌿"},
-  crystal:{name:"Cristal",icon:"💎"},
-  fang:{name:"Presa",icon:"🦷"},
-  potion:{name:"Poção de Vida",icon:"🧪"},
-  manaPotion:{name:"Poção de Mana",icon:"🔷"}
-};
-
-let state={
-  players:{},
-  enemies:[],
-  drops:[],
-  market:[],
-  ranking:[],
-  world:{
-    width:8200,
-    height:6200,
-    safeZone:{x:3790,y:2860,w:620,h:480},
-    npcShop:{x:4100,y:3110,name:"Lia, Mercadora"},
-    biomes:[]
-  },
-  serverTime:"--:--:--"
-};
-
-let joined=false;
-let myId=null;
-let noticeTimer=0;
-let chosenClass="swordsman";
-let effects=[];
-let floatTexts=[];
-let chatTab="global";
-let globalMessages=[];
-let actionMessages=[];
-let pendingMarketBuy=null;
-let audioCtx=null;
-let musicNodes=null;
-const audioSettings={
-  music:Number(localStorage.getItem("musicVol")||"0.12"),
-  sfx:Number(localStorage.getItem("sfxVol")||"0.45"),
-  musicEnabled:localStorage.getItem("musicEnabled")!=="0"
-};
-let quests=[];
-let questTab='active';
-
-const decor={trees:[],rocks:[],flowers:[],lakes:[],bones:[],crystals:[],lava:[],clouds:[],islands:[]};
-
-function createDecor(){
-  for(let i=0;i<680;i++)decor.trees.push({x:Math.random()*8200,y:Math.random()*6200,s:22+Math.random()*30,rot:Math.random()*6.28});
-  for(let i=0;i<360;i++)decor.rocks.push({x:Math.random()*8200,y:Math.random()*6200,s:8+Math.random()*20,rot:Math.random()*6.28});
-  for(let i=0;i<1400;i++)decor.flowers.push({x:Math.random()*8200,y:Math.random()*6200,c:Math.random()>.5?"#fff3b0":"#ffd166",s:2+Math.random()*3});
-  for(let i=0;i<80;i++)decor.bones.push({x:Math.random()*8200,y:Math.random()*6200});
-  for(let i=0;i<90;i++)decor.crystals.push({x:Math.random()*8200,y:Math.random()*6200});
-  for(let i=0;i<70;i++)decor.lava.push({x:Math.random()*8200,y:Math.random()*6200});
-  decor.lakes.push({x:620,y:720,w:520,h:310});
-  decor.lakes.push({x:6650,y:900,w:460,h:280});
-  decor.lakes.push({x:760,y:5160,w:470,h:260});
-  decor.lakes.push({x:6680,y:4980,w:520,h:300});
-  decor.lakes.push({x:3800,y:1250,w:420,h:240});
-}
-createDecor();
-
-function selectClass(id){
-  chosenClass=id;
-  document.querySelectorAll(".classCard").forEach(c=>c.classList.remove("selected"));
-  document.querySelector(`[data-class="${id}"]`).classList.add("selected");
-}
-
-function loginAccount(){
-  socket.emit("login",{
-    email:document.getElementById("authEmail").value.trim(),
-    password:document.getElementById("authPassword").value
-  });
-}
-
-function registerAccount(){
-  socket.emit("register",{
-    email:document.getElementById("authEmail").value.trim(),
-    password:document.getElementById("authPassword").value
-  });
-}
-
-function guestLogin(){
-  if(audioSettings.musicEnabled) startMusic();
-  const name="Convidado"+Math.floor(Math.random()*999);
-  socket.emit("join",{name,classId:chosenClass});
-  document.getElementById("menu").style.display="none";
-  joined=true;
-}
-
-function createCharacter(){
-  const name=document.getElementById("nameInput").value.trim()||"Aventureiro";
-  localStorage.setItem("ecoClass",chosenClass);
-  socket.emit("createCharacter",{name,classId:chosenClass});
-}
-
-function selectCharacter(id){
-  socket.emit("selectCharacter",id);
-}
-
-function renderCharacters(chars){
-  const list=document.getElementById("characterList");
-  list.innerHTML="";
-  if(!chars.length){
-    list.innerHTML='<p class="small">Nenhum personagem criado ainda.</p>';
-    return;
-  }
-  chars.forEach(c=>{
-    const row=document.createElement("div");
-    row.className="marketRow";
-    row.innerHTML=`<b>${c.name}</b><br>Classe: ${c.className} | Nível ${c.level} | Ouro ${c.gold}`;
-    const btn=document.createElement("button");
-    btn.className="full";
-    btn.textContent="Jogar com este personagem";
-    btn.addEventListener("mousedown",e=>{
-      e.preventDefault();
-      selectCharacter(c.id);
-    });
-    row.appendChild(btn);
-    list.appendChild(row);
-  });
-}
-
-chosenClass=localStorage.getItem("ecoClass")||"swordsman";
-selectClass(chosenClass);
-
-socket.on("connect",()=>{
-  myId=socket.id;
-  showNotice("Conectado ao servidor.");
-});
-
-socket.on("authOk",data=>{
-  showNotice("Login realizado.");
-  document.getElementById("authScreen").style.display="none";
-  document.getElementById("characterScreen").style.display="block";
-  renderCharacters(data.characters||[]);
-});
-
-socket.on("authError",msg=>{
-  showNotice(msg);
-});
-
-socket.on("characters",chars=>{
-  renderCharacters(chars||[]);
-});
-
-socket.on("gameStarted",()=>{
-  document.getElementById("menu").style.display="none";
-  joined=true;
-  if(audioSettings.musicEnabled) startMusic();
-});
-
-socket.on("state",s=>{
-  state=s;
-  for(const id in state.players){
-    if(!renderPlayers[id])renderPlayers[id]={...state.players[id]};
-  }
-  for(const id in renderPlayers){
-    if(!state.players[id])delete renderPlayers[id];
-  }
-  updateUI();
-});
-
-socket.on("chat",msg=>{
-  globalMessages.push(msg);
-  if(globalMessages.length>80)globalMessages.shift();
-  renderChat();
-});
-
-socket.on("actionLog",msg=>{
-  actionMessages.push(msg);
-  if(actionMessages.length>100)actionMessages.shift();
-  renderChat();
-});
-
-socket.on("notice",showNotice);
-
-socket.on("attackEffect",e=>{
-  if(e.from && me() && Math.hypot(e.from.x-me().x,e.from.y-me().y)<20) playAttackSound(e.classId);
-  effects.push({...e,life:14});
-  floatTexts.push({x:e.to.x,y:e.to.y-30,text:String(e.damage),life:44,color:e.classId==="mage"?"#b388ff":e.classId==="archer"?"#ffd166":"#ffffff"});
-});
-
-socket.on("damageTaken",e=>{
-  playDamageSound();
-  floatTexts.push({x:e.x,y:e.y,text:"-"+e.damage,life:44,color:"#ff4d6d"});
-});
-
-socket.on("quests",q=>{
-  quests=q||[];
-  renderQuests();
-});
-
-function setChatTab(tab){
-  chatTab=tab;
-  document.getElementById("tabGlobal").classList.toggle("active",tab==="global");
-  document.getElementById("tabActions").classList.toggle("active",tab==="actions");
-  document.getElementById("chatInput").style.display=tab==="global"?"block":"none";
-  renderChat();
-}
-
-function renderChat(){
-  const box=document.getElementById("messages");
-  box.innerHTML="";
-  const arr=chatTab==="global"?globalMessages:actionMessages;
-  arr.slice(-45).forEach(msg=>{
-    const div=document.createElement("div");
-    div.textContent=msg;
-    box.appendChild(div);
-  });
-  box.scrollTop=box.scrollHeight;
-}
-
-function showNotice(text){
-  document.getElementById("notice").textContent=text;
-  noticeTimer=180;
-}
-
-function ensureAudio(){
-  if(!audioCtx){
-    audioCtx=new (window.AudioContext||window.webkitAudioContext)();
-  }
-  if(audioCtx.state==="suspended")audioCtx.resume();
-}
-
-function playTone(freq,duration,type,volume,slideTo){
-  if(!audioSettings.sfx && volume !== "music") return;
-  ensureAudio();
-  const osc=audioCtx.createOscillator();
-  const gain=audioCtx.createGain();
-  osc.type=type||"sine";
-  osc.frequency.setValueAtTime(freq,audioCtx.currentTime);
-  if(slideTo)osc.frequency.exponentialRampToValueAtTime(slideTo,audioCtx.currentTime+duration);
-  gain.gain.setValueAtTime(0.0001,audioCtx.currentTime);
-  gain.gain.exponentialRampToValueAtTime(Math.max(0.0001,volume),audioCtx.currentTime+0.02);
-  gain.gain.exponentialRampToValueAtTime(0.0001,audioCtx.currentTime+duration);
-  osc.connect(gain).connect(audioCtx.destination);
-  osc.start();
-  osc.stop(audioCtx.currentTime+duration+0.02);
-}
-
-function playAttackSound(classId){
-  ensureAudio();
-  const v=audioSettings.sfx;
-  if(classId==="swordsman"){
-    playTone(520,0.11,"sawtooth",0.12*v,180);
-  }else if(classId==="archer"){
-    playTone(880,0.09,"triangle",0.10*v,420);
-    setTimeout(()=>playTone(240,0.05,"square",0.05*v,160),70);
-  }else if(classId==="mage"){
-    playTone(430,0.18,"sine",0.10*v,900);
-    setTimeout(()=>playTone(730,0.14,"triangle",0.07*v,1100),50);
-  }
-}
-
-function playDamageSound(){
-  playTone(160,0.16,"sawtooth",0.12*audioSettings.sfx,70);
-}
-
-function startMusic(){
-  if(!audioSettings.musicEnabled)return;
-  ensureAudio();
-  if(musicNodes)return;
-
-  const master=audioCtx.createGain();
-  master.gain.value=audioSettings.music;
-  master.connect(audioCtx.destination);
-
-  const bass=audioCtx.createOscillator();
-  bass.type="sine";
-  bass.frequency.value=55;
-
-  const pad=audioCtx.createOscillator();
-  pad.type="triangle";
-  pad.frequency.value=110;
-
-  const pad2=audioCtx.createOscillator();
-  pad2.type="sine";
-  pad2.frequency.value=165;
-
-  const lfo=audioCtx.createOscillator();
-  lfo.type="sine";
-  lfo.frequency.value=0.07;
-
-  const lfoGain=audioCtx.createGain();
-  lfoGain.gain.value=18;
-  lfo.connect(lfoGain);
-  lfoGain.connect(pad.frequency);
-
-  const g1=audioCtx.createGain();
-  const g2=audioCtx.createGain();
-  const g3=audioCtx.createGain();
-  g1.gain.value=0.16;
-  g2.gain.value=0.08;
-  g3.gain.value=0.05;
-
-  bass.connect(g1).connect(master);
-  pad.connect(g2).connect(master);
-  pad2.connect(g3).connect(master);
-
-  bass.start();
-  pad.start();
-  pad2.start();
-  lfo.start();
-
-  musicNodes={master,bass,pad,pad2,lfo};
-}
-
-function stopMusic(){
-  if(!musicNodes)return;
-  try{
-    musicNodes.bass.stop();
-    musicNodes.pad.stop();
-    musicNodes.pad2.stop();
-    musicNodes.lfo.stop();
-  }catch{}
-  musicNodes=null;
-}
-
-function updateMusicVolume(){
-  if(musicNodes)musicNodes.master.gain.value=audioSettings.music;
-}
-
-
-document.addEventListener("keydown",e=>{
-  const tag=document.activeElement.tagName;
-  const focusedChat=document.activeElement.id==="chatInput";
-
-  if(focusedChat)return;
-
-  const key=e.key.toLowerCase();
-
-  if(key==="i")togglePanel("inventoryPanel");
-  if(key==="l")togglePanel("shopPanel");
-  if(key==="m")togglePanel("marketPanel");
-  if(key==="h")togglePanel("statsPanel");
-  if(key==="r")togglePanel("rankPanel");
-  if(key==="f")socket.emit("toggleFly");
-  if(key==="q")togglePanel("questPanel");
-
-  if(tag==="INPUT"||tag==="SELECT"||tag==="BUTTON")return;
-
-  keys[key]=true;
-
-  if(e.code==="Space")socket.emit("attack");
-});
-
-document.addEventListener("keyup",e=>{
-  keys[e.key.toLowerCase()]=false;
-});
-
-document.getElementById("chatInput").addEventListener("keydown",e=>{
-  if(e.key==="Enter"){
-    const v=e.target.value.trim();
-    if(v)socket.emit("chat",v);
-    e.target.value="";
-    e.target.blur();
-  }
-});
-
-document.getElementById("chat").addEventListener("mousedown",e=>{
-  if(!document.getElementById("chat").classList.contains("open")){
-    e.preventDefault();
-    e.stopPropagation();
-    document.getElementById("chat").classList.add("open");
-  }
-});
-
-document.getElementById("gameMenu").addEventListener("mousedown",e=>{
-  if(!document.getElementById("gameMenu").classList.contains("open")){
-    e.preventDefault();
-    e.stopPropagation();
-    document.getElementById("gameMenu").classList.add("open");
-  }
-});
-
-document.addEventListener("mousedown",e=>{
-  const chat=document.getElementById("chat");
-  if(chat.contains(e.target))return;
-  if(e.target.closest(".panel") && e.target.closest(".panel").id!=="chat")return;
-
-  if(e.button===0){
-    const enemy=enemyAtScreen(e.clientX,e.clientY);
-    if(enemy){
-      const p=me();
-      const clsRange=p?.classId==="archer"?285:p?.classId==="mage"?305:75;
-      const range=clsRange+(enemy.isBoss?20:0);
-
-      if(p && distanceWorld(p,enemy)<=range){
-        socket.emit("attack",{enemyId:enemy.id});
-      }else{
-        showNotice("Alvo fora do alcance.");
-      }
-    }
-  }
-
-  if(e.button===2){
-    e.preventDefault();
-    mouseMoveTarget=screenToWorld(e.clientX,e.clientY);
-    showNotice("Movendo até o ponto marcado.");
-  }
-});
-
-document.addEventListener("contextmenu",e=>{
-  e.preventDefault();
-});
-
-
-document.getElementById("confirmYes").addEventListener("mousedown",e=>{
-  e.preventDefault();
-  e.stopPropagation();
-  if(pendingMarketBuy){
-    socket.emit("marketBuy",Number(pendingMarketBuy.id));
-    showNotice("Solicitação de compra enviada...");
-  }
-  pendingMarketBuy=null;
-  document.getElementById("confirmOverlay").classList.remove("open");
-});
-
-document.getElementById("confirmNo").addEventListener("mousedown",e=>{
-  e.preventDefault();
-  e.stopPropagation();
-  pendingMarketBuy=null;
-  document.getElementById("confirmOverlay").classList.remove("open");
-});
-
-function togglePanel(id){
-  document.getElementById(id).classList.toggle("open");
-}
-
-function closePanel(id){
-  document.getElementById(id).classList.remove("open");
-}
-
-function minimizeChat(e){
-  if(e){
-    e.preventDefault();
-    e.stopPropagation();
-  }
-  document.getElementById("chat").classList.remove("open");
-}
-
-function closePanelDirect(id){
-  const el=document.getElementById(id);
-  if(el)el.style.display="none";
-}
-
-function minimizeGameMenu(e){
-  if(e){
-    e.preventDefault();
-    e.stopPropagation();
-  }
-  document.getElementById("gameMenu").classList.remove("open");
-}
-
-function showMenuInfo(type){
-  const panel=document.getElementById("infoPanel");
-  const title=document.getElementById("infoTitle");
-  const content=document.getElementById("infoContent");
-
-  panel.classList.add("open");
-
-  if(type==="shortcuts"){
-    title.textContent="⌨️ Atalhos";
-    content.innerHTML="WASD ou setas: mover<br>Espaço: atacar<br>Clique esquerdo no monstro: atacar<br>Botão direito no chão: andar<br>I: inventário<br>Q: missões<br>H: atributos<br>R: ranking<br>M: mercado<br>L: loja NPC<br>F: voar/prancha voadora";
-  }
-
-  if(type==="settings"){
-    title.textContent="⚙️ Configurações";
-    content.innerHTML=`
-      <b>Áudio</b>
-      <div class="settingRow"><span>Música de fundo</span><input id="musicVol" type="range" min="0" max="100" value="${Math.round(audioSettings.music*100)}"></div>
-      <div class="settingRow"><span>Efeitos sonoros</span><input id="sfxVol" type="range" min="0" max="100" value="${Math.round(audioSettings.sfx*100)}"></div>
-      <button class="full" id="toggleMusicBtn">${audioSettings.musicEnabled?"Desligar música":"Ligar música"}</button>
-      <br><br>
-      <b>Interface</b><br>
-      • HUDs podem ser fechados no X<br>
-      • Chat pode ser minimizado<br>
-      • Menu pode ser minimizado<br>
-      • Movimento por teclado ou mouse
-    `;
-
-    document.getElementById("musicVol").addEventListener("input",e=>{
-      audioSettings.music=Number(e.target.value)/100;
-      localStorage.setItem("musicVol",String(audioSettings.music));
-      updateMusicVolume();
-    });
-
-    document.getElementById("sfxVol").addEventListener("input",e=>{
-      audioSettings.sfx=Number(e.target.value)/100;
-      localStorage.setItem("sfxVol",String(audioSettings.sfx));
-    });
-
-    document.getElementById("toggleMusicBtn").addEventListener("click",()=>{
-      audioSettings.musicEnabled=!audioSettings.musicEnabled;
-      localStorage.setItem("musicEnabled",audioSettings.musicEnabled?"1":"0");
-      if(audioSettings.musicEnabled) startMusic();
-      else stopMusic();
-      showMenuInfo("settings");
-    });
-  }
-
-  if(type==="characters"){
-    title.textContent="🧙 Personagens da conta";
-    content.innerHTML="Para trocar de personagem, atualize a página e volte para a tela de seleção.<br><br>Personagem atual:<br><b>"+(me()?.name||"---")+"</b><br>Classe: "+(me()?.className||"---")+"<br>Nível: "+(me()?.level||1)+"<br>Ouro: "+(me()?.gold||0);
-  }
-}
-
-function openMarketFromMenu(){
-  document.getElementById("marketPanel").classList.add("open");
-}
-
-function teleportSpawn(){
-  socket.emit("teleportSpawn");
-  showNotice("Voltando para o spawn...");
-}
-
-setInterval(()=>{
-  if(!joined)return;
-
-  let input={
-    up:!!keys["w"]||!!keys["arrowup"],
-    down:!!keys["s"]||!!keys["arrowdown"],
-    left:!!keys["a"]||!!keys["arrowleft"],
-    right:!!keys["d"]||!!keys["arrowright"]
+const WORLD={w:5200,h:5200};
+let chosenClass="blade";
+let running=false;
+let keys={},mouse={x:0,y:0,down:false};
+let scene,camera,renderer,clock;
+let groundGroup,entityGroup,fxGroup;
+let player,enemies=[],drops=[],npcs=[],quests=[],boss=null;
+let inventory={potion:3,crystal:0,feather:0,bossCore:0};
+let toastTimer=0,dialogueTimer=0;
+const raycaster=new THREE.Raycaster();
+const pointer=new THREE.Vector2();
+const tmpV=new THREE.Vector3();
+
+document.querySelectorAll(".classCard").forEach(card=>{
+  card.onclick=()=>{
+    document.querySelectorAll(".classCard").forEach(c=>c.classList.remove("active"));
+    card.classList.add("active");
+    chosenClass=card.dataset.class;
   };
+});
 
-  const p=me();
+const CLASS_DATA={
+  blade:{name:"Blade",icon:"⚔️",color:0x49a6ff,hp:180,mp:70,damage:28,range:95,speed:8},
+  ranger:{name:"Ranger",icon:"🏹",color:0x06d6a0,hp:135,mp:95,damage:22,range:360,speed:9.5},
+  arcanist:{name:"Arcanist",icon:"🔮",color:0xb388ff,hp:115,mp:160,damage:30,range:320,speed:8}
+};
 
-  if(mouseMoveTarget && p && !input.up && !input.down && !input.left && !input.right){
-    const dx=mouseMoveTarget.x-p.x;
-    const dy=mouseMoveTarget.y-p.y;
-    const d=Math.hypot(dx,dy);
-
-    if(d<12){
-      mouseMoveTarget=null;
-    }else{
-      input.left=dx<-8;
-      input.right=dx>8;
-      input.up=dy<-8;
-      input.down=dy>8;
-    }
-  }
-
-  if(input.up||input.down||input.left||input.right){
-    if(keys["w"]||keys["a"]||keys["s"]||keys["d"]||keys["arrowup"]||keys["arrowdown"]||keys["arrowleft"]||keys["arrowright"]){
-      mouseMoveTarget=null;
-    }
-  }
-
-  socket.emit("input",input);
-},1000/30);
-
-function usePotion(type){socket.emit("usePotion",type);}
-function buyNpcPotion(type){socket.emit("buyNpcPotion",type);}
-function addStat(stat){socket.emit("addStat",stat);showNotice("Adicionando atributo...");}
-function claimQuest(id){socket.emit("claimQuest",id);}
-
-function renamePlayer(){
-  const name=document.getElementById("renameInput").value.trim();
-  if(!name)return;
-  localStorage.setItem("ecoName",name);
-  socket.emit("rename",name);
-  showNotice("Nome alterado.");
+function startGame(){
+  document.getElementById("startScreen").style.display="none";
+  init();
+  running=true;
+  toast("Bem-vindo a Aetheria!");
 }
 
-function sellMarket(){
-  socket.emit("marketSell",{
-    item:document.getElementById("sellItem").value,
-    amount:Number(document.getElementById("sellAmount").value),
-    price:Number(document.getElementById("sellPrice").value)
+function init(){
+  scene=new THREE.Scene();
+  scene.background=new THREE.Color(0x8ed8ff);
+  scene.fog=new THREE.Fog(0x8ed8ff,1200,5200);
+  clock=new THREE.Clock();
+
+  camera=new THREE.PerspectiveCamera(55,innerWidth/innerHeight,0.1,9000);
+  renderer=new THREE.WebGLRenderer({antialias:true,powerPreference:"high-performance"});
+  renderer.setSize(innerWidth,innerHeight);
+  renderer.setPixelRatio(Math.min(devicePixelRatio,2));
+  renderer.shadowMap.enabled=true;
+  renderer.shadowMap.type=THREE.PCFSoftShadowMap;
+  renderer.outputColorSpace=THREE.SRGBColorSpace;
+  document.getElementById("game").appendChild(renderer.domElement);
+
+  const hemi=new THREE.HemisphereLight(0xdff7ff,0x4d7a3a,1.5);
+  scene.add(hemi);
+  const sun=new THREE.DirectionalLight(0xfff1c2,2.6);
+  sun.position.set(1200,2200,900);
+  sun.castShadow=true;
+  sun.shadow.mapSize.set(2048,2048);
+  sun.shadow.camera.left=-1800;sun.shadow.camera.right=1800;sun.shadow.camera.top=1800;sun.shadow.camera.bottom=-1800;
+  scene.add(sun);
+
+  groundGroup=new THREE.Group(); entityGroup=new THREE.Group(); fxGroup=new THREE.Group();
+  scene.add(groundGroup,entityGroup,fxGroup);
+
+  buildWorld();
+  createPlayer();
+  createNPCs();
+  spawnWave(1);
+  setupQuests();
+
+  addEventListener("resize",()=>{
+    camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight);
   });
+  addEventListener("keydown",e=>{keys[e.key.toLowerCase()]=true;handleKey(e.key.toLowerCase())});
+  addEventListener("keyup",e=>keys[e.key.toLowerCase()]=false);
+  addEventListener("mousemove",e=>{mouse.x=e.clientX;mouse.y=e.clientY});
+  addEventListener("mousedown",e=>{if(e.button===0)basicAttack()});
+  animate();
 }
 
-function confirmBuyMarket(id,itemName,amount,price,seller){
-  pendingMarketBuy={id:Number(id)};
-  document.getElementById("confirmText").textContent=`Deseja comprar ${amount}x ${itemName} de ${seller} por ${price} ouro?`;
-  document.getElementById("confirmOverlay").classList.add("open");
-}
+function mat(color,rough=.75,metal=.05){return new THREE.MeshStandardMaterial({color,roughness:rough,metalness:metal})}
 
-function me(){return state.players[myId];}
+function buildWorld(){
+  addIsland(0,0,1900,0x62c96a,"Florion Fields");
+  addIsland(1800,-1400,1300,0xd7b05e,"Sunvale Dunes");
+  addIsland(-1800,-1450,1300,0x8adff5,"Crystal Frost");
+  addIsland(1800,1500,1300,0x81433d,"Ashfall Crater");
+  addIsland(-1800,1500,1300,0x7f6ed6,"Arcane Ruins");
 
-function camera(){
-  const p=renderPlayers[myId]||me()||{x:4100,y:3110};
-  return{x:p.x-W/2,y:p.y-H/2};
-}
-
-function screen(x,y){
-  const c=camera();
-  return{x:x-c.x,y:y-c.y};
-}
-
-function screenToWorld(x,y){
-  const c=camera();
-  return {x:x+c.x,y:y+c.y};
-}
-
-function enemyAtScreen(x,y){
-  let best=null;
-  let bestDist=9999;
-
-  for(const e of state.enemies){
-    const p=screen(e.x,e.y);
-    const radius=(e.size||32)*(e.isBoss?0.85:0.65);
-    const d=Math.hypot(p.x-x,p.y-y);
-
-    if(d<radius && d<bestDist){
-      best=e;
-      bestDist=d;
-    }
+  for(let i=0;i<240;i++){
+    const p=randomPoint();
+    const biome=biomeAt(p.x,p.z);
+    if(Math.random()<.72)addTree(p.x,p.z,biome);
+    else addRock(p.x,p.z,biome);
   }
+  for(let i=0;i<120;i++)addFlower(...Object.values(randomPoint()));
+  for(let i=0;i<18;i++)addFloatingCrystal(...Object.values(randomPoint()));
+}
 
+function addIsland(x,z,r,color,name){
+  const g=new THREE.Group();
+  const land=new THREE.Mesh(new THREE.CylinderGeometry(r,r*.92,80,64),mat(color,.9,.02));
+  land.position.set(x,-40,z); land.receiveShadow=true; g.add(land);
+  const rim=new THREE.Mesh(new THREE.CylinderGeometry(r*.92,r*.55,220,64),mat(0x7a5731,.9,.02));
+  rim.position.set(x,-190,z);rim.receiveShadow=true;g.add(rim);
+  groundGroup.add(g);
+
+  const label=document.createElement("div");
+  label.textContent=name;
+}
+
+function biomeAt(x,z){
+  if(x>1000&&z<-700)return "desert";
+  if(x<-1000&&z<-700)return "ice";
+  if(x>1000&&z>700)return "volcano";
+  if(x<-1000&&z>700)return "ruins";
+  return "field";
+}
+
+function randomPoint(){
+  const islands=[
+    {x:0,z:0,r:1750},{x:1800,z:-1400,r:1180},{x:-1800,z:-1450,r:1180},{x:1800,z:1500,r:1180},{x:-1800,z:1500,r:1180}
+  ];
+  const i=islands[Math.floor(Math.random()*islands.length)];
+  const a=Math.random()*Math.PI*2,d=Math.sqrt(Math.random())*i.r;
+  return{x:i.x+Math.cos(a)*d,z:i.z+Math.sin(a)*d};
+}
+
+function addTree(x,z,biome){
+  const group=new THREE.Group();
+  const trunk=new THREE.Mesh(new THREE.CylinderGeometry(10,14,90,8),mat(0x8a5b2f));
+  trunk.position.y=45;trunk.castShadow=true;group.add(trunk);
+  const leafColor=biome==="ice"?0xd9fbff:biome==="volcano"?0xa83228:biome==="ruins"?0x8f5bff:0x2da84a;
+  for(let i=0;i<3;i++){
+    const leaves=new THREE.Mesh(new THREE.ConeGeometry(70-i*12,90,10),mat(leafColor));
+    leaves.position.y=120+i*42;leaves.castShadow=true;group.add(leaves);
+  }
+  group.position.set(x,0,z);group.scale.setScalar(.7+Math.random()*.7);groundGroup.add(group);
+}
+
+function addRock(x,z,biome){
+  const color=biome==="ice"?0xcff9ff:biome==="desert"?0xb88444:biome==="volcano"?0x2b1d20:0x878b91;
+  const m=new THREE.Mesh(new THREE.DodecahedronGeometry(35+Math.random()*35,0),mat(color));
+  m.position.set(x,25,z);m.rotation.set(Math.random(),Math.random(),Math.random());m.castShadow=true;m.receiveShadow=true;groundGroup.add(m);
+}
+
+function addFlower(x,z){
+  const m=new THREE.Mesh(new THREE.SphereGeometry(8,8,6),mat(Math.random()>.5?0xff69b4:0xffe66d));
+  m.position.set(x,8,z);groundGroup.add(m);
+}
+
+function addFloatingCrystal(x,z){
+  const c=new THREE.Mesh(new THREE.OctahedronGeometry(24,0),mat(0x8ed8ff,.25,.25));
+  c.position.set(x,120+Math.random()*100,z);c.castShadow=true;c.userData.float=true;groundGroup.add(c);
+}
+
+function createPlayer(){
+  const data=CLASS_DATA[chosenClass];
+  const name=document.getElementById("heroName").value||"Arandor";
+  player={
+    name,classId:chosenClass,className:data.name,icon:data.icon,
+    hp:data.hp,maxHp:data.hp,mp:data.mp,maxMp:data.mp,level:1,xp:0,nextXp:100,gold:100,
+    speed:data.speed,damage:data.damage,range:data.range,isFlying:false,phase:1,mesh:null,cd:{q:0,e:0,r:0,atk:0,dash:0}
+  };
+  player.mesh=createHeroMesh(chosenClass);
+  player.mesh.position.set(0,0,0);
+  entityGroup.add(player.mesh);
+  document.getElementById("portrait").textContent=data.icon;
+  document.getElementById("hudName").textContent=name;
+  document.getElementById("hudClass").textContent=data.name;
+}
+
+function createHeroMesh(cls){
+  const g=new THREE.Group();
+  const data=CLASS_DATA[cls];
+  const skin=mat(0xf4bf77), armor=mat(data.color,.45,.2), white=mat(0xffffff), gold=mat(0xffd166,.45,.25);
+
+  const body=new THREE.Mesh(new THREE.BoxGeometry(42,62,28),armor);body.position.y=86;body.castShadow=true;g.add(body);
+  const head=new THREE.Mesh(new THREE.SphereGeometry(28,24,18),skin);head.position.y=140;head.castShadow=true;g.add(head);
+  const hair=new THREE.Mesh(new THREE.SphereGeometry(31,20,12),cls==="ranger"?white:mat(cls==="arcanist"?0x493069:0x3b2416));hair.position.y=156;hair.scale.set(1,.55,1);g.add(hair);
+  for(let s of [-1,1]){
+    const leg=new THREE.Mesh(new THREE.BoxGeometry(15,60,18),mat(0x26364a));leg.position.set(s*14,36,0);leg.castShadow=true;g.add(leg);
+    const arm=new THREE.Mesh(new THREE.BoxGeometry(13,55,16),skin);arm.position.set(s*36,86,0);arm.castShadow=true;g.add(arm);
+  }
+  if(cls==="ranger"){
+    for(let s of [-1,1]){
+      const wing=new THREE.Mesh(new THREE.ConeGeometry(13,48,3),mat(0xbde9ff));wing.position.set(s*42,158,0);wing.rotation.z=s*1.2;g.add(wing);
+    }
+    const crown=new THREE.Mesh(new THREE.ConeGeometry(18,28,3),gold);crown.position.y=178;crown.rotation.y=Math.PI/3;g.add(crown);
+  }
+  const weapon=new THREE.Mesh(new THREE.TorusGeometry(cls==="ranger"?46:24,4,10,42,cls==="ranger"?Math.PI*1.35:Math.PI*2),mat(cls==="arcanist"?0xb388ff:0x1b3440,.38,.25));
+  weapon.position.set(54,90,0);weapon.rotation.set(Math.PI/2,0,Math.PI/2);g.add(weapon);g.userData.weapon=weapon;
+  g.traverse(o=>{if(o.isMesh){o.castShadow=true;o.receiveShadow=true}});
+  return g;
+}
+
+function createNPCs(){
+  npcs.push({name:"Luna",text:"Bem-vindo a Aetheria! Derrote os Pukis e prove seu valor.",mesh:createNPC(0xffd166),pos:new THREE.Vector3(120,0,120)});
+  npcs.push({name:"Mestre Voo",text:"Aperte F para usar sua prancha voadora. No ar você anda mais rápido.",mesh:createNPC(0x90e0ef),pos:new THREE.Vector3(-130,0,90)});
+  npcs.forEach(n=>{n.mesh.position.copy(n.pos);entityGroup.add(n.mesh)});
+}
+
+function createNPC(color){
+  const g=new THREE.Group();
+  const body=new THREE.Mesh(new THREE.CylinderGeometry(22,28,70,16),mat(color));body.position.y=70;body.castShadow=true;g.add(body);
+  const head=new THREE.Mesh(new THREE.SphereGeometry(24,20,16),mat(0xf4bf77));head.position.y=125;head.castShadow=true;g.add(head);
+  return g;
+}
+
+function spawnWave(phase){
+  enemies.forEach(e=>entityGroup.remove(e.mesh));enemies=[];
+  const count=phase===1?12:phase===2?16:20;
+  for(let i=0;i<count;i++){
+    const p=randomPoint();
+    enemies.push(createEnemy(phase,p.x,p.z,false));
+  }
+  if(phase>=2)spawnBoss(phase);
+}
+
+function createEnemy(phase,x,z,isBoss){
+  const biome=biomeAt(x,z);
+  const names={
+    field:["Puki Saltitante","Lobo Fofo","Cogumelo Travesso"],
+    desert:["Besouro Dourado","Minotauro Jovem","Fada de Areia"],
+    ice:["Fada Cristalina","Yeti Pequeno","Lobo Glacial"],
+    volcano:["Imp de Cinzas","Lobo de Lava","Golem Mini"],
+    ruins:["Mago Sombrio","Guardião Antigo","Mascote Abissal"]
+  }[biome]||["Puki"];
+  const name=isBoss?(phase===2?"Rei Puki":"Dragão Celeste"):names[Math.floor(Math.random()*names.length)];
+  const color=isBoss?0xffd166:biome==="desert"?0xd9a441:biome==="ice"?0x90e0ef:biome==="volcano"?0xff5733:biome==="ruins"?0x8f5bff:0x6ee56f;
+  const mesh=createEnemyMesh(color,isBoss);
+  mesh.position.set(x,0,z);
+  entityGroup.add(mesh);
+  return {name,mesh,hp:isBoss?900+phase*450:80+phase*45,maxHp:isBoss?900+phase*450:80+phase*45,damage:isBoss?22+phase*10:8+phase*4,x,z,isBoss,phase,dead:false,ai:Math.random()*6};
+}
+
+function createEnemyMesh(color,isBoss){
+  const g=new THREE.Group();
+  const body=new THREE.Mesh(isBoss?new THREE.DodecahedronGeometry(80,1):new THREE.SphereGeometry(35,16,12),mat(color));
+  body.position.y=isBoss?90:45;body.castShadow=true;g.add(body);
+  if(isBoss){
+    const crown=new THREE.Mesh(new THREE.TorusGeometry(82,6,8,40),mat(0xffd166,.35,.3));crown.position.y=175;crown.rotation.x=Math.PI/2;g.add(crown);
+    const wings=new THREE.Mesh(new THREE.BoxGeometry(210,20,8),mat(0xffffff,.5,.1));wings.position.y=118;g.add(wings);
+  }else{
+    const eyes=new THREE.Mesh(new THREE.BoxGeometry(30,8,5),mat(0x111111));eyes.position.set(0,55,31);g.add(eyes);
+  }
+  g.traverse(o=>{if(o.isMesh){o.castShadow=true;o.receiveShadow=true}});
+  return g;
+}
+
+function spawnBoss(phase){
+  const p=phase===2?{x:0,z:-1550}:{x:1750,z:1500};
+  boss=createEnemy(phase,p.x,p.z,true);
+  enemies.push(boss);
+  showBossDialogue(phase===2?"Rei Puki":"Dragão Celeste",phase===2?"Quem ousa invadir meu vale saltitante?":"Você chegou longe, herói. Mostre seu poder no céu!");
+}
+
+function setupQuests(){
+  quests=[
+    {id:1,title:"Primeiros Pukis",desc:"Derrote 6 monstros.",need:6,progress:0,done:false,reward:"80 ouro + 120 XP"},
+    {id:2,title:"Cristais Flutuantes",desc:"Colete 3 cristais.",need:3,progress:0,done:false,reward:"Asa Celeste"},
+    {id:3,title:"Boss da Fase 2",desc:"Derrote o Rei Puki.",need:1,progress:0,done:false,reward:"300 ouro + fase 3"}
+  ];
+}
+
+function handleKey(k){
+  if(!running)return;
+  if(k==="i")document.getElementById("inventory").style.display=document.getElementById("inventory").style.display==="block"?"none":"block";
+  if(k==="f")toggleFly();
+  if(k==="q")useSkill("q");
+  if(k==="e")useSkill("e");
+  if(k==="r")useSkill("r");
+  if(k==="shift")dash();
+}
+
+function toggleFly(e){
+  if(e)e.stopPropagation();
+  player.isFlying=!player.isFlying;
+  toast(player.isFlying?"Prancha voadora ativada!":"Você pousou.");
+}
+
+function dash(){
+  if(player.cd.dash>0)return;
+  player.cd.dash=.8;
+  const dir=getForward();
+  player.mesh.position.addScaledVector(dir,180);
+  addRingFx(player.mesh.position,0x90e0ef);
+}
+
+function getForward(){
+  const dir=new THREE.Vector3();
+  camera.getWorldDirection(dir);dir.y=0;dir.normalize();
+  return dir;
+}
+
+function basicAttack(){
+  if(player.cd.atk>0)return;
+  player.cd.atk=.35;
+  const target=findTarget(player.range);
+  if(target)damageEnemy(target,player.damage,false);
+  swingWeapon();
+}
+
+function useSkill(k){
+  if(player.cd[k]>0)return;
+  if(k==="q"){player.cd.q=2.2;const t=findTarget(player.range+80);if(t)damageEnemy(t,player.damage*1.8,false);addRingFx(player.mesh.position,0xffd166)}
+  if(k==="e"){player.cd.e=4.5;enemies.forEach(en=>{if(!en.dead&&distanceToPlayer(en)<260)damageEnemy(en,player.damage*1.2,true)});addRingFx(player.mesh.position,0x90e0ef)}
+  if(k==="r"){player.cd.r=12;enemies.forEach(en=>{if(!en.dead&&distanceToPlayer(en)<520)damageEnemy(en,player.damage*3.2,true)});addRingFx(player.mesh.position,0xb388ff)}
+}
+
+function swingWeapon(){
+  if(player.mesh.userData.weapon){
+    player.mesh.userData.weapon.rotation.z+=.65;
+    setTimeout(()=>player.mesh.userData.weapon.rotation.z-=.65,120);
+  }
+}
+
+function findTarget(range){
+  let best=null,bd=999999;
+  enemies.forEach(e=>{
+    if(e.dead)return;
+    const d=distanceToPlayer(e);
+    if(d<range&&d<bd){best=e;bd=d}
+  });
   return best;
 }
 
-function distanceWorld(a,b){
-  return Math.hypot(a.x-b.x,a.y-b.y);
+function distanceToPlayer(e){
+  return e.mesh.position.distanceTo(player.mesh.position);
 }
 
-
-function biomeAtClient(x,y){
-  const biomes=state.world.biomes||[];
-  for(const b of biomes){
-    if(x>=b.x&&x<=b.x+b.w&&y>=b.y&&y<=b.y+b.h)return b.id;
-  }
-  return "meadow";
+function damageEnemy(e,amount,aoe){
+  e.hp-=amount;
+  floatText("-"+Math.floor(amount),e.mesh.position,aoe?0x90e0ef:0xfff1a8);
+  addHitFx(e.mesh.position);
+  if(e.hp<=0&&!e.dead)killEnemy(e);
 }
 
-function biomePalette(id){
-  if(id==="forest")return{a:"#55b95b",b:"#46a84d",c:"#b6ff7a",soil:"#2f7d3a"};
-  if(id==="ruins")return{a:"#8b80c8",b:"#7066ad",c:"#ffd166",soil:"#514b8a"};
-  if(id==="swamp")return{a:"#5aa46f",b:"#3f8259",c:"#b5ff9a",soil:"#2d6043"};
-  if(id==="desert")return{a:"#e0b35c",b:"#d49843",c:"#ffe08a",soil:"#ad7432"};
-  if(id==="volcanic")return{a:"#7a3830",b:"#612a28",c:"#ff9f1c",soil:"#331817"};
-  if(id==="ice")return{a:"#a7efff",b:"#7bd4eb",c:"#ffffff",soil:"#5eb7d0"};
-  if(id==="base")return{a:"#78c477",b:"#5caf62",c:"#ffd166",soil:"#3d854c"};
-  return{a:"#6ecf65",b:"#58b85c",c:"#c8ff8a",soil:"#3b8c45"};
-}
-
-function drawBiomeTile(x,y,w,h,id,wx,wy){
-  const pal=biomePalette(id);
-  ctx.fillStyle=((Math.floor(wx/64)+Math.floor(wy/64))%2===0)?pal.a:pal.b;
-  ctx.fillRect(x,y,w,h);
-
-  ctx.globalAlpha=.18;
-  ctx.fillStyle=pal.soil;
-  for(let i=0;i<3;i++){
-    const seed=wx*12.9+wy*78.2+i*43.7;
-    const px=x+Math.abs(Math.sin(seed))*w;
-    const py=y+Math.abs(Math.cos(seed))*h;
-    ctx.beginPath();
-    ctx.ellipse(px,py,12+i*5,4+i*2,Math.sin(seed),0,Math.PI*2);
-    ctx.fill();
-  }
-  ctx.globalAlpha=1;
-
-  ctx.globalAlpha=.25;
-  ctx.fillStyle=pal.c;
-  const px=x+12+Math.abs(Math.sin(wx+wy))*42;
-  const py=y+10+Math.abs(Math.cos(wx-wy))*42;
-
-  if(id==="desert"){
-    ctx.fillRect(px,py,20,2);
-    ctx.fillRect(px+6,py+8,24,2);
-  }else if(id==="ice"){
-    ctx.beginPath();ctx.moveTo(px,py);ctx.lineTo(px+10,py+18);ctx.lineTo(px-8,py+16);ctx.closePath();ctx.fill();
-  }else if(id==="ruins"){
-    ctx.fillRect(px,py,16,10);
-  }else if(id==="volcanic"){
-    ctx.fillStyle="#ff3d2e";ctx.fillRect(px,py,24,3);
-    ctx.fillStyle="#ff9f1c";ctx.fillRect(px+4,py+1,10,2);
-  }else{
-    ctx.fillRect(px,py,4,4);
-    ctx.fillRect(px+12,py+9,3,3);
-  }
-  ctx.globalAlpha=1;
-}
-
-function drawGround(){
-  const c=camera();
-  const tile=64;
-  const startX=Math.floor(c.x/tile)*tile;
-  const startY=Math.floor(c.y/tile)*tile;
-
-  ctx.fillStyle="#226b36";
-  ctx.fillRect(0,0,W,H);
-
-  for(let x=startX;x<c.x+W+tile;x+=tile){
-    for(let y=startY;y<c.y+H+tile;y+=tile){
-      const p=screen(x,y);
-      const biome=biomeAtClient(x+tile/2,y+tile/2);
-      drawBiomeTile(p.x,p.y,tile,tile,biome,x,y);
-    }
-  }
-
-  const biomes=state.world.biomes||[];
-  biomes.forEach(b=>{
-    if(b.id==="base")return;
-    const p=screen(b.x,b.y);
-    if(p.x>W||p.y>H||p.x+b.w<0||p.y+b.h<0)return;
-    ctx.strokeStyle="rgba(255,255,255,.14)";
-    ctx.lineWidth=2;
-    ctx.strokeRect(p.x,p.y,b.w,b.h);
-    ctx.lineWidth=1;
-    ctx.fillStyle="rgba(0,0,0,.45)";
-    roundRect(p.x+12,p.y+12,210,34,10);
-    ctx.fill();
-    ctx.fillStyle="#ffd166";
-    ctx.font="16px Arial";
-    ctx.fillText(b.name,p.x+25,p.y+35);
-  });
-}
-
-
-function drawAnimeCloud(c){
-  const p=screen(c.x,c.y);
-  if(p.x<-150||p.y<-150||p.x>W+150||p.y>H+150)return;
-  ctx.globalAlpha=.18;
-  ctx.fillStyle="#ffffff";
-  ctx.beginPath();ctx.ellipse(p.x,p.y,c.s,22,0,0,Math.PI*2);ctx.fill();
-  ctx.beginPath();ctx.ellipse(p.x+c.s*.45,p.y+8,c.s*.55,18,0,0,Math.PI*2);ctx.fill();
-  ctx.beginPath();ctx.ellipse(p.x-c.s*.45,p.y+6,c.s*.5,16,0,0,Math.PI*2);ctx.fill();
-  ctx.globalAlpha=1;
-}
-
-function drawFloatingIsland(i){
-  const p=screen(i.x,i.y);
-  if(p.x<-300||p.y<-250||p.x>W+300||p.y>H+250)return;
-  ctx.globalAlpha=.35;
-  ctx.fillStyle="#2f7d3a";
-  ctx.beginPath();ctx.ellipse(p.x,p.y,i.w,i.h,0,0,Math.PI*2);ctx.fill();
-  ctx.fillStyle="#7bd56d";
-  ctx.beginPath();ctx.ellipse(p.x,p.y-8,i.w*.85,i.h*.65,0,0,Math.PI*2);ctx.fill();
-  ctx.fillStyle="rgba(0,0,0,.18)";
-  ctx.beginPath();ctx.moveTo(p.x-i.w*.45,p.y+i.h*.4);ctx.lineTo(p.x,p.y+i.h*1.25);ctx.lineTo(p.x+i.w*.45,p.y+i.h*.4);ctx.closePath();ctx.fill();
-  ctx.globalAlpha=1;
-}
-
-function drawSafeZone(){
-  const z=state.world.safeZone;
-  const p=screen(z.x,z.y);
-  ctx.fillStyle="rgba(255,209,102,.16)";
-  roundRect(p.x,p.y,z.w,z.h,34);
-  ctx.fill();
-  ctx.strokeStyle="rgba(255,209,102,.65)";
-  ctx.lineWidth=3;
-  roundRect(p.x,p.y,z.w,z.h,34);
-  ctx.stroke();
-  ctx.lineWidth=1;
-  ctx.fillStyle="rgba(15,18,25,.85)";
-  roundRect(p.x+85,p.y+85,z.w-170,z.h-170,22);
-  ctx.fill();
-  ctx.fillStyle="#ffd166";
-  ctx.font="18px Arial";
-  ctx.textAlign="center";
-  ctx.fillText("BASE SEGURA",p.x+z.w/2,p.y+58);
-  ctx.textAlign="left";
-}
-
-function drawNpc(){
-  const n=state.world.npcShop;
-  const p=screen(n.x,n.y);
-  ctx.fillStyle="rgba(0,0,0,.3)";
-  ctx.beginPath();ctx.ellipse(p.x,p.y+28,22,8,0,0,Math.PI*2);ctx.fill();
-  ctx.fillStyle="#ffd166";ctx.fillRect(p.x-14,p.y-25,28,44);
-  ctx.fillStyle="#f4bf77";ctx.fillRect(p.x-11,p.y-43,22,20);
-  ctx.fillStyle="#111";ctx.fillText("🛒",p.x-12,p.y-50);
-  ctx.fillStyle="#fff";ctx.font="13px Arial";ctx.textAlign="center";
-  ctx.fillText(n.name,p.x,p.y-62);
-  ctx.fillText("Poções 15 ouro",p.x,p.y+42);
-  ctx.textAlign="left";
-}
-
-function drawLake(l){
-  const p=screen(l.x,l.y);
-  if(p.x>W||p.y>H||p.x+l.w<0||p.y+l.h<0)return;
-  ctx.fillStyle="#1f6fb2";
-  roundRect(p.x,p.y,l.w,l.h,48);
-  ctx.fill();
-  ctx.fillStyle="rgba(255,255,255,.13)";
-  roundRect(p.x+35,p.y+35,l.w-70,22,16);
-  ctx.fill();
-}
-
-function drawTree(t){
-  const p=screen(t.x,t.y);
-  if(p.x<-100||p.y<-100||p.x>W+100||p.y>H+100)return;
-
-  const biome=biomeAtClient(t.x,t.y);
-  let trunk="#5a361d",leaf="#115c2b",leaf2="#1f7a3b";
-  if(biome==="swamp"){trunk="#3b2f22";leaf="#31522f";leaf2="#486b3f";}
-  if(biome==="desert"){trunk="#8a5b2f";leaf="#b58b3f";leaf2="#d0aa50";}
-  if(biome==="ice"){trunk="#6a7d83";leaf="#c8f4ff";leaf2="#9ee5ff";}
-  if(biome==="ruins"){trunk="#2c2535";leaf="#5f3ca0";leaf2="#8f5bff";}
-  if(biome==="volcanic"){trunk="#241615";leaf="#763024";leaf2="#ff4a2d";}
-
-  ctx.fillStyle="rgba(0,0,0,.28)";
-  ctx.beginPath();ctx.ellipse(p.x,p.y+t.s*.72,t.s*.85,t.s*.28,0,0,Math.PI*2);ctx.fill();
-
-  if(biome==="desert"){
-    ctx.fillStyle=trunk;ctx.fillRect(p.x-5,p.y-4,10,t.s*1.05);
-    ctx.fillStyle=leaf2;ctx.fillRect(p.x-18,p.y-14,36,10);ctx.fillRect(p.x-8,p.y-28,16,40);
-  }else{
-    ctx.fillStyle=trunk;ctx.fillRect(p.x-6,p.y,12,t.s);
-    ctx.fillStyle=leaf;ctx.beginPath();ctx.arc(p.x,p.y-7,t.s,0,Math.PI*2);ctx.fill();
-    ctx.fillStyle=leaf2;ctx.beginPath();ctx.arc(p.x-t.s*.32,p.y-t.s*.35,t.s*.55,0,Math.PI*2);ctx.fill();
-  }
-}
-
-function drawRock(r){
-  const p=screen(r.x,r.y);
-  if(p.x<-80||p.y<-80||p.x>W+80||p.y>H+80)return;
-
-  const biome=biomeAtClient(r.x,r.y);
-  let base="#747a7f",hi="#9aa0a6";
-  if(biome==="desert"){base="#9b7042";hi="#c09154";}
-  if(biome==="ice"){base="#9bd6e4";hi="#e8fbff";}
-  if(biome==="swamp"){base="#465443";hi="#6e7d64";}
-  if(biome==="ruins"){base="#4d445a";hi="#8f5bff";}
-  if(biome==="volcanic"){base="#23191a";hi="#ff6b35";}
-
-  const s=r.s||14;
-  ctx.fillStyle="rgba(0,0,0,.28)";
-  ctx.beginPath();ctx.ellipse(p.x,p.y+6,s+7,5,0,0,Math.PI*2);ctx.fill();
-  ctx.fillStyle=base;ctx.beginPath();ctx.ellipse(p.x,p.y,s+6,s*.75,0,0,Math.PI*2);ctx.fill();
-  ctx.fillStyle=hi;ctx.beginPath();ctx.ellipse(p.x-s*.35,p.y-s*.22,s*.35,s*.16,0,0,Math.PI*2);ctx.fill();
-}
-
-function drawExtraDecor(){
-  decor.bones.forEach(b=>{
-    if(biomeAtClient(b.x,b.y)!=="desert"&&biomeAtClient(b.x,b.y)!=="ruins")return;
-    const p=screen(b.x,b.y);
-    if(p.x<-30||p.y<-30||p.x>W+30||p.y>H+30)return;
-    ctx.fillStyle="rgba(240,220,180,.55)";
-    ctx.fillRect(p.x,p.y,18,4);
-    ctx.fillRect(p.x+6,p.y-5,4,14);
-  });
-
-  decor.crystals.forEach(c=>{
-    const biome=biomeAtClient(c.x,c.y);
-    if(biome!=="ice"&&biome!=="ruins")return;
-    const p=screen(c.x,c.y);
-    if(p.x<-30||p.y<-30||p.x>W+30||p.y>H+30)return;
-    ctx.fillStyle=biome==="ice"?"#e8fbff":"#b388ff";
-    ctx.beginPath();ctx.moveTo(p.x,p.y-12);ctx.lineTo(p.x+8,p.y+10);ctx.lineTo(p.x-8,p.y+10);ctx.closePath();ctx.fill();
-  });
-
-  decor.lava.forEach(l=>{
-    if(biomeAtClient(l.x,l.y)!=="volcanic")return;
-    const p=screen(l.x,l.y);
-    if(p.x<-30||p.y<-30||p.x>W+30||p.y>H+30)return;
-    ctx.fillStyle="#ff3d2e";
-    ctx.fillRect(p.x,p.y,28,4);
-    ctx.fillStyle="#ff9f1c";
-    ctx.fillRect(p.x+5,p.y+1,12,2);
-  });
-}
-
-
-function drawQuestNpc(){
-  const n=state.world.questNpc||{x:3040,y:2185,name:"Capitão Rowan"};
-  const p=screen(n.x,n.y);
-  ctx.fillStyle="rgba(0,0,0,.3)";
-  ctx.beginPath();ctx.ellipse(p.x,p.y+28,22,8,0,0,Math.PI*2);ctx.fill();
-  ctx.fillStyle="#7ee787";ctx.fillRect(p.x-14,p.y-25,28,44);
-  ctx.fillStyle="#f4bf77";ctx.fillRect(p.x-11,p.y-43,22,20);
-  ctx.fillStyle="#111";ctx.fillText("📜",p.x-12,p.y-50);
-  ctx.fillStyle="#fff";ctx.font="13px Arial";ctx.textAlign="center";
-  ctx.fillText(n.name,p.x,p.y-62);
-  ctx.fillText("Missões [Q]",p.x,p.y+42);
-  ctx.textAlign="left";
-}
-
-function drawDrop(d){
-  const p=screen(d.x,d.y);
-  ctx.fillStyle="rgba(0,0,0,.25)";
-  ctx.beginPath();ctx.ellipse(p.x,p.y+10,14,5,0,0,Math.PI*2);ctx.fill();
-  ctx.font="24px Arial";ctx.textAlign="center";
-  ctx.fillText(ITEM_INFO[d.item]?.icon||"?",p.x,p.y+6);
-  ctx.textAlign="left";
-}
-
-function drawEnemy(e){
-  const p=screen(e.x,e.y);
-  if(p.x<-150||p.y<-150||p.x>W+150||p.y>H+150)return;
-
-  const pulse=e.isBoss?Math.sin(Date.now()/220)*4:Math.sin(Date.now()/260+e.id)*1.5;
-  const size=e.size+pulse;
-
-  ctx.fillStyle="rgba(0,0,0,.36)";
-  ctx.beginPath();ctx.ellipse(p.x,p.y+size*.58,size*.78,9,0,0,Math.PI*2);ctx.fill();
-
+function killEnemy(e){
+  e.dead=true;
+  entityGroup.remove(e.mesh);
+  player.gold+=e.isBoss?300:18;
+  gainXp(e.isBoss?300:40);
+  if(Math.random()<.45)inventory.crystal++;
+  quests[0].progress=Math.min(quests[0].need,quests[0].progress+1);
+  if(e.isBoss&&e.phase===2)quests[2].progress=1;
   if(e.isBoss){
-    ctx.fillStyle="rgba(255,209,102,.22)";
-    ctx.beginPath();ctx.arc(p.x,p.y,size*.82,0,Math.PI*2);ctx.fill();
+    boss=null;
+    player.phase++;
+    showBossDialogue("Sistema",`Fase ${player.phase} liberada! Novas áreas e monstros apareceram.`);
+    spawnWave(player.phase);
   }
-
-  ctx.fillStyle=e.color||"#9b5de5";
-
-  if(e.shape==="bird"){
-    const flap=Math.sin(Date.now()/90+e.id)*size*.18;
-    ctx.beginPath();ctx.ellipse(p.x,p.y,size*.35,size*.25,0,0,Math.PI*2);ctx.fill();
-    ctx.beginPath();ctx.moveTo(p.x-size*.15,p.y);ctx.lineTo(p.x-size*.75,p.y-flap);ctx.lineTo(p.x-size*.25,p.y+size*.18);ctx.closePath();ctx.fill();
-    ctx.beginPath();ctx.moveTo(p.x+size*.15,p.y);ctx.lineTo(p.x+size*.75,p.y+flap);ctx.lineTo(p.x+size*.25,p.y+size*.18);ctx.closePath();ctx.fill();
-  }else if(e.shape==="minotaur"){
-    ctx.fillRect(p.x-size*.42,p.y-size*.42,size*.84,size*.9);
-    ctx.fillRect(p.x-size*.18,p.y-size*.72,size*.36,size*.34);
-    ctx.fillStyle="#f0d28a";
-    ctx.beginPath();ctx.moveTo(p.x-size*.18,p.y-size*.62);ctx.lineTo(p.x-size*.58,p.y-size*.85);ctx.lineTo(p.x-size*.3,p.y-size*.48);ctx.fill();
-    ctx.beginPath();ctx.moveTo(p.x+size*.18,p.y-size*.62);ctx.lineTo(p.x+size*.58,p.y-size*.85);ctx.lineTo(p.x+size*.3,p.y-size*.48);ctx.fill();
-  }else if(e.shape==="crawler"){
-    ctx.beginPath();ctx.ellipse(p.x,p.y,size*.58,size*.32,0,0,Math.PI*2);ctx.fill();
-    for(let i=-2;i<=2;i++)ctx.fillRect(p.x+i*size*.18,p.y+size*.1,4,size*.28);
-  }else if(e.shape==="knight"){
-    ctx.fillRect(p.x-size*.35,p.y-size*.45,size*.7,size*.9);
-    ctx.fillStyle="rgba(255,255,255,.12)";
-    ctx.fillRect(p.x-size*.22,p.y-size*.32,size*.16,size*.55);
-  }else if(e.shape==="mage"||e.shape==="demon"){
-    ctx.beginPath();ctx.moveTo(p.x,p.y-size*.55);ctx.lineTo(p.x+size*.45,p.y+size*.35);ctx.lineTo(p.x-size*.45,p.y+size*.35);ctx.closePath();ctx.fill();
-  }else if(e.shape==="wolf"||e.shape==="beast"){
-    ctx.beginPath();ctx.ellipse(p.x,p.y,size*.58,size*.35,0,0,Math.PI*2);ctx.fill();
-    ctx.fillRect(p.x+size*.25,p.y-size*.2,size*.35,size*.25);
-  }else if(e.shape==="ent"){
-    ctx.fillRect(p.x-size*.35,p.y-size*.55,size*.7,size*1.1);
-    ctx.fillStyle="#1f7a3b";ctx.beginPath();ctx.arc(p.x,p.y-size*.5,size*.45,0,Math.PI*2);ctx.fill();
-  }else{
-    ctx.beginPath();ctx.arc(p.x,p.y,size/2,0,Math.PI*2);ctx.fill();
-  }
-
-  ctx.fillStyle="#111";
-  ctx.fillRect(p.x-9,p.y-4,4,4);
-  ctx.fillRect(p.x+5,p.y-4,4,4);
-
-  if(e.isBoss){
-    ctx.fillStyle="#ffd166";ctx.font="24px Arial";ctx.textAlign="center";
-    ctx.fillText(e.icon||"👑",p.x,p.y-size*.75);
-    ctx.textAlign="left";
-  }
-
-  drawMiniBar(p.x,p.y-size*.75,Math.max(54,size*1.25),e.hp/e.maxHp,e.isBoss?"#ffbe0b":"#ef476f");
-  ctx.fillStyle=e.isBoss?"#ffd166":"#fff";
-  ctx.font=e.isBoss?"13px Arial":"11px Arial";
-  ctx.textAlign="center";
-  ctx.fillText(`${e.isBoss?"BOSS ":""}${e.name||""} Nv.${e.level||1}`,p.x,p.y-size*.87);
-  ctx.textAlign="left";
+  toast(e.isBoss?"Boss derrotado!":"Monstro derrotado!");
 }
 
-
-function drawArcherPortrait(){
-  const c=document.getElementById("portraitCanvas");
-  if(!c)return;
-  const pc=c.getContext("2d");
-  const p=me();
-  pc.clearRect(0,0,74,74);
-
-  pc.fillStyle="#111827";
-  pc.beginPath();
-  pc.arc(37,37,36,0,Math.PI*2);
-  pc.fill();
-
-  if(!p)return;
-
-  if(p.classId==="archer"){
-    pc.fillStyle="#e8f2ff";
-    pc.beginPath();pc.arc(37,31,18,0,Math.PI*2);pc.fill();
-    pc.fillStyle="#f4bf77";
-    pc.beginPath();pc.arc(37,35,14,0,Math.PI*2);pc.fill();
-    pc.fillStyle="#ffffff";
-    pc.fillRect(22,16,30,10);
-    pc.fillStyle="#ffd166";
-    pc.beginPath();pc.moveTo(26,17);pc.lineTo(37,7);pc.lineTo(48,17);pc.closePath();pc.fill();
-    pc.fillStyle="#8ed8ff";
-    pc.beginPath();pc.moveTo(16,20);pc.lineTo(4,9);pc.lineTo(24,16);pc.closePath();pc.fill();
-    pc.beginPath();pc.moveTo(58,20);pc.lineTo(70,9);pc.lineTo(50,16);pc.closePath();pc.fill();
-    pc.fillStyle="#24364f";
-    pc.fillRect(24,49,26,18);
-    pc.strokeStyle="#ffd166";pc.lineWidth=2;
-    pc.beginPath();pc.arc(57,46,11,-1.2,1.2);pc.stroke();
-  }else{
-    pc.fillStyle=p.color||"#49a6ff";
-    pc.beginPath();pc.arc(37,36,18,0,Math.PI*2);pc.fill();
-    pc.font="28px Arial";pc.textAlign="center";pc.fillText(p.weaponIcon||"⚔️",37,47);
+function gainXp(v){
+  player.xp+=v;
+  if(player.xp>=player.nextXp){
+    player.xp-=player.nextXp;player.level++;player.nextXp=Math.floor(player.nextXp*1.45);
+    player.maxHp+=20;player.hp=player.maxHp;player.maxMp+=10;player.mp=player.maxMp;player.damage+=5;
+    toast("Level Up!");
   }
 }
 
-function drawArcherSkin(pos,p,bob,step,attacking,swing){
-  // sombra
-  ctx.fillStyle="rgba(0,0,0,.34)";
-  ctx.beginPath();ctx.ellipse(pos.x,pos.y+29,23,8,0,0,Math.PI*2);ctx.fill();
-
-  // botas verdes com detalhes vermelhos/dourados
-  ctx.fillStyle="#344d45";
-  ctx.fillRect(pos.x-13,pos.y+11+bob+step*2,9,23);
-  ctx.fillRect(pos.x+4,pos.y+11+bob-step*2,9,23);
-  ctx.fillStyle="#8c2630";
-  ctx.fillRect(pos.x-14,pos.y+17+bob+step*2,11,4);
-  ctx.fillRect(pos.x+3,pos.y+17+bob-step*2,11,4);
-  ctx.fillStyle="#d6a84a";
-  ctx.fillRect(pos.x-14,pos.y+28+bob+step*2,11,3);
-  ctx.fillRect(pos.x+3,pos.y+28+bob-step*2,11,3);
-
-  // calça clara
-  ctx.fillStyle="#9fb0a6";
-  ctx.fillRect(pos.x-10,pos.y+2+bob+step*2,8,18);
-  ctx.fillRect(pos.x+2,pos.y+2+bob-step*2,8,18);
-
-  // torso pele + armadura prata
-  ctx.fillStyle="#f4bf77";
-  ctx.fillRect(pos.x-9,pos.y-19+bob,18,25);
-  ctx.fillStyle="#d9e0e8";
-  ctx.beginPath();ctx.moveTo(pos.x-18,pos.y-17+bob);ctx.lineTo(pos.x-5,pos.y-21+bob);ctx.lineTo(pos.x-10,pos.y+9+bob);ctx.lineTo(pos.x-20,pos.y+8+bob);ctx.closePath();ctx.fill();
-  ctx.beginPath();ctx.moveTo(pos.x+18,pos.y-17+bob);ctx.lineTo(pos.x+5,pos.y-21+bob);ctx.lineTo(pos.x+10,pos.y+9+bob);ctx.lineTo(pos.x+20,pos.y+8+bob);ctx.closePath();ctx.fill();
-  ctx.strokeStyle="#233044";ctx.lineWidth=1;
-  ctx.strokeRect(pos.x-14,pos.y-15+bob,28,23);
-
-  // ombreiras de plumas
-  ctx.fillStyle="#eef2ff";
-  for(let i=0;i<5;i++){
-    ctx.beginPath();
-    ctx.ellipse(pos.x-19-i*2,pos.y-18+bob+i*2,7,3,0,0,Math.PI*2);
-    ctx.fill();
-    ctx.beginPath();
-    ctx.ellipse(pos.x+19+i*2,pos.y-18+bob+i*2,7,3,0,0,Math.PI*2);
-    ctx.fill();
-  }
-
-  // braços e braceletes dourado/laranja
-  ctx.fillStyle="#f4bf77";
-  ctx.fillRect(pos.x-23,pos.y-12+bob-step*2,7,22);
-  ctx.fillRect(pos.x+16,pos.y-12+bob+step*2,7,22);
-  ctx.fillStyle="#ff8c24";
-  ctx.fillRect(pos.x-25,pos.y+1+bob-step*2,11,10);
-  ctx.fillRect(pos.x+14,pos.y+1+bob+step*2,11,10);
-  ctx.fillStyle="#ffd166";
-  ctx.fillRect(pos.x-25,pos.y+1+bob-step*2,11,3);
-  ctx.fillRect(pos.x+14,pos.y+1+bob+step*2,11,3);
-
-  // cabeça, cabelo branco, tiara alada
-  ctx.fillStyle="#f4bf77";
-  ctx.fillRect(pos.x-11,pos.y-40+bob,22,20);
-  ctx.fillStyle="#ffffff";
-  ctx.fillRect(pos.x-13,pos.y-45+bob,26,9);
-  ctx.beginPath();ctx.arc(pos.x,pos.y-40+bob,13,Math.PI,Math.PI*2);ctx.fill();
-
-  // asas laterais da tiara
-  ctx.fillStyle="#bde9ff";
-  ctx.beginPath();ctx.moveTo(pos.x-12,pos.y-43+bob);ctx.lineTo(pos.x-34,pos.y-55+bob);ctx.lineTo(pos.x-18,pos.y-38+bob);ctx.closePath();ctx.fill();
-  ctx.beginPath();ctx.moveTo(pos.x+12,pos.y-43+bob);ctx.lineTo(pos.x+34,pos.y-55+bob);ctx.lineTo(pos.x+18,pos.y-38+bob);ctx.closePath();ctx.fill();
-  ctx.strokeStyle="#6aa9e8";ctx.beginPath();ctx.moveTo(pos.x-30,pos.y-52+bob);ctx.lineTo(pos.x-18,pos.y-40+bob);ctx.moveTo(pos.x+30,pos.y-52+bob);ctx.lineTo(pos.x+18,pos.y-40+bob);ctx.stroke();
-
-  ctx.fillStyle="#d6a84a";
-  ctx.beginPath();ctx.moveTo(pos.x-9,pos.y-44+bob);ctx.lineTo(pos.x,pos.y-53+bob);ctx.lineTo(pos.x+9,pos.y-44+bob);ctx.closePath();ctx.fill();
-  ctx.fillStyle="#d22";
-  ctx.fillRect(pos.x-3,pos.y-46+bob,6,4);
-
-  // olhos
-  ctx.fillStyle="#111";
-  ctx.fillRect(pos.x-5,pos.y-33+bob,3,3);
-  ctx.fillRect(pos.x+4,pos.y-33+bob,3,3);
-
-  // arco grande estilizado
-  ctx.save();
-  ctx.translate(pos.x+28,pos.y-3+bob);
-  ctx.rotate(((attacking?35:12)+swing)*Math.PI/180);
-  ctx.strokeStyle="#192c36";
-  ctx.lineWidth=4;
-  ctx.beginPath();
-  ctx.arc(0,0,31,-1.25,1.25);
-  ctx.stroke();
-  ctx.strokeStyle="#d6a84a";
-  ctx.lineWidth=2;
-  ctx.beginPath();
-  ctx.arc(0,0,33,-1.2,1.2);
-  ctx.stroke();
-  ctx.strokeStyle="#8ed8ff";
-  ctx.lineWidth=2;
-  ctx.beginPath();ctx.moveTo(10,-27);ctx.lineTo(28,-39);ctx.moveTo(10,27);ctx.lineTo(28,39);ctx.stroke();
-  ctx.strokeStyle="#e8f2ff";ctx.lineWidth=1;
-  ctx.beginPath();ctx.moveTo(9,-29);ctx.lineTo(9,29);ctx.stroke();
-  ctx.restore();
-
-  if(attacking){
-    ctx.strokeStyle="#ffd166";
-    ctx.lineWidth=3;
-    ctx.beginPath();ctx.arc(pos.x+20,pos.y-8+bob,30,.1,1.4);ctx.stroke();
-    ctx.lineWidth=1;
-  }
+function addHitFx(pos){
+  const m=new THREE.Mesh(new THREE.SphereGeometry(16,12,8),new THREE.MeshBasicMaterial({color:0xffffff,transparent:true,opacity:.8}));
+  m.position.copy(pos);m.position.y+=70;m.userData.life=.35;fxGroup.add(m);
 }
 
-
-function drawChibiAnimeSkin(pos,p,bob,step,attacking,swing){
-  const isArcher=p.classId==="archer";
-  const isMage=p.classId==="mage";
-  const armor=isArcher?"#d9e0e8":isMage?"#b388ff":"#49a6ff";
-  const accent=isArcher?"#ffd166":isMage?"#7b61ff":"#ff8c42";
-
-  if(p.isFlying){
-    ctx.fillStyle="rgba(255,255,255,.22)";
-    ctx.beginPath();ctx.ellipse(pos.x,pos.y+38,48,13,0,0,Math.PI*2);ctx.fill();
-    ctx.fillStyle=isArcher?"#58bfe8":isMage?"#b388ff":"#ffd166";
-    roundRect(pos.x-36,pos.y+28,72,10,8);ctx.fill();
-  }
-
-  ctx.fillStyle="rgba(0,0,0,.25)";
-  ctx.beginPath();ctx.ellipse(pos.x,pos.y+30,24,8,0,0,Math.PI*2);ctx.fill();
-
-  // legs
-  ctx.fillStyle="#26364a";
-  ctx.fillRect(pos.x-12,pos.y+11+bob+step*2,9,21);
-  ctx.fillRect(pos.x+3,pos.y+11+bob-step*2,9,21);
-
-  // body
-  ctx.fillStyle=armor;
-  roundRect(pos.x-17,pos.y-20+bob,34,34,8);ctx.fill();
-  ctx.fillStyle=accent;
-  ctx.fillRect(pos.x-13,pos.y-14+bob,26,5);
-  ctx.fillStyle="rgba(255,255,255,.35)";
-  ctx.fillRect(pos.x-11,pos.y-6+bob,6,18);
-
-  // head larger chibi
-  ctx.fillStyle="#f4bf77";
-  ctx.beginPath();ctx.arc(pos.x,pos.y-36+bob,18,0,Math.PI*2);ctx.fill();
-
-  // hair
-  ctx.fillStyle=isArcher?"#ffffff":isMage?"#433056":"#3b2416";
-  ctx.beginPath();ctx.arc(pos.x,pos.y-44+bob,18,Math.PI,Math.PI*2);ctx.fill();
-  ctx.fillRect(pos.x-18,pos.y-45+bob,36,10);
-
-  // archer wing crown
-  if(isArcher){
-    ctx.fillStyle="#bde9ff";
-    ctx.beginPath();ctx.moveTo(pos.x-14,pos.y-48+bob);ctx.lineTo(pos.x-38,pos.y-60+bob);ctx.lineTo(pos.x-20,pos.y-42+bob);ctx.closePath();ctx.fill();
-    ctx.beginPath();ctx.moveTo(pos.x+14,pos.y-48+bob);ctx.lineTo(pos.x+38,pos.y-60+bob);ctx.lineTo(pos.x+20,pos.y-42+bob);ctx.closePath();ctx.fill();
-    ctx.fillStyle="#ffd166";
-    ctx.beginPath();ctx.moveTo(pos.x-8,pos.y-49+bob);ctx.lineTo(pos.x,pos.y-60+bob);ctx.lineTo(pos.x+8,pos.y-49+bob);ctx.closePath();ctx.fill();
-  }
-
-  // eyes
-  ctx.fillStyle="#111";
-  ctx.fillRect(pos.x-7,pos.y-38+bob,4,4);
-  ctx.fillRect(pos.x+4,pos.y-38+bob,4,4);
-
-  // weapon
-  ctx.save();
-  ctx.translate(pos.x+28,pos.y-8+bob);
-  ctx.rotate(((attacking?35:8)+swing)*Math.PI/180);
-  ctx.font="27px Arial";
-  ctx.textAlign="center";
-  ctx.fillText(p.weaponIcon||"⚔️",0,0);
-  ctx.restore();
-
-  if(attacking){
-    ctx.strokeStyle=accent;
-    ctx.lineWidth=4;
-    ctx.beginPath();ctx.arc(pos.x+20,pos.y-10+bob,32,.1,1.45);ctx.stroke();
-    ctx.lineWidth=1;
-  }
+function addRingFx(pos,color){
+  const ring=new THREE.Mesh(new THREE.TorusGeometry(65,4,8,36),new THREE.MeshBasicMaterial({color,transparent:true,opacity:.8}));
+  ring.position.copy(pos);ring.position.y=12;ring.rotation.x=Math.PI/2;ring.userData.life=.6;fxGroup.add(ring);
 }
 
-function drawPlayer(p,isMe){
-  const r=renderPlayers[p.id]||p;
-  const pos=screen(r.x,r.y);
-  const moving=Math.abs(p.vx)+Math.abs(p.vy)>.1;
-  const t=Date.now();
-  const step=moving?Math.sin(t/90):0;
-  const bob=moving?step*2:0;
-  const attacking=(p.attackCd||0)>8;
-  const swing=attacking?Math.sin(t/45)*10:0;
-
-  if(p.classId==="archer"){
-    drawChibiAnimeSkin(pos,p,bob,step,attacking,swing);
-    drawMiniBar(pos.x,pos.y-74,58,p.hp/p.maxHp,"#ef476f");
-    drawMiniBar(pos.x,pos.y-66,58,p.mana/p.maxMana,"#118ab2");
-    ctx.fillStyle=isMe?"#7ee787":"#fff";
-    ctx.font="13px Arial";ctx.textAlign="center";
-    ctx.fillText(`${p.name} [Nv.${p.level}]`,pos.x,pos.y-82);
-    ctx.font="11px Arial";ctx.fillStyle="#cdd6e5";
-    ctx.fillText(p.className,pos.x,pos.y-50);
-    ctx.textAlign="left";
-    return;
-  }
-
-  drawChibiAnimeSkin(pos,p,bob,step,attacking,swing);
-  drawMiniBar(pos.x,pos.y-74,58,p.hp/p.maxHp,"#ef476f");
-  drawMiniBar(pos.x,pos.y-66,58,p.mana/p.maxMana,"#118ab2");
-  ctx.fillStyle=isMe?"#7ee787":"#fff";
-  ctx.font="13px Arial";ctx.textAlign="center";
-  ctx.fillText(`${p.name} [Nv.${p.level}]`,pos.x,pos.y-82);
-  ctx.font="11px Arial";ctx.fillStyle="#cdd6e5";
-  ctx.fillText(p.className,pos.x,pos.y-50);
-  ctx.textAlign="left";
-  return;
-
-  ctx.fillStyle="rgba(0,0,0,.34)";
-  ctx.beginPath();ctx.ellipse(pos.x,pos.y+29,22,8,0,0,Math.PI*2);ctx.fill();
-
-  const armor=p.color||"#49a6ff";
-  ctx.fillStyle="#1a2433";
-  ctx.fillRect(pos.x-12,pos.y+12+bob+step*2,8,19);
-  ctx.fillRect(pos.x+4,pos.y+12+bob-step*2,8,19);
-  ctx.fillStyle="#0d1117";
-  ctx.fillRect(pos.x-13,pos.y+29+bob+step*2,10,5);
-  ctx.fillRect(pos.x+3,pos.y+29+bob-step*2,10,5);
-
-  ctx.fillStyle=armor;ctx.fillRect(pos.x-14,pos.y-18+bob,28,33);
-  ctx.fillStyle="rgba(255,255,255,.22)";ctx.fillRect(pos.x-10,pos.y-14+bob,6,22);
-  ctx.fillStyle="rgba(0,0,0,.22)";ctx.fillRect(pos.x+7,pos.y-14+bob,5,24);
-
-  ctx.fillStyle="#f4bf77";
-  ctx.fillRect(pos.x-20,pos.y-13+bob-step*2,7,23);
-  ctx.fillRect(pos.x+13,pos.y-13+bob+step*2,7,23);
-  ctx.fillRect(pos.x-11,pos.y-39+bob,22,20);
-
-  ctx.fillStyle="#3b2416";ctx.fillRect(pos.x-12,pos.y-43+bob,24,7);
-  ctx.fillStyle="#111";ctx.fillRect(pos.x-5,pos.y-32+bob,3,3);ctx.fillRect(pos.x+4,pos.y-32+bob,3,3);
-
-  ctx.save();
-  ctx.translate(pos.x+24,pos.y-5+bob);
-  ctx.rotate((swing*Math.PI)/180);
-  ctx.font="25px Arial";ctx.textAlign="center";
-  ctx.fillText(p.weaponIcon||"⚔️",0,0);
-  ctx.restore();
-
-  if(attacking){
-    ctx.strokeStyle=p.classId==="mage"?"#b388ff":p.classId==="archer"?"#ffd166":"#ffffff";
-    ctx.lineWidth=3;ctx.beginPath();ctx.arc(pos.x+18,pos.y-8+bob,24,.1,1.4);ctx.stroke();ctx.lineWidth=1;
-  }
-
-  drawMiniBar(pos.x,pos.y-74,58,p.hp/p.maxHp,"#ef476f");
-  drawMiniBar(pos.x,pos.y-66,58,p.mana/p.maxMana,"#118ab2");
-
-  ctx.fillStyle=isMe?"#7ee787":"#fff";
-  ctx.font="13px Arial";ctx.textAlign="center";
-  ctx.fillText(`${p.name} [Nv.${p.level}]`,pos.x,pos.y-82);
-  ctx.font="11px Arial";ctx.fillStyle="#cdd6e5";
-  ctx.fillText(p.className,pos.x,pos.y-50);
-  ctx.textAlign="left";
+function floatText(text,pos,color){
+  // 3D simple: use glowing sphere instead of DOM text
+  const m=new THREE.Mesh(new THREE.SphereGeometry(10,8,6),new THREE.MeshBasicMaterial({color,transparent:true,opacity:.9}));
+  m.position.copy(pos);m.position.y+=120;m.userData.life=.7;fxGroup.add(m);
 }
 
-function drawMiniBar(x,y,w,value,color){
-  ctx.fillStyle="#111";
-  ctx.fillRect(x-w/2,y,w,5);
-  ctx.fillStyle=color;
-  ctx.fillRect(x-w/2,y,w*Math.max(0,Math.min(1,value)),5);
+function showBossDialogue(name,text){
+  document.getElementById("dialogue").style.display="block";
+  document.getElementById("dialogueName").textContent=name;
+  document.getElementById("dialogueText").textContent=text;
+  dialogueTimer=5;
 }
 
-function drawEffects(){
-  for(let i=effects.length-1;i>=0;i--){
-    const e=effects[i];
-    const a=screen(e.from.x,e.from.y);
-    const b=screen(e.to.x,e.to.y);
-    ctx.strokeStyle=e.classId==="mage"?"#b388ff":e.classId==="archer"?"#ffd166":"#ffffff";
-    ctx.lineWidth=e.classId==="swordsman"?5:3;
-    ctx.beginPath();ctx.moveTo(a.x,a.y-10);ctx.lineTo(b.x,b.y-10);ctx.stroke();
-    ctx.lineWidth=1;
-    e.life--;
-    if(e.life<=0)effects.splice(i,1);
+function update(dt){
+  Object.keys(player.cd).forEach(k=>player.cd[k]=Math.max(0,player.cd[k]-dt));
+  if(dialogueTimer>0){dialogueTimer-=dt;if(dialogueTimer<=0)document.getElementById("dialogue").style.display="none"}
+  if(toastTimer>0){toastTimer-=dt;if(toastTimer<=0)document.getElementById("toast").style.display="none"}
+
+  const forward=getForward();
+  const right=new THREE.Vector3().crossVectors(forward,new THREE.Vector3(0,1,0)).multiplyScalar(-1);
+  let move=new THREE.Vector3();
+  if(keys.w)move.add(forward);
+  if(keys.s)move.addScaledVector(forward,-1);
+  if(keys.a)move.addScaledVector(right,-1);
+  if(keys.d)move.add(right);
+  if(move.length()>0){
+    move.normalize();
+    player.mesh.position.addScaledVector(move,player.speed*dt*55*(player.isFlying?1.7:1));
+    player.mesh.rotation.y=Math.atan2(move.x,move.z);
   }
+  player.mesh.position.y=player.isFlying?120+Math.sin(performance.now()/250)*10:0;
 
-  for(let i=floatTexts.length-1;i>=0;i--){
-    const f=floatTexts[i];
-    const p=screen(f.x,f.y);
-    ctx.fillStyle=f.color;
-    ctx.font="bold 20px Arial";
-    ctx.textAlign="center";
-    ctx.fillText(f.text,p.x,p.y-(44-f.life));
-    ctx.textAlign="left";
-    f.life--;
-    if(f.life<=0)floatTexts.splice(i,1);
-  }
-}
-
-
-function drawMinimap(){
-  const mini=document.getElementById("minimap");
-  if(!mini)return;
-  const mctx=mini.getContext("2d");
-  const mw=mini.width;
-  const mh=mini.height;
-  const p=me();
-
-  mctx.clearRect(0,0,mw,mh);
-  mctx.fillStyle="#0b1220";
-  mctx.fillRect(0,0,mw,mh);
-
-  const sx=mw/state.world.width;
-  const sy=mh/state.world.height;
-
-  (state.world.biomes||[]).forEach(b=>{
-    const pal=biomePalette(b.id);
-    mctx.fillStyle=pal.a;
-    mctx.globalAlpha=b.id==="base"?0.8:0.45;
-    mctx.fillRect(b.x*sx,b.y*sy,b.w*sx,b.h*sy);
-    mctx.globalAlpha=1;
+  enemies.forEach(e=>{
+    if(e.dead)return;
+    const toP=player.mesh.position.clone().sub(e.mesh.position);toP.y=0;
+    const d=toP.length();
+    if(d<900){toP.normalize();e.mesh.position.addScaledVector(toP,dt*(e.isBoss?70:95));e.mesh.rotation.y=Math.atan2(toP.x,toP.z)}
+    e.mesh.position.y=(e.isBoss?20:0)+Math.sin(performance.now()/300+e.ai)*6;
+    if(d<80+(e.isBoss?60:0)){player.hp-=e.damage*dt*.8;if(player.hp<=0)respawn()}
   });
 
-  if(p){
-    const radiusWorld=850;
-    state.enemies.forEach(e=>{
-      const d=Math.hypot(e.x-p.x,e.y-p.y);
-      if(d>radiusWorld && !e.isBoss)return;
-      mctx.fillStyle=e.isBoss?"#ffd166":"#ef476f";
-      mctx.beginPath();
-      mctx.arc(e.x*sx,e.y*sy,e.isBoss?3:1.8,0,Math.PI*2);
-      mctx.fill();
-    });
-
-    mctx.fillStyle="#7ee787";
-    mctx.beginPath();
-    mctx.arc(p.x*sx,p.y*sy,3.2,0,Math.PI*2);
-    mctx.fill();
-
-    mctx.strokeStyle="rgba(126,231,135,.45)";
-    mctx.beginPath();
-    mctx.arc(p.x*sx,p.y*sy,radiusWorld*sx,0,Math.PI*2);
-    mctx.stroke();
-  }
-
-  mctx.strokeStyle="rgba(255,255,255,.25)";
-  mctx.strokeRect(0,0,mw,mh);
-}
-
-function draw(){
-  ctx.clearRect(0,0,W,H);
-  drawGround();
-  decor.clouds&&decor.clouds.forEach(drawAnimeCloud);
-  decor.islands&&decor.islands.forEach(drawFloatingIsland);
-  decor.lakes.forEach(drawLake);
-  drawExtraDecor();
-  decor.flowers.forEach(f=>{
-    const p=screen(f.x,f.y);
-    if(p.x<0||p.y<0||p.x>W||p.y>H)return;
-    ctx.fillStyle=f.c;
-    ctx.fillRect(p.x,p.y,f.s,f.s);
+  fxGroup.children.slice().forEach(f=>{
+    f.userData.life-=dt;f.position.y+=dt*70;f.material.opacity=Math.max(0,f.userData.life);
+    if(f.userData.life<=0)fxGroup.remove(f);
   });
-  decor.rocks.forEach(drawRock);
-  decor.trees.forEach(drawTree);
-  drawSafeZone();
-  drawNpc();
-  drawQuestNpc();
-  state.drops.forEach(drawDrop);
-  state.enemies.forEach(drawEnemy);
-  for(const id in state.players)drawPlayer(state.players[id],id===myId);
-  drawEffects();
 
-  if(mouseMoveTarget){
-    const m=screen(mouseMoveTarget.x,mouseMoveTarget.y);
-    ctx.strokeStyle="#ffd166";
-    ctx.lineWidth=2;
-    ctx.beginPath();
-    ctx.arc(m.x,m.y,10,0,Math.PI*2);
-    ctx.stroke();
-    ctx.lineWidth=1;
-  }
+  groundGroup.children.forEach(o=>{if(o.userData.float){o.rotation.y+=dt;o.position.y+=Math.sin(performance.now()/500+o.position.x)*0.12}});
 
-  const c=camera();
-  ctx.strokeStyle="rgba(255,255,255,.18)";
-  ctx.strokeRect(-c.x,-c.y,state.world.width,state.world.height);
+  updateCamera(dt);
+  updateUI();
 }
 
-function updateRenderPositions(){
-  for(const id in state.players){
-    const t=state.players[id];
-    if(!renderPlayers[id])renderPlayers[id]={...t};
-    renderPlayers[id].x+=(t.x-renderPlayers[id].x)*.28;
-    renderPlayers[id].y+=(t.y-renderPlayers[id].y)*.28;
-  }
+function updateCamera(dt){
+  const target=player.mesh.position.clone();target.y+=80;
+  const desired=target.clone().add(new THREE.Vector3(0,420,620));
+  camera.position.lerp(desired,.08);
+  camera.lookAt(target);
+}
+
+function respawn(){
+  player.hp=player.maxHp;player.mp=player.maxMp;player.mesh.position.set(0,0,0);toast("Você voltou ao spawn.");
 }
 
 function updateUI(){
-  const p=me();
-  if(!p)return;
+  document.getElementById("levelBadge").textContent=player.level;
+  document.getElementById("gold").textContent=player.gold;
+  document.getElementById("phase").textContent=player.phase;
+  document.getElementById("hpFill").style.width=(100*player.hp/player.maxHp)+"%";
+  document.getElementById("mpFill").style.width=(100*player.mp/player.maxMp)+"%";
+  document.getElementById("xpFill").style.width=(100*player.xp/player.nextXp)+"%";
+  document.getElementById("hpText").textContent=Math.ceil(player.hp)+"/"+player.maxHp;
+  document.getElementById("mpText").textContent=Math.ceil(player.mp)+"/"+player.maxMp;
 
-  document.getElementById("serverClock").textContent=state.serverTime||"--:--:--";
-  document.getElementById("pName").textContent=p.name;
-  document.getElementById("online").textContent=Object.keys(state.players).length;
-  document.getElementById("className").textContent=p.className;
-  document.getElementById("weaponName").textContent=`${p.weaponIcon} ${p.weapon}`;
-  document.getElementById("level").textContent=p.level;
-  document.getElementById("portraitLevel").textContent=p.level;
-  document.getElementById("gold").textContent=p.gold;
-  document.getElementById("kills").textContent=p.kills;
-  document.getElementById("attrPoints").textContent=p.attrPoints||0;
-  document.getElementById("hpText").textContent=`${Math.ceil(p.hp)}/${p.maxHp}`;
-  document.getElementById("manaText").textContent=`${Math.ceil(p.mana)}/${p.maxMana}`;
-  document.getElementById("xpText").textContent=`${p.xp}/${p.nextXp}`;
-  document.getElementById("hpBar").style.width=`${100*p.hp/p.maxHp}%`;
-  document.getElementById("manaBar").style.width=`${100*p.mana/p.maxMana}%`;
-  document.getElementById("xpBar").style.width=`${100*p.xp/p.nextXp}%`;
-  document.getElementById("topHpFill").style.width=`${100*p.hp/p.maxHp}%`;
-  document.getElementById("topManaFill").style.width=`${100*p.mana/p.maxMana}%`;
-  drawArcherPortrait();
-  const fb=document.getElementById("flyBadge");
-  if(fb)fb.style.display=p.isFlying?"block":"none";
-
-  const inv=document.getElementById("inventory");
-  inv.innerHTML="";
-  Object.entries(p.inventory).forEach(([item,amount])=>{
-    const slot=document.createElement("div");
-    slot.className="slot";
-    slot.title=ITEM_INFO[item]?.name||item;
-    slot.innerHTML=`${ITEM_INFO[item]?.icon||"?"}<span>${amount}</span>`;
-    inv.appendChild(slot);
+  const q=document.getElementById("quests");
+  q.innerHTML="";
+  quests.forEach(quest=>{
+    const done=quest.progress>=quest.need;
+    const div=document.createElement("div");div.className="quest";
+    div.innerHTML=`<b>${done?"✅":"⭐"} ${quest.title}</b><br>${quest.desc}<br>${quest.progress}/${quest.need}<br><span class="small">${quest.reward}</span>`;
+    q.appendChild(div);
   });
 
-  const stats=document.getElementById("statsList");
-  stats.innerHTML="";
-  const points=document.createElement("div");
-  points.className="row";
-  points.innerHTML=`<span>Pontos disponíveis</span><b>${p.attrPoints||0}</b>`;
-  stats.appendChild(points);
-  stats.appendChild(document.createElement("br"));
-
-  [
-    ["ATK","atk",p.stats.atk],
-    ["Vigor","vigor",p.stats.vigor],
-    ["Destreza","dex",p.stats.dex],
-    ["Inteligência","int",p.stats.int]
-  ].forEach(([label,key,value])=>{
-    const row=document.createElement("div");
-    row.className="row";
-    const left=document.createElement("span");
-    left.textContent=label;
-    const right=document.createElement("span");
-    const strong=document.createElement("b");
-    strong.textContent=value;
-    const btn=document.createElement("button");
-    btn.className="attrBtn";
-    btn.textContent="+";
-    btn.type="button";
-    btn.addEventListener("mousedown",e=>{
-      e.preventDefault();
-      e.stopPropagation();
-      addStat(key);
-    });
-    right.appendChild(strong);
-    right.appendChild(document.createTextNode(" "));
-    right.appendChild(btn);
-    row.appendChild(left);
-    row.appendChild(right);
-    stats.appendChild(row);
+  const items=document.getElementById("items");
+  items.innerHTML="";
+  const icons={potion:"🧪",crystal:"💎",feather:"🪽",bossCore:"🔱"};
+  Object.entries(inventory).forEach(([k,v])=>{
+    const it=document.createElement("div");it.className="item";it.innerHTML=`${icons[k]||"?"}<span>${v}</span>`;items.appendChild(it);
   });
 
-  const desc=document.createElement("p");
-  desc.className="small";
-  desc.style.marginTop="12px";
-  desc.textContent="Cada nível dá 5 pontos. Vigor aumenta vida; Inteligência aumenta mana; Destreza ajuda velocidade/cooldown; ATK aumenta dano físico.";
-  stats.appendChild(desc);
+  if(boss&&!boss.dead){
+    document.getElementById("bossPanel").style.display="block";
+    document.getElementById("bossName").textContent=boss.name;
+    document.getElementById("bossHp").style.width=(100*boss.hp/boss.maxHp)+"%";
+    document.getElementById("bossHpText").textContent=Math.ceil(boss.hp)+"/"+boss.maxHp;
+    document.getElementById("bossPhaseText").textContent=boss.hp<boss.maxHp*.5?"Fase furiosa: ataques mais rápidos!":"Fase normal";
+  }else document.getElementById("bossPanel").style.display="none";
 
-  const list=document.getElementById("marketList");
-  list.innerHTML="";
-  if(!state.market.length)list.innerHTML=`<p class="small">Nenhum item anunciado.</p>`;
-
-  state.market.slice().reverse().forEach(m=>{
-    const itemName=ITEM_INFO[m.item]?.name||m.item;
-    const row=document.createElement("div");
-    row.className="marketRow";
-    const title=document.createElement("b");
-    title.textContent=`${m.amount}x ${ITEM_INFO[m.item]?.icon||""} ${itemName}`;
-    const seller=document.createElement("div");
-    seller.textContent=`Vendedor: ${m.seller}`;
-    const price=document.createElement("div");
-    price.textContent=`Preço: ${m.price} ouro`;
-    const btn=document.createElement("button");
-    btn.className="full";
-    btn.type="button";
-    btn.textContent="Comprar";
-    btn.addEventListener("mousedown",e=>{
-      e.preventDefault();
-      e.stopPropagation();
-      confirmBuyMarket(m.id,itemName,m.amount,m.price,m.seller);
-    });
-    row.appendChild(title);
-    row.appendChild(document.createElement("br"));
-    row.appendChild(seller);
-    row.appendChild(price);
-    row.appendChild(btn);
-    list.appendChild(row);
-  });
-
-  const rank=document.getElementById("rankList");
-  rank.innerHTML="";
-  (state.ranking||[]).forEach(r=>{
-    const row=document.createElement("div");
-    row.className="rankRow";
-    row.textContent=`${r.pos}. ${r.name} | classe ${r.className} | nível ${r.level} | kills ${r.kills}`;
-    rank.appendChild(row);
-  });
-}
-
-
-function setQuestTab(tab){
-  questTab=tab;
-  const a=document.getElementById("tabQuestActive");
-  const d=document.getElementById("tabQuestDone");
-  if(a&&d){
-    a.classList.toggle("active",tab==="active");
-    d.classList.toggle("active",tab==="done");
-  }
-  renderQuests();
-}
-
-function renderQuests(){
-  const list=document.getElementById("questList");
-  if(!list)return;
-  list.innerHTML="";
-
-  const filtered=quests.filter(q=>{
-    const st=q.state||{};
-    if(questTab==="done")return !!st.claimed;
-    return !st.claimed;
-  });
-
-  if(!filtered.length){
-    list.innerHTML=questTab==="done"
-      ? '<p class="small">Nenhuma missão finalizada ainda.</p>'
-      : '<p class="small">Nenhuma missão ativa disponível.</p>';
-    return;
-  }
-
-  filtered.forEach(q=>{
-    const st=q.state||{progress:0,completed:false,claimed:false};
-    const row=document.createElement("div");
-    row.className="marketRow";
-    const status=st.claimed?"Finalizada":st.completed?"Concluída":"Em andamento";
-    row.innerHTML=`<b>${q.type==="main"?"⭐":q.type==="boss"?"👑":"•"} ${q.title}</b><br>${q.description}<br>Progresso: ${st.progress||0}/${q.target.total}<br>Status: ${status}<br>Recompensa: ${q.reward.gold||0} ouro, ${q.reward.xp||0} XP`;
-
-    if(st.completed&&!st.claimed){
-      const btn=document.createElement("button");
-      btn.className="full";
-      btn.textContent="Receber recompensa";
-      btn.addEventListener("mousedown",e=>{
-        e.preventDefault();
-        claimQuest(q.id);
-      });
-      row.appendChild(btn);
-    }
-
-    list.appendChild(row);
-  });
-}
-
-function roundRect(x,y,w,h,r){
-  ctx.beginPath();
-  ctx.moveTo(x+r,y);
-  ctx.arcTo(x+w,y,x+w,y+h,r);
-  ctx.arcTo(x+w,y+h,x,y+h,r);
-  ctx.arcTo(x,y+h,x,y,r);
-  ctx.arcTo(x,y,x+w,y,r);
-  ctx.closePath();
-}
-
-function loop(){
-  updateRenderPositions();
-  if(noticeTimer>0)noticeTimer--;
-  else document.getElementById("notice").textContent="Anime MMORPG • voo • mundo vivo";
-  draw();
   drawMinimap();
-  requestAnimationFrame(loop);
 }
 
-loop();
+function drawMinimap(){
+  const c=document.getElementById("minimap"),ctx=c.getContext("2d"),w=c.width,h=c.height;
+  ctx.clearRect(0,0,w,h);ctx.fillStyle="#102038";ctx.fillRect(0,0,w,h);
+  const sx=w/WORLD.w,sy=h/WORLD.h;
+  ctx.fillStyle="#55b95b";ctx.beginPath();ctx.arc(w/2,h/2,50,0,Math.PI*2);ctx.fill();
+  enemies.forEach(e=>{if(e.dead)return;ctx.fillStyle=e.isBoss?"#ffd166":"#ef476f";ctx.beginPath();ctx.arc(w/2+e.mesh.position.x*sx,h/2+e.mesh.position.z*sy,e.isBoss?4:2,0,Math.PI*2);ctx.fill()});
+  ctx.fillStyle="#7ee787";ctx.beginPath();ctx.arc(w/2+player.mesh.position.x*sx,h/2+player.mesh.position.z*sy,4,0,Math.PI*2);ctx.fill();
+}
+
+function toggleInventory(e){if(e)e.stopPropagation();const inv=document.getElementById("inventory");inv.style.display=inv.style.display==="block"?"none":"block"}
+function returnSpawn(e){if(e)e.stopPropagation();player.mesh.position.set(0,0,0);toast("Retornou ao spawn.")}
+function showHelp(e){if(e)e.stopPropagation();showBossDialogue("Ajuda","WASD move, mouse mira, clique ataca, Q/E/R skills, F voa, I inventário. Derrote bosses para avançar fases.")}
+function openMenu(e){e.stopPropagation();document.getElementById("menu").classList.add("open")}
+function toast(t){const el=document.getElementById("toast");el.textContent=t;el.style.display="block";toastTimer=2}
+
+function animate(){
+  requestAnimationFrame(animate);
+  if(!running)return;
+  const dt=Math.min(.033,clock.getDelta());
+  update(dt);
+  renderer.render(scene,camera);
+}
 </script>
 </body>
 </html>

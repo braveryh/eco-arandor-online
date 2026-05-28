@@ -1,7 +1,7 @@
 {
   "name": "eco-arandor-online",
-  "version": "17.0.0",
-  "description": "MMORPG indie multiplayer V17 - contas, personagens e missoes",
+  "version": "18.0.0",
+  "description": "MMORPG indie multiplayer V18 - contas, personagens e missoes",
   "main": "server.js",
   "scripts": {
     "start": "node server.js"

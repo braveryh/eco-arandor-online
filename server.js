@@ -1078,6 +1078,22 @@ io.on("connection", socket => {
     forceState();
   });
 
+  socket.on("teleportSpawn", () => {
+    const p = players[socket.id];
+    if (!p) return;
+
+    const pos = spawnPoint();
+    p.x = pos.x;
+    p.y = pos.y;
+    p.hp = Math.min(p.maxHp, Math.max(1, p.hp));
+    p.mana = Math.min(p.maxMana, p.mana + 10);
+
+    io.to(socket.id).emit("notice", "Você voltou para o spawn.");
+    privateLog(socket.id, "Você usou o menu para voltar ao spawn.");
+    savePlayerCharacter(p);
+    forceState();
+  });
+
   socket.on("chat", msg => {
     const p = players[socket.id];
     if (!p) return;
